@@ -1,0 +1,188 @@
+/* === Базовий стиль (використовуємо ваші налаштування) === */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 0;
+  margin: 0;
+  background-color: #f9fafb;
+  color: #333;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.sr-only { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 0.75rem;
+  z-index: 1000;
+}
+
+.topbar select {
+  border: 1.5px solid #bbb;
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  outline: none;
+  background: #fff;
+}
+
+.ghost-btn {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.ghost-btn:hover { box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
+
+/* Бокові панелі */
+.side-panel {
+  position: fixed;
+  top: 48px;
+  bottom: 0;
+  width: 64px;
+  background: #ffffff;
+  border-right: 1px solid #eee;
+  padding: 0.5rem;
+  overflow: auto;
+  transition: transform 0.25s ease-in-out;
+  z-index: 900;
+}
+.side-panel.left { left: 0; transform: translateX(0); }
+.side-panel.left.hidden { transform: translateX(-100%); }
+
+.side-panel.right {
+  right: 0;
+  border-right: none;
+  border-left: 1px solid #eee;
+  width: 320px;
+  transform: translateX(0);
+}
+.side-panel.right.hidden { transform: translateX(100%); }
+
+.tool-group {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+}
+
+.tool-btn {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.tool-btn.active { outline: 2px solid #3b82f6; }
+.tool-btn svg { width: 24px; height: 24px; fill: none; stroke: #111; stroke-width: 2; }
+
+.settings {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #eee;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.35rem 0;
+  flex-wrap: wrap;
+}
+.setting-label { font-size: 0.8rem; color: #444; min-width: 80px; }
+.checkbox-inline { font-size: 0.85rem; color: #333; }
+.danger-btn {
+  background: #fff;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Права панель контенту */
+.subject-panel {
+  padding: 0.75rem;
+}
+.subject-panel h3 { margin: 0.5rem 0 0.75rem; }
+.subject-panel .muted { color: #6b7280; font-size: 0.95rem; }
+
+/* Полотно */
+.board-wrap {
+  position: fixed;
+  inset: 48px 0 0 0;
+  display: grid;
+  background: #f9fafb;
+}
+#boardContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+#board {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #ffffff;
+  box-shadow: inset 0 0 25px rgba(0,0,0,0.06);
+}
+
+#drawLayer > * { cursor: move; } /* дозволяє перетягувати фігури при виборі select */
+
+/* Виділення */
+#selectionLayer rect.selection-box {
+  fill: rgba(59,130,246,0.15);
+  stroke: #3b82f6;
+  stroke-dasharray: 4;
+}
+
+/* Ефекти наведення/виділення */
+#drawLayer .selected {
+  filter: drop-shadow(0 0 4px rgba(59,130,246,0.8));
+  outline: none;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 56px; /* або твоя висота */
+  padding: 0 10px;
+  background: #fff; /* якщо фон світлий */
+  border-bottom: 1px solid #ddd; /* тонка лінія, щоб відділити */
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* відстань між логотипом і кнопкою */
+}
+
+.logo {
+  height: 70%;       /* логотип автоматично підганяється по висоті панелі */
+  max-height: 40px;  /* обмеження, щоб не був завеликий */
+  width: auto;       /* пропорції не ламаються */
+  object-fit: contain;
+}
+
+
+
+
+/* Адаптив */
+@media (max-width: 900px) {
+  .side-panel.right { width: 270px; }
+}

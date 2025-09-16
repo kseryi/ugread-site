@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Редактор молекул</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Редактор молекул</h1>
+
+  <input id="formulaInput" type="text" placeholder="Введіть формулу, напр. C2H5OH">
+  <div id="prettyFormula"></div>
+
+  <div class="controls">
+    <label>Обертання (°): <input type="range" id="rotationSlider" min="0" max="360" value="0"></label>
+    <label>Масштаб: <input type="range" id="zoomSlider" min="0.2" max="3" step="0.1" value="1"></label>
+  </div>
+
+  <div class="main-content">
+    <div id="viewer3D">
+      <canvas id="moleculeCanvas" width="500" height="500"></canvas>
+    </div>
+
+    <div class="editor-panel">
+      <table id="atomsTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Атом</th>
+            <th>X</th>
+            <th>Y</th>
+            <th>Z</th>
+            <th>Радіус</th>
+            <th>Колір</th>
+            <th>Зв'язок</th>
+            <th>До атома</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <button id="downloadBtn">Завантажити код</button>
+  <pre id="codeOutput"></pre>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

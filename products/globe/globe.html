@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Globe.gl — Темний Глобус</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="ui">
+    <button id="btn-physical">Фізична</button>
+    <button id="btn-political">Політична</button>
+    <button id="btn-economic">Економічна</button>
+  </div>
+
+  <div id="globeViz"></div>
+
+  <!-- Three.js + OrbitControls + Globe.gl -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://unpkg.com/globe.gl"></script>
+
+  <script src="script.js"></script>
+</body>
+</html>

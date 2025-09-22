@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Інтерактивна офлайн-дошка</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script type="module" src="ukr.js"></script>
+
+</head>
+<body>
+  <!-- Верхня панель: вибір предмету + кнопки показу панелей -->
+  <header class="topbar">
+
+    <div class="topbar-left">
+        
+      <button id="toggleLeft" class="ghost-btn" title="Показати/сховати інструменти" aria-label="Показати/сховати інструменти">☰</button>
+    <img src="logo.png" alt="Логотип компанії" class="logo"/>
+    </div>
+    <div class="topbar-right">
+      <label class="sr-only" for="subjectSelect">Предмет</label>
+      <select id="subjectSelect" title="Оберіть предмет">
+        <option value="" selected>— без предмету —</option>
+        <option value="ukr">Українська мова</option>
+        <option value="math">Математика</option>
+        <option value="geography">Географія</option>
+        <option value="chemistry">Хімія</option>
+        <option value="history">Історія</option>
+        <option value="physics">Фізика</option>
+      </select>
+      <button id="toggleRight" class="ghost-btn" title="Показати/сховати додаткову панель" aria-label="Показати/сховати додаткову панель">⊟</button>
+    </div>
+  </header>
+
+  <!-- Ліва панель інструментів -->
+  <aside id="leftPanel" class="side-panel left">
+    <div class="tool-group">
+      <!-- Інструмент вибору/переміщення -->
+      <button class="tool-btn" data-tool="select" title="Вибір/переміщення" aria-label="Вибір/переміщення">
+        <!-- курсор -->
+        <svg viewBox="0 0 24 24"><path d="M3 2l7 18 2-7 7-2L3 2z"/></svg>
+      </button>
+      <!-- Олівець (вільне малювання) -->
+      <button class="tool-btn" data-tool="pencil" title="Олівець" aria-label="Олівець">
+        <svg viewBox="0 0 24 24"><path d="M3 21l3-1 12-12-2-2L4 18l-1 3zM15 3l2 2"/></svg>
+      </button>
+      <!-- Пряма лінія -->
+      <button class="tool-btn" data-tool="line" title="Лінія" aria-label="Лінія">
+        <svg viewBox="0 0 24 24"><path d="M4 20L20 4"/></svg>
+      </button>
+      <!-- Прямокутник -->
+      <button class="tool-btn" data-tool="rect" title="Прямокутник" aria-label="Прямокутник">
+        <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="1"/></svg>
+      </button>
+      <!-- Овал -->
+      <button class="tool-btn" data-tool="ellipse" title="Овал" aria-label="Овал">
+        <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="8" ry="6"/></svg>
+      </button>
+      <!-- Коло -->
+      <button class="tool-btn" data-tool="circle" title="Коло" aria-label="Коло">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/></svg>
+      </button>
+      <!-- Ламана -->
+      <button class="tool-btn" data-tool="polyline" title="Ламана лінія" aria-label="Ламана лінія">
+        <svg viewBox="0 0 24 24"><polyline points="4,18 8,8 14,14 20,6"/></svg>
+      </button>
+      <!-- Трикутник -->
+      <button class="tool-btn" data-tool="triangle" title="Трикутник" aria-label="Трикутник">
+        <svg viewBox="0 0 24 24"><polygon points="12,5 4,19 20,19"/></svg>
+      </button>
+      <!-- П'ятикутник -->
+      <button class="tool-btn" data-tool="pentagon" title="П'ятикутник" aria-label="П'ятикутник">
+        <svg viewBox="0 0 24 24"><polygon points="12,3 3,10 6,21 18,21 21,10"/></svg>
+      </button>
+      <!-- Шестикутник -->
+      <button class="tool-btn" data-tool="hexagon" title="Шестикутник" aria-label="Шестикутник">
+        <svg viewBox="0 0 24 24"><polygon points="6,4 18,4 22,12 18,20 6,20 2,12"/></svg>
+      </button>
+      <!-- Зірка -->
+      <button class="tool-btn" data-tool="star" title="Зірка" aria-label="Зірка">
+        <svg viewBox="0 0 24 24"><polygon points="12,3 14.9,9.2 21.6,9.2 16.2,13.1 18.5,20 12,15.9 5.5,20 7.8,13.1 2.4,9.2 9.1,9.2"/></svg>
+      </button>
+    </div>
+
+    <div class="settings">
+      <div class="setting-row">
+        <label class="setting-label">Колір лінії</label>
+        <input type="color" id="strokeColor" value="#111111"/>
+      </div>
+      <div class="setting-row">
+        <label class="setting-label">Товщина</label>
+        <input type="range" id="strokeWidth" min="1" max="20" value="2"/>
+        <span id="strokeWidthVal">2</span>
+      </div>
+      <div class="setting-row">
+        <label class="setting-label">Стиль</label>
+        <select id="strokeStyle">
+          <option value="solid" selected>Суцільна</option>
+          <option value="dashed">Штрихова</option>
+          <option value="dotted">Пунктир</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label class="setting-label">Заливка</label>
+        <input type="color" id="fillColor" value="#ffffff"/>
+        <label class="checkbox-inline"><input type="checkbox" id="noFill" checked/> без заливки</label>
+      </div>
+      <div class="setting-row">
+        <button id="deleteSelected" class="danger-btn" title="Видалити вибране">🗑</button>
+        <button id="clearAll" class="danger-btn" title="Очистити дошку">✖</button>
+      </div>
+      <div class="setting-row">
+        <button id="downloadSVG" class="ghost-btn" title="Завантажити як SVG">⬇ SVG</button>
+        <button id="downloadPNG" class="ghost-btn" title="Завантажити як PNG">⬇ PNG</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Права панель (динамічна під предмет) -->
+  <aside id="rightPanel" class="side-panel right">
+    <div id="subjectPanel" class="subject-panel">
+      <p class="muted">Оберіть предмет у верхньому правому куті, щоб завантажити додаткові інструменти.</p>
+    </div>
+  </aside>
+
+  <!-- Біле полотно (SVG) -->
+  <main class="board-wrap">
+    <div id="boardContainer">
+      <svg id="board" xmlns="http://www.w3.org/2000/svg" tabindex="0">
+        <rect id="boardBg" x="0" y="0" width="100%" height="100%" fill="#ffffff"></rect>
+        <!-- Шари для фону, малюнків та виділення -->
+        <g id="bgLayer"></g>
+        <g id="drawLayer"></g>
+        <g id="selectionLayer"></g>
+      </svg>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+<style>
+  .fab-fullscreen {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(28, 28, 33, 0.95);
+    backdrop-filter: blur(6px);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+    cursor: grab;
+    z-index: 9999;
+    padding: 0;
+    touch-action: none; /* для коректного перетягування на мобільних */
+    transition: transform .12s ease, box-shadow .12s ease, background .2s ease;
+    user-select: none;
+  }
+  .fab-fullscreen:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(0,0,0,.4); }
+  .fab-fullscreen:active { cursor: grabbing; transform: translateY(0); }
+  .fab-fullscreen svg { width: 26px; height: 26px; display: block; }
+
+  /* маленький бейджик-підказка (опційно) */
+  .fab-hint {
+    position: fixed;
+    bottom: 84px;
+    right: 20px;
+    background: rgba(30,30,35,.9);
+    color: #eee;
+    font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    padding: 6px 10px;
+    border-radius: 8px;
+    box-shadow: 0 8px 18px rgba(0,0,0,.35);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(6px);
+    transition: opacity .18s ease, transform .18s ease;
+  }
+  .fab-fullscreen:hover + .fab-hint { opacity: 1; transform: translateY(0); }
+</style>
+
+<!-- Плаваюча кнопка -->
+<button id="fullscreenFab" class="fab-fullscreen" aria-label="Перемкнути повноекранний режим">
+  <!-- Іконка «розгорнути» (за замовчуванням) -->
+  <svg id="iconExpand" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M4 10V4h6M4 4l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M14 4h6v6M20 4l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M10 20H4v-6M4 20l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M20 14v6h-6M20 20l-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <!-- Іконка «згорнути» (показується у fullscreen) -->
+  <svg id="iconCompress" viewBox="0 0 24 24" fill="none" style="display:none" aria-hidden="true">
+    <path d="M9 9H4v5M4 9l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M15 9h5v5M20 9l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M9 15H4v-5M4 15l5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M15 15h5v-5M20 15l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
+<div class="fab-hint">Клік — fullscreen • Перетягни — перемістити</div>
+
+<script>
+(function(){
+  const btn = document.getElementById('fullscreenFab');
+  const iconExpand = document.getElementById('iconExpand');
+  const iconCompress = document.getElementById('iconCompress');
+
+  // Відновити останню позицію (localStorage)
+  const saved = localStorage.getItem('fab-fullscreen-pos');
+  if (saved) {
+    try {
+      const { left, top } = JSON.parse(saved);
+      if (typeof left === 'number' && typeof top === 'number') {
+        btn.style.left = left + 'px';
+        btn.style.top = top + 'px';
+        btn.style.right = 'auto';
+        btn.style.bottom = 'auto';
+      }
+    } catch {}
+  }
+
+  // Хелпери fullscreen
+  function isFullscreen(){
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  }
+  function requestFS(el){
+    if (el.requestFullscreen) return el.requestFullscreen();
+    if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+    if (el.msRequestFullscreen) return el.msRequestFullscreen();
+  }
+  function exitFS(){
+    if (document.exitFullscreen) return document.exitFullscreen();
+    if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+    if (document.msExitFullscreen) return document.msExitFullscreen();
+  }
+  function syncIcon(){
+    const fs = isFullscreen();
+    iconExpand.style.display   = fs ? 'none' : '';
+    iconCompress.style.display = fs ? '' : 'none';
+    btn.setAttribute('aria-pressed', fs ? 'true' : 'false');
+    btn.title = fs ? 'Вийти з повноекранного' : 'На весь екран';
+  }
+  document.addEventListener('fullscreenchange', syncIcon);
+  document.addEventListener('webkitfullscreenchange', syncIcon);
+  document.addEventListener('msfullscreenchange', syncIcon);
+  syncIcon();
+
+  // Клік: toggle fullscreen
+  let dragged = false;
+  btn.addEventListener('click', (e) => {
+    if (dragged) { dragged = false; return; } // якщо щойно перетягували — не тиснемо
+    if (!isFullscreen()) requestFS(document.documentElement);
+    else exitFS();
+  });
+
+  // Перетягування (Pointer Events)
+  let startX=0, startY=0, startLeft=0, startTop=0, moved=false;
+
+  const onPointerMove = (e) => {
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (!moved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) { moved = true; dragged = true; }
+    if (!moved) return;
+
+    const left = startLeft + dx;
+    const top  = startTop + dy;
+    btn.style.left = left + 'px';
+    btn.style.top  = top + 'px';
+    btn.style.right = 'auto';
+    btn.style.bottom = 'auto';
+  };
+
+  const onPointerUp = () => {
+    btn.releasePointerCapture?.(event.pointerId);
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+    if (moved) {
+      const rect = btn.getBoundingClientRect();
+      localStorage.setItem('fab-fullscreen-pos', JSON.stringify({ left: rect.left, top: rect.top }));
+    }
+    setTimeout(()=>{ moved = false; }, 0);
+  };
+
+  btn.addEventListener('pointerdown', (e) => {
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = btn.getBoundingClientRect();
+    startLeft = rect.left;
+    startTop  = rect.top;
+    moved = false;
+    btn.setPointerCapture?.(e.pointerId);
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+  });
+
+  // Запобігти прокрутці сторінки під час перетягування на мобільних
+  btn.addEventListener('touchmove', (e)=> e.preventDefault(), { passive: false });
+})();
+</script>
+
+</body>
+</html>

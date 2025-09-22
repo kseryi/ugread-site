@@ -1,4 +1,4 @@
-// === script.js — оновлена версія з незалежним масштабуванням (повна інтеграція) ===
+// === script.js — оновлена версія 022 ===
 const state = {
   tool: 'select',
   strokeColor: '#000000',
@@ -38,10 +38,7 @@ const state = {
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
-/* ВАЖЛИВО:
-   РАНІШЕ тут була рекурсивна помилка getTransformedPoint().
-   Нижче — коректні функції перетворення координат миші в локальні координати конкретного <g>.
-*/
+
 
 // Повертає локальні координати podGroup (наприклад, #drawLayer) з події миші/пальця
 function localPointFromEvent(evt, podGroup){
@@ -69,10 +66,7 @@ function writeTranslate(el, tx, ty){
   el.setAttribute('transform', `translate(${tx} ${ty})`);
 }
 
-/* applyAttrs: застосовує стиль до елементів
-   ПРИМІТКА: якщо потрібна товщина, що НЕ масштабується, можна додати:
-   el.setAttribute('vector-effect','non-scaling-stroke');
-*/
+
 function applyAttrs(el, forceNoFill=false){
   el.setAttribute('stroke', state.strokeColor);
   el.setAttribute('stroke-width', state.strokeWidth);
@@ -116,7 +110,7 @@ function selectElement(el){
 }
 
 // ===============================
-//  БЛОК РЕСАЙЗУ (оновлений)
+//  БЛОК РЕСАЙЗУ 
 // ===============================
 
 function createResizeHandles(el){
@@ -204,7 +198,7 @@ function resizeMove(e){
       break;
   }
 
-  // Оновлюємо положення ручок
+  // Оновлюємо положення 
   const newBBox = el.getBBox();
   $$('.resize-handle').forEach(h=>positionHandle(h,newBBox,h.getAttribute('data-cursor')));
 }
@@ -402,18 +396,7 @@ function clearBackground(){
 //  МАСШТАБУВАННЯ ТА ГРУПИ ШАРІВ
 // ===============================
 
-/* Ми НЕ чіпаємо HTML.
-   На ініціалізації створюємо <g id="rootView"> і
-   переносимо всередину існуючі #bgLayer, #drawLayer, #selectionLayer.
-   Далі застосовуємо трансформації так:
-   <svg id="board">
-     <g id="rootView" transform="translate(all.tx,all.ty) scale(all.scale)">
-       <g id="bgLayer"   transform="translate(bg.tx,bg.ty) scale(bg.scale)">...</g>
-       <g id="drawLayer" transform="translate(draw.tx,draw.ty) scale(draw.scale)">...</g>
-       <g id="selectionLayer">...</g>
-     </g>
-   </svg>
-*/
+
 
 function ensureViewGroups(){
   const svg = $('#board');
@@ -510,7 +493,7 @@ function onPointerDown(e){
     return;
   }
 
-  // УВАГА: всі фігури малюємо в drawLayer, тому координати беремо в його локальній системі
+  // УВАГА: всі фігури малюємо в drawLayer, координати беремо в його локальній системі
   const drawLayer = $('#drawLayer');
   const pt = localPointFromEvent(e, drawLayer);
   state.startPoint = pt;
@@ -865,7 +848,7 @@ function renderDefaultRightPanel(){
   updateBackground();
 }
 
-// (друга частина вибору предмета з твого коду — залишаю як є)
+
 const subjectSelect = document.getElementById('subjectSelect');
 const subjectPanel = document.getElementById('subjectPanel');
 let currentSubjectScript = null;

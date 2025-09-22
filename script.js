@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   draw();
   window.addEventListener('resize', resize);
 
-  // Реакція на рух миші
+
   canvas.addEventListener('mousemove', e=>{
     particles.forEach(p=>{
       p.vx += (e.movementX)*0.0005;
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     });
   });
 
-  // Реакція на скрол
+
   window.addEventListener('scroll', ()=>{
     particles.forEach(p=>{
       p.y += window.scrollY*0.001;

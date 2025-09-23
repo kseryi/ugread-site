@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Редактор формул (Python ⇄ LaTeX)</title>
+<style>
+:root{ --panel-height:220px }
+html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#ffffff}
+#canvas{position:relative;box-sizing:border-box;height:calc(100% - var(--panel-height));border:1px solid #eee;overflow:hidden}
+.formula-block{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  cursor:grab;user-select:none;padding:6px;border-radius:8px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);background:rgba(255,255,255,0.9);
+  min-width:40px;min-height:24px
+}
+.formula-block.selected{outline:2px dashed #3b82f6}
+#panel{position:fixed;left:0;right:0;bottom:0;height:var(--panel-height);
+  background:#fafafa;border-top:1px solid #e6e6e6;display:flex;flex-direction:column;
+  gap:8px;padding:8px;box-sizing:border-box}
+.tabs{display:flex;gap:6px;margin-bottom:4px;align-items:center}
+.tab{padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;background:#f8fafc}
+.tab.active{background:#2563eb;color:white;border-color:#2563eb}
+.editor{display:none;flex:1;flex-direction:column;gap:6px}
+.editor.active{display:flex}
+textarea{width:100%;height:56px;padding:8px;border:1px solid #ddd;border-radius:6px;resize:vertical;font-family:monospace}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;background:white;cursor:pointer;font-size:14px}
+button.primary{background:#2563eb;color:white;border-color:transparent}
+.cheatsheet{display:flex;flex-wrap:wrap;gap:6px;padding-top:4px;max-height:60px;overflow:auto}
+.cheatsheet button{background:#f1f5f9;border-color:#e2e8f0;font-size:13px}
+.greek-popup{position:absolute;bottom:50px;left:10px;background:#fff;border:1px solid #ccc;padding:4px;border-radius:6px;display:none;flex-wrap:wrap;gap:4px;max-width:300px;z-index:10}
+.greek-popup button{padding:4px 6px;font-size:14px}
+</style>
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'], ['\\(','\\)']] }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+</head>
+<body>
+<div id="canvas" tabindex="0"></div>
+
+<div id="panel">
+  <div class="tabs">
+    <div class="tab active" data-tab="python">Python стиль</div>
+    <div class="tab" data-tab="latex">LaTeX стиль</div>
+    <button id="greek-btn">α β γ</button>
+    <button id="plot-btn">Побудувати графік</button>
+
+  </div>
+
+  <div class="greek-popup" id="greek-popup"></div>
+
+  <div class="editor active" id="python-editor">
+    <textarea id="py-input" placeholder="Напр.: sqrt(x) + 1/3 + x**2"></textarea>
+    <div class="cheatsheet" id="py-cheatsheet"></div>
+  </div>
+
+  <div class="editor" id="latex-editor">
+    <textarea id="tex-input" placeholder="Напр.: x^2 + y^2 = r^2"></textarea>
+    <div class="cheatsheet" id="tex-cheatsheet"></div>
+  </div>
+
+  <div class="controls">
+    <button id="add-btn" class="primary">Додати</button>
+    <button id="update-btn">Оновити</button>
+    <button id="delete-btn">Видалити</button>
+    <label>Розмір</label>
+    <select id="size-select"><option value="1">Норм</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+  </div>
+</div>
+
+<script>
+(function(){
+const canvas = document.getElementById('canvas');
+const pyInput = document.getElementById('py-input');
+const texInput = document.getElementById('tex-input');
+const addBtn = document.getElementById('add-btn');
+const updateBtn = document.getElementById('update-btn');
+const deleteBtn = document.getElementById('delete-btn');
+const sizeSelect = document.getElementById('size-select');
+const tabs = document.querySelectorAll('.tab');
+const editors = document.querySelectorAll('.editor');
+const greekBtn = document.getElementById('greek-btn');
+const greekPopup = document.getElementById('greek-popup');
+let selected = null;
+let currentTab = "python";
+
+// вкладки
+tabs.forEach(tab=>{
+  tab.addEventListener("click", ()=>{
+    tabs.forEach(t=>t.classList.remove("active"));
+    editors.forEach(e=>e.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById(tab.dataset.tab+"-editor").classList.add("active");
+    currentTab = tab.dataset.tab;
+  });
+});
+
+// Greek popup
+greekBtn.addEventListener("click", e=>{
+  greekPopup.style.display = greekPopup.style.display==='flex'?'none':'flex';
+});
+greekPopup.innerHTML='';
+'α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω'.split(' ').forEach(l=>{
+  let b = document.createElement('button'); b.textContent = l; greekPopup.appendChild(b);
+});
+greekPopup.addEventListener("click", e=>{
+  if(e.target.tagName==='BUTTON'){
+    const target = currentTab==='python'?pyInput:texInput;
+    target.value += e.target.textContent;
+  }
+});
+
+//Блок мать його графіку
+
+
+const plotBtn = document.getElementById('plot-btn');
+
+plotBtn.addEventListener('click', ()=>{
+  if(!selected) return alert("Оберіть формулу для графіку");
+  let expr = selected.dataset.tex.trim();
+
+  // простий парсинг функцій типу f(x)=..., y=..., або просто вираз з x
+  let match = expr.match(/^(?:f\s*\(x\)|y)\s*=\s*(.+)$/);
+  let formula = match ? match[1] : expr; 
+
+  try {
+    // створюємо дані для графіка
+    let xs = [], ys = [];
+    for(let x=-10; x<=10; x+=0.1){
+      let jsExpr = formula.replace(/\*\*/g,"**")
+                          .replace(/sqrt\(/g,"Math.sqrt(")
+                          .replace(/sin\(/g,"Math.sin(")
+                          .replace(/cos\(/g,"Math.cos(")
+                          .replace(/tan\(/g,"Math.tan(")
+                          .replace(/log\(/g,"Math.log(")
+                          .replace(/exp\(/g,"Math.exp(");
+      let y = eval(jsExpr);
+      if(isFinite(y)){
+        xs.push(x);
+        ys.push(y);
+      }
+    }
+
+    // створюємо блок
+    const wrap = document.createElement('div');
+    wrap.className = 'formula-block';
+    wrap.style.width = '400px';
+    wrap.style.height = '300px';
+    wrap.style.background = '#fff';
+    wrap.dataset.tex = 'graph';
+    wrap.style.left = '50%';
+    wrap.style.top = '50%';
+    wrap.style.transform = 'translate(-50%, -50%)';
+    canvas.appendChild(wrap);
+
+    // внутрішній div для Plotly
+    const inner = document.createElement('div');
+    inner.style.width = '100%';
+    inner.style.height = '100%';
+    wrap.appendChild(inner);
+
+    // resize handle
+    const handle = document.createElement('div');
+    handle.style.width = '12px';
+    handle.style.height = '12px';
+    handle.style.background = '#3b82f6';
+    handle.style.position = 'absolute';
+    handle.style.right = '2px';
+    handle.style.bottom = '2px';
+    handle.style.cursor = 'se-resize';
+    wrap.appendChild(handle);
+
+    // resize logic
+    handle.addEventListener('pointerdown', e=>{
+      e.stopPropagation();
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startWidth = wrap.offsetWidth;
+      const startHeight = wrap.offsetHeight;
+
+      function move(ev){
+        let newWidth = startWidth + (ev.clientX - startX);
+        let newHeight = startHeight + (ev.clientY - startY);
+        if(newWidth < 50) newWidth = 50;
+        if(newHeight < 50) newHeight = 50;
+        wrap.style.width = newWidth+'px';
+        wrap.style.height = newHeight+'px';
+        Plotly.Plots.resize(inner);
+      }
+
+      function up(){
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+      }
+
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+    });
+
+    // draggable
+    wrap.addEventListener('pointerdown', e=>{
+      if(e.target === handle || e.target.closest('.js-plotly-plot')) return;
+      e.stopPropagation();
+      selectBlock(wrap);
+      startDrag(e, wrap);
+    });
+
+    // побудова графіка
+    Plotly.newPlot(inner,[{x:xs,y:ys,type:'scatter'}],
+      {margin:{t:20},xaxis:{zeroline:true},yaxis:{zeroline:true}},
+      {responsive:true});
+
+    selectBlock(wrap);
+
+  } catch(e){
+    alert("Не вдалося побудувати графік: "+e.message);
+  }
+});
+
+
+// Python → LaTeX
+function pythonToLatex(expr){
+  let latex = expr;
+  latex = latex.replace(/([a-zA-Z0-9]+)\*\*([a-zA-Z0-9]+)/g,'$1^{$2}');
+  latex = latex.replace(/([0-9a-zA-Z]+)\/([0-9a-zA-Z]+)/g,'\\frac{$1}{$2}');
+  latex = latex.replace(/sqrt\((.*?)\)/g,'\\sqrt{$1}');
+  latex = latex.replace(/log\((.*?)\)/g,'\\log{$1}');
+  latex = latex.replace(/sin\((.*?)\)/g,'\\sin{$1}');
+  latex = latex.replace(/cos\((.*?)\)/g,'\\cos{$1}');
+  latex = latex.replace(/exp\((.*?)\)/g,'e^{$1}');
+  latex = latex.replace(/e\*\*(.*?)/g,'e^{$1}');
+  latex = latex.replace(/integrate\((.*?),\s*(.*?)\)/g,'\\int {$1} d$2');
+  latex = latex.replace(/sum\((.*?),\s*([a-zA-Z])=([0-9]+)\.\.([0-9a-zA-Z]+)\)/g,'\\sum_{$2=$3}^{$4} $1');
+  latex = latex.replace(/matrix\(\[\[(.*?)\]\]\)/g,function(m,c){
+    let rows=c.split('],[').map(r=>r.split(',').join(' & '));
+    return '\\begin{bmatrix}'+rows.join(' \\\\ ')+'\\end{bmatrix}';
+  });
+  
+  // === ОБРОБКА ДРОБІВ ===
+  latex = smartFraction(latex);
+  
+  return latex;
+}
+
+// --- Функція smartFraction ---
+function smartFraction(expr) {
+  return expr.replace(/(\([^\)]+\)|[^\/\s]+)\/(\([^\)]+\)|[^\/\s]+)/g, (match, num, den) => {
+    num = num.trim();
+    den = den.trim();
+
+    if (!num.startsWith('{') && (num.includes('+') || num.includes('-') || num.startsWith('('))) {
+      if (num.startsWith('(') && num.endsWith(')')) {
+        num = num.slice(1,-1);
+      }
+      num = `{${num}}`;
+    }
+
+    if (!den.startsWith('{') && (den.includes('+') || den.includes('-') || den.startsWith('('))) {
+      if (den.startsWith('(') && den.endsWith(')')) {
+        den = den.slice(1,-1);
+      }
+      den = `{${den}}`;
+    }
+
+    return `\\frac${num && den ? ` ${num} ${den}` : ''}`;
+  });
+}
+
+function createFormula(tex, opts={}){
+  const wrap = document.createElement('div');
+  wrap.className='formula-block';
+  wrap.dataset.tex=tex;
+  wrap.style.fontSize=(opts.scale||1)+'em';
+  const inner = document.createElement('div'); wrap.appendChild(inner);
+  wrap.style.left=(opts.x||canvas.clientWidth/2)+'px';
+  wrap.style.top=(opts.y||canvas.clientHeight/2)+'px';
+  wrap.addEventListener('pointerdown', e=>{e.stopPropagation();selectBlock(wrap);startDrag(e,wrap);});
+  wrap.addEventListener('dblclick', e=>{
+    e.stopPropagation();
+    (currentTab==='python'?pyInput:texInput).value=wrap.dataset.tex;
+  });
+  canvas.appendChild(wrap);
+  typesetBlock(wrap);
+  return wrap;
+}
+
+function typesetBlock(block){
+  const inner=block.querySelector('div');
+  if(!inner) return;
+  inner.textContent='';
+  let tex = block.dataset.tex;
+  if(/\*\*|sqrt|log|sin|cos|exp|integrate|sum|matrix|\//.test(tex)){
+    tex=pythonToLatex(tex);
+  }
+  inner.innerHTML='\\('+tex+'\\)';
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise([inner]).catch(err=>console.error(err));
+  }
+}
+
+function selectBlock(b){if(selected)selected.classList.remove('selected');selected=b;if(b)b.classList.add('selected');}
+function startDrag(e,el){
+  el.setPointerCapture(e.pointerId);
+  const startX=e.clientX,startY=e.clientY,origLeft=parseFloat(el.style.left),origTop=parseFloat(el.style.top);
+  function move(ev){el.style.left=(origLeft+ev.clientX-startX)+'px';el.style.top=(origTop+ev.clientY-startY)+'px';}
+  function up(){el.releasePointerCapture(e.pointerId);window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);}
+  window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);
+}
+
+addBtn.addEventListener('click',()=>{
+  let val=currentTab==='python'?pyInput.value.trim():texInput.value.trim();
+  if(!val)return alert('Введіть формулу');
+  createFormula(val,{scale:parseFloat(sizeSelect.value)});
+});
+updateBtn.addEventListener('click',()=>{
+  if(!selected)return alert('Нічого не вибрано');
+  let val=currentTab==='python'?pyInput.value.trim():texInput.value.trim();
+  if(!val)return alert('Введіть формулу');
+  selected.dataset.tex=val;
+  selected.style.fontSize=sizeSelect.value+'em';
+  typesetBlock(selected);
+});
+deleteBtn.addEventListener('click',()=>{if(selected){selected.remove();selected=null;}});
+canvas.addEventListener('pointerdown',()=>selectBlock(null));
+window.addEventListener('keydown', e=>{if((e.key==='Delete'||e.key==='Backspace')&&selected){selected.remove();selected=null;}});
+
+// Шпаргалки Python
+const pyCheat = document.getElementById("py-cheatsheet");
+[
+  {code:"x**2",label:"x²"},
+  {code:"sqrt(x)",label:"√x"},
+  {code:"1/3",label:"1/3"},
+  {code:"sin(x)",label:"sin"},
+  {code:"cos(x)",label:"cos"},
+  {code:"log(x)",label:"log"},
+  {code:"e**x",label:"e^x"},
+  {code:"integrate(f(x),x)",label:"∫ f(x) dx"},
+  {code:"sum(i,i=1..n)",label:"Σ сума"},
+  {code:"matrix([[a,b],[c,d]])",label:"Матриця"}
+].forEach(it=>{let b=document.createElement("button");b.textContent=it.label;b.onclick=()=>{pyInput.value=it.code};pyCheat.appendChild(b);});
+
+// Шпаргалки LaTeX
+const texCheat = document.getElementById("tex-cheatsheet");
+[
+  {tex:"x^2+y^2=r^2",label:"x²+y²=r²"},
+  {tex:"\\sqrt{x}",label:"√x"},
+  {tex:"\\int_{0}^{\\pi} \\sin(x) dx",label:"∫ sin(x)"},
+  {tex:"\\begin{bmatrix}1&0\\\\0&1\\end{bmatrix}",label:"Матриця"},
+  {tex:"\\begin{cases}x+y=5\\\\x-y=3\\end{cases}",label:"Система"}
+].forEach(it=>{let b=document.createElement("button");b.textContent=it.label;b.onclick=()=>{texInput.value=it.tex};texCheat.appendChild(b);});
+
+})();
+</script>
+</body>
+</html>

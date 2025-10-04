@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Періодична таблиця — квантова 3D модель</title>
+<style>
+:root{
+  --bg:#05060a; --fg:#e8f8ff; --cell-bg:#072033; --cell-accent:#78d6ff; --muted:rgba(232,248,255,0.75);
+  /* Кольори груп елементів - ВИПРАВЛЕНО галогени */
+  --alkali-metal: #ff6b6b; --alkaline-earth: #ffa726; --transition: #29b6f6; 
+  --post-transition: #66bb6a; --metalloid: #ab47bc; --nonmetal1: #f48fb1; --nonmetal2: #f48f64;
+  --halogen: #ffca28; --noble-gas: #80deea; --lanthanide: #4db6ac; 
+  --actinide: #ba68c8; --unknown: #90a4ae;
+}
+html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased}
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent)}
+.title{font-weight:700}
+.controls{display:flex;gap:8px;align-items:center}
+.btn{padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:var(--fg);cursor:pointer}
+.container{padding:12px}
+.tableWrap{max-width:1400px;margin:10px auto}
+
+/* ВИПРАВЛЕНО: Розширена сітка для підписів */
+.periodic{
+  display:grid;
+  grid-template-columns: 30px repeat(18, 64px); /* Додано стовпець для номерів періодів */
+  grid-template-rows: 30px repeat(10, 64px); /* Додано рядок для номерів груп */
+  gap:6px;
+  justify-content:center;
+  position:relative;
+  margin: 0 auto;
+}
+
+/* ВИПРАВЛЕНО: Вертикальний градієнт для комірок */
+.cell{
+  width:64px;height:64px;border-radius:12px;
+  background:linear-gradient(180deg, var(--cell-color), rgba(255,255,255,0.1));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:var(--cell-accent);cursor:pointer;border:2px solid rgba(255,255,255,0.1);
+  position:relative;box-shadow:0 8px 24px rgba(0,0,0,0.4);transition:all 0.3s ease;overflow:hidden
+}
+.cell:hover{transform:translateY(-4px) scale(1.05);box-shadow:0 12px 32px rgba(0,0,0,0.6);border-color:rgba(255,255,255,0.2)}
+.cell .num{position:absolute;left:6px;top:6px;font-size:10px;color:var(--muted);font-weight:600}
+.cell .sym{font-weight:800;font-size:20px;text-shadow:0 2px 4px rgba(0,0,0,0.5)}
+.cell .name{font-size:8px;opacity:0.9;margin-top:2px;color:var(--muted);font-weight:500}
+.cell .mass{position:absolute;right:6px;bottom:6px;font-size:8px;opacity:0.7}
+
+/* ВИПРАВЛЕНО: Підписи всередині сітки */
+.period-label, .group-label, .group-label-roman {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.group-label-roman {
+  font-size: 10px;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+/* Класифікація */
+.classification {
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  margin: 10px 0;
+  grid-column: 1 / -1;
+}
+
+/* Легенда груп */
+.legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:20px auto;max-width:1000px;padding:16px;background:rgba(255,255,255,0.02);border-radius:12px}
+.legend-item{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12px;background:rgba(255,255,255,0.05)}
+.legend-color{width:16px;height:16px;border-radius:4px;border:1px solid rgba(255,255,255,0.2)}
+
+.overlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(2,6,10,0.95),rgba(2,6,10,0.98));z-index:200;display:none;align-items:center;justify-content:center;padding:18px}
+.overlay.show{display:flex}
+.cardFull{width:95vw;max-width:1400px;height:90vh;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border-radius:16px;display:grid;grid-template-columns:1fr 520px;gap:20px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,0.8);border:1px solid rgba(255,255,255,0.05)}
+@media(max-width:1100px){ .cardFull{grid-template-columns:1fr} .modelPane{height:400px} }
+.infoPane{padding:24px;overflow:auto;background:rgba(255,255,255,0.01)}
+.infoPane h1{margin:0 0 12px;font-size:32px;background:linear-gradient(135deg,var(--element-color, var(--cell-accent)),#a8e6ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.pRow{margin:10px 0;font-size:15px;color:var(--muted);padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.02)}
+.modelPane{background:linear-gradient(180deg,rgba(0,0,0,0.3),transparent);padding:16px;display:flex;flex-direction:column;gap:12px;align-items:stretch;position:relative}
+.modelHeader{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:8px 0}
+.modelCanvasWrap{flex:1;border-radius:12px;overflow:hidden;background:rgba(0,0,0,0.1);position:relative;border:1px solid rgba(255,255,255,0.05)}
+.modelControls{display:flex;gap:10px;align-items:center}
+.small{padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);cursor:pointer;background:rgba(255,255,255,0.05);transition:all 0.2s; color: #ffffff}
+.small:hover{background:rgba(255,255,255,0.1);transform:translateY(-1px)}
+
+.zoomControls{position:absolute;right:16px;bottom:16px;z-index:100;display:flex;flex-direction:column;gap:6px}
+.zoomBtn{width:40px;height:40px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.7);color: #ffffff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px}
+
+.footerNote{text-align:center;color:var(--muted);margin-top:16px;font-size:14px;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px}
+.authorNote{text-align:center;color:var(--muted);margin:8px auto;font-size:12px;max-width:600px;opacity:0.6}
+
+.light{--bg:#f8fcff;--fg:#0a1f3d;--cell-bg:#e8f7ff;--cell-accent:#0066cc;--muted:rgba(10,31,61,0.7)}
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">Періодична таблиця — квантова 3D модель</div>
+    <div class="controls">
+      <button id="themeBtn" class="btn">🌓 Тема</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="legend" id="legend"></div>
+    <div class="tableWrap">
+      <!-- ВИПРАВЛЕНО: Підписи тепер всередині сітки -->
+      <div id="periodic" class="periodic" aria-label="Періодична таблиця"></div>
+      
+      <div class="footerNote">Клікни на комірку — переглянути повну картку з 3D-моделлю атома</div>
+      <div class="authorNote" contenteditable="true">Періодична таблиця елементів з інтерактивними 3D-моделями атомів.</div>
+    </div>
+  </div>
+
+  <!-- Fullscreen card -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true">
+    <div class="cardFull" role="document">
+      <div class="infoPane" id="infoPane">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h1 id="elTitle">Carbon (C)</h1>
+          <div style="display:flex;gap:8px;">
+            <button id="fullscreenBtn" class="small">⛶ Повний екран</button>
+            <button id="backBtn" class="small">← Назад</button>
+          </div>
+        </div>
+        <div id="properties">
+          <!-- properties filled dynamically -->
+        </div>
+        <div style="margin-top:20px;">
+          <h3 style="margin:0 0 12px;color:var(--cell-accent)">Опис / Нотатки</h3>
+          <div id="notes" contenteditable="true" style="min-height:100px;padding:14px;border-radius:10px;background:rgba(255,255,255,0.03);color:var(--fg);border:1px solid rgba(255,255,255,0.05)"></div>
+        </div>
+      </div>
+
+      <div class="modelPane">
+        <div class="modelHeader">
+          <div style="display:flex;gap:12px;">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+              <input id="modelMode" type="radio" name="model" value="quantum" checked> 
+              <span>🌫️ Квантова</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+              <input id="modelMode2" type="radio" name="model" value="classical"> 
+              <span>🪐 Класична</span>
+            </label>
+          </div>
+          <div class="modelControls">
+            <button id="highQuality" class="small">🎨 HD якість</button>
+            <button id="resetCamera" class="small">🔄 Скинути камеру</button>
+          </div>
+        </div>
+        <div class="modelCanvasWrap" id="modelCanvasWrap">
+          <div class="zoomControls">
+            <button id="zoomIn" class="zoomBtn">+</button>
+            <button id="zoomOut" class="zoomBtn">-</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =========== Data source (Bowserinator) =========== */
+const DATA_URL = 'https://raw.githubusercontent.com/kseryi/ugread-site/refs/heads/main/products/periodic/PeriodicTableJSON_fork.json';
+const periodicEl = document.getElementById('periodic');
+const legendEl = document.getElementById('legend');
+const overlay = document.getElementById('overlay');
+const infoPane = document.getElementById('infoPane');
+const properties = document.getElementById('properties');
+const elTitle = document.getElementById('elTitle');
+const notes = document.getElementById('notes');
+const backBtn = document.getElementById('backBtn');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const modelCanvasWrap = document.getElementById('modelCanvasWrap');
+const modelMode = document.getElementById('modelMode');
+const modelMode2 = document.getElementById('modelMode2');
+const highQuality = document.getElementById('highQuality');
+const resetCamera = document.getElementById('resetCamera');
+const zoomIn = document.getElementById('zoomIn');
+const zoomOut = document.getElementById('zoomOut');
+
+let elements = [];
+let currentElement = null;
+
+/* Групи елементів та їх кольори - ВИПРАВЛЕНО: правильні кольори для галогенів */
+const elementGroups = {
+  'alkali metal': { name: 'Лужні метали', color: 'var(--alkali-metal)' },
+  'alkaline earth metal': { name: 'Лужноземельні метали', color: 'var(--alkaline-earth)' },
+  'transition metal': { name: 'Перехідні метали', color: 'var(--transition)' },
+  'post-transition metal': { name: 'Постперехідні метали', color: 'var(--post-transition)' },
+  'metalloid': { name: 'Металоїди', color: 'var(--metalloid)' },
+  'polyatomic nonmetal': { name: 'Неметали PA', color: 'var(--nonmetal1)' },
+  'diatomic nonmetal': { name: 'Неметали DA', color: 'var(--nonmetal2)' },
+  'halogen': { name: 'Галогени', color: 'var(--halogen)' },
+  'noble gas': { name: 'Благородні гази', color: 'var(--noble-gas)' },
+  'lanthanide': { name: 'Лантаноїди', color: 'var(--lanthanide)' },
+  'actinide': { name: 'Актиноїди', color: 'var(--actinide)' },
+  'unknown': { name: 'Невідомо', color: 'var(--unknown)' }
+};
+
+/* Старі позначення груп римськими цифрами */
+const romanGroupLabels = {
+  1: 'I A', 2: 'II A', 3: 'III B', 4: 'IV B', 5: 'V B', 6: 'VI B', 7: 'VII B', 8: 'VIII',
+  9: 'VIII', 10: 'VIII', 11: 'I B', 12: 'II B', 13: 'III A', 14: 'IV A', 15: 'V A', 
+  16: 'VI A', 17: 'VII A', 18: 'VIII A'
+};
+
+/* Побудова легенди */
+function buildLegend() {
+  legendEl.innerHTML = '';
+  Object.entries(elementGroups).forEach(([key, group]) => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `
+      <div class="legend-color" style="background:${group.color}"></div>
+      <span>${group.name}</span>
+    `;
+    legendEl.appendChild(item);
+  });
+}
+
+/* ВИПРАВЛЕНО: Побудова таблиці з підписами ВСЕРЕДИНІ сітки та римськими цифрами */
+function buildTable(list){
+  periodicEl.innerHTML = '';
+  
+  // Додаємо підписи груп (стовпців) - перший рядок (сучасна нумерація)
+  for(let i=1;i<=18;i++){
+    const groupLabel = document.createElement('div');
+    groupLabel.className = 'group-label';
+    groupLabel.textContent = i;
+    groupLabel.style.gridColumnStart = i + 1; // +1 бо перший стовпець для періодів
+    groupLabel.style.gridRowStart = 1;
+    periodicEl.appendChild(groupLabel);
+    
+    // Додаємо старі позначення римськими цифрами
+    const romanLabel = document.createElement('div');
+    romanLabel.className = 'group-label-roman';
+    romanLabel.textContent = romanGroupLabels[i] || '';
+    romanLabel.style.gridColumnStart = i + 1;
+    romanLabel.style.gridRowStart = 1;
+    romanLabel.style.marginTop = '30px'; // Зміщуємо нижче сучасної нумерації
+    periodicEl.appendChild(romanLabel);
+  }
+  
+  // Додаємо підписи періодів (рядків)
+  for(let i=1;i<=7;i++){
+    const periodLabel = document.createElement('div');
+    periodLabel.className = 'period-label';
+    periodLabel.textContent = i;
+    periodLabel.style.gridColumnStart = 1;
+    periodLabel.style.gridRowStart = i + 1; // +1 бо перший рядок для груп
+    periodicEl.appendChild(periodLabel);
+  }
+
+  // Додаємо порожні комірки для сітки
+  for(let row=2;row<=11;row++){
+    for(let col=2;col<=19;col++){
+      const emptyCell = document.createElement('div');
+      emptyCell.style.width='64px';
+      emptyCell.style.height='64px';
+      emptyCell.style.visibility='hidden';
+      emptyCell.style.gridColumnStart = col;
+      emptyCell.style.gridRowStart = row;
+      periodicEl.appendChild(emptyCell);
+    }
+  }
+  
+  // Додаємо елементи
+  for(const el of list){
+    const b = document.createElement('button');
+    b.className = 'cell';
+    
+    const groupInfo = elementGroups[el.category] || elementGroups['unknown'];
+    b.style.setProperty('--cell-color', groupInfo.color);
+    
+    b.innerHTML = `
+      <div class="num">${el.number}</div>
+      <div class="sym">${el.symbol}</div>
+      <div class="name">${el.name}</div>
+      <div class="mass">${el.atomic_mass ? Math.round(el.atomic_mass * 100)/100 : ''}</div>
+    `;
+    
+    b.onclick = ()=> openFull(el);
+    
+    if(el.xpos && el.ypos){
+      // +1 бо додали стовпець для періодів і рядок для груп
+      b.style.gridColumnStart = el.xpos + 1;
+      b.style.gridRowStart = el.ypos + 1;
+    }
+    
+    periodicEl.appendChild(b);
+  }
+}
+
+/* ========== Fetch data ========== */
+fetch(DATA_URL).then(r=>r.json()).then(js=>{
+  elements = js.elements || [];
+  buildLegend();
+  buildTable(elements);
+}).catch(err=>{
+  console.warn('Не вдалось підвантажити повний набір, використовую fallback', err);
+  elements = [
+    {number:1,symbol:'H',name:'Hydrogen',category:'diatomic nonmetal',atomic_mass:1.008,shells:[1],electron_configuration:'1s1', xpos:1, ypos:1},
+    {number:2,symbol:'He',name:'Helium',category:'noble gas',atomic_mass:4.002,shells:[2],electron_configuration:'1s2', xpos:18, ypos:1},
+    {number:3,symbol:'Li',name:'Lithium',category:'alkali metal',atomic_mass:6.94,shells:[2,1],electron_configuration:'[He] 2s1', xpos:1, ypos:2},
+    {number:4,symbol:'Be',name:'Beryllium',category:'alkaline earth metal',atomic_mass:9.012,shells:[2,2],electron_configuration:'[He] 2s2', xpos:2, ypos:2},
+    {number:5,symbol:'B',name:'Boron',category:'metalloid',atomic_mass:10.81,shells:[2,3],electron_configuration:'[He] 2s2 2p1', xpos:13, ypos:2},
+    {number:6,symbol:'C',name:'Carbon',category:'polyatomic nonmetal',atomic_mass:12.011,shells:[2,4],electron_configuration:'[He] 2s2 2p2', xpos:14, ypos:2},
+    {number:7,symbol:'N',name:'Nitrogen',category:'diatomic nonmetal',atomic_mass:14.007,shells:[2,5],electron_configuration:'[He] 2s2 2p3', xpos:15, ypos:2},
+    {number:8,symbol:'O',name:'Oxygen',category:'diatomic nonmetal',atomic_mass:16.00,shells:[2,6],electron_configuration:'[He] 2s2 2p4', xpos:16, ypos:2},
+    {number:9,symbol:'F',name:'Fluorine',category:'halogen',atomic_mass:19.00,shells:[2,7],electron_configuration:'[He] 2s2 2p5', xpos:17, ypos:2},
+    {number:10,symbol:'Ne',name:'Neon',category:'noble gas',atomic_mass:20.18,shells:[2,8],electron_configuration:'[He] 2s2 2p6', xpos:18, ypos:2},
+    {number:17,symbol:'Cl',name:'Chlorine',category:'halogen',atomic_mass:35.45,shells:[2,8,7],electron_configuration:'[Ne] 3s2 3p5', xpos:17, ypos:3}
+  ];
+  buildLegend();
+  buildTable(elements);
+});
+
+/* ========== Fullscreen card behavior ========== */
+function openFull(el){
+  currentElement = el;
+  document.querySelector('.tableWrap').style.opacity = '0.05';
+  overlay.classList.add('show');
+  elTitle.textContent = `${el.name} (${el.symbol})`;
+  
+  const groupInfo = elementGroups[el.category] || elementGroups['unknown'];
+  infoPane.style.setProperty('--element-color', groupInfo.color);
+  
+  properties.innerHTML = '';
+  addProp('Атомний номер', el.number);
+  addProp('Атомна маса', el.atomic_mass ? Math.round(el.atomic_mass * 1000)/1000 : '—');
+  addProp('Група', `${groupInfo.name}`);
+  addProp('Період', el.period || '—');
+  addProp('Електронна конфігурація', el.electron_configuration || '—');
+  
+  const shells = getElectronShells(el);
+  addProp('Електронні оболонки', shells ? shells.join(' • ') : '—');
+  
+  addProp('Електронегативність', el.electronegativity_pauling ? el.electronegativity_pauling + ' (Паулінг)' : '—');
+  addProp('Точка плавлення', el.melt ? el.melt + ' K' : '—');
+  addProp('Точка кипіння', el.boil ? el.boil + ' K' : '—');
+  addProp('Густина', el.density ? el.density + ' г/см³' : '—');
+  addProp('Стан', el.phase ? getPhaseName(el.phase) : '—');
+  
+  if(el.summary) addProp('Опис', el.summary);
+  
+  notes.textContent = localStorage.getItem(`pt_notes_${el.number}`) || '';
+  notes.onblur = ()=> localStorage.setItem(`pt_notes_${el.number}`, notes.textContent);
+  
+  startModelForElement(el);
+}
+
+function getPhaseName(phase) {
+  const phases = {
+    'Solid': 'Твердий',
+    'Liquid': 'Рідкий', 
+    'Gas': 'Газ',
+    'unknown': 'Невідомо'
+  };
+  return phases[phase] || phase;
+}
+
+function addProp(title, val){
+  const d = document.createElement('div'); 
+  d.className='pRow';
+  d.innerHTML = `<strong>${title}:</strong> ${val}`;
+  properties.appendChild(d);
+}
+
+backBtn.addEventListener('click', ()=> {
+  overlay.classList.remove('show');
+  document.querySelector('.tableWrap').style.opacity = '1';
+  stopModel();
+  currentElement = null;
+});
+
+/* Тема */
+document.getElementById('themeBtn').addEventListener('click', ()=>{
+  document.body.classList.toggle('light');
+});
+
+/* ========== 3D model ========== */
+let THREE_LOADED = false;
+function loadThree(cb){
+  if(window.THREE){ THREE_LOADED=true; return cb(); }
+  const s = document.createElement('script'); 
+  s.src='https://unpkg.com/three@0.154.0/build/three.min.js';
+  s.onload = ()=>{ THREE_LOADED=true; cb(); };
+  s.onerror = ()=>{ console.error('Не вдалося завантажити three.js'); cb(); };
+  document.head.appendChild(s);
+}
+
+let renderer, scene, camera, animId;
+let modelState = { 
+  mode:'quantum', 
+  quality:false, 
+  electronObjs:[], 
+  cloudMeshes:[], 
+  nucleusGroup: null,
+  cameraDistance: 80,
+  isFullscreen: false
+};
+
+/* Управління моделлю */
+highQuality.addEventListener('click', ()=>{ 
+  modelState.quality = !modelState.quality; 
+  highQuality.style.opacity = modelState.quality? '0.8':'1'; 
+  if(currentElement) startModelForElement(currentElement); 
+});
+
+modelMode.addEventListener('change', ()=> { 
+  modelState.mode = 'quantum'; 
+  if(currentElement) startModelForElement(currentElement); 
+});
+modelMode2.addEventListener('change', ()=> { 
+  modelState.mode = 'classical'; 
+  if(currentElement) startModelForElement(currentElement); 
+});
+
+/* Zoom controls */
+zoomIn.addEventListener('click', ()=>{
+  modelState.cameraDistance = Math.max(20, modelState.cameraDistance - 10);
+  if(camera) camera.position.set(0, 0, modelState.cameraDistance);
+});
+
+zoomOut.addEventListener('click', ()=>{
+  modelState.cameraDistance = Math.min(200, modelState.cameraDistance + 10);
+  if(camera) camera.position.set(0, 0, modelState.cameraDistance);
+});
+
+/* Reset camera */
+resetCamera.addEventListener('click', ()=>{
+  modelState.cameraDistance = 80;
+  if(camera) {
+    camera.position.set(0, 0, modelState.cameraDistance);
+    camera.lookAt(0, 0, 0);
+  }
+});
+
+/* Fullscreen */
+fullscreenBtn.addEventListener('click', ()=>{
+  const cardFull = document.querySelector('.cardFull');
+  if (!document.fullscreenElement) {
+    cardFull.requestFullscreen().catch(err => {
+      console.log('Помилка повноекранного режиму:', err);
+    });
+    fullscreenBtn.textContent = '⛶ Вийти з повного екрану';
+  } else {
+    document.exitFullscreen();
+    fullscreenBtn.textContent = '⛶ Повний екран';
+  }
+});
+
+function startModelForElement(el){
+  stopModel();
+  loadThree(()=>{ buildModel(el); });
+}
+
+function stopModel(){
+  if(animId) { cancelAnimationFrame(animId); animId = null; }
+  if(renderer){ 
+    try{ 
+      renderer.dispose(); 
+      renderer.forceContextLoss(); 
+      if(renderer.domElement && renderer.domElement.remove) renderer.domElement.remove(); 
+    }catch(e){} 
+    renderer = null; 
+  }
+  modelCanvasWrap.innerHTML = '<div class="zoomControls"><button id="zoomIn" class="zoomBtn">+</button><button id="zoomOut" class="zoomBtn">-</button></div>';
+  modelState.electronObjs = []; 
+  modelState.cloudMeshes = []; 
+  modelState.nucleusGroup = null;
+  
+  // Reattach zoom events
+  document.getElementById('zoomIn').addEventListener('click', ()=>{
+    modelState.cameraDistance = Math.max(20, modelState.cameraDistance - 10);
+    if(camera) camera.position.set(0, 0, modelState.cameraDistance);
+  });
+  document.getElementById('zoomOut').addEventListener('click', ()=>{
+    modelState.cameraDistance = Math.min(200, modelState.cameraDistance + 10);
+    if(camera) camera.position.set(0, 0, modelState.cameraDistance);
+  });
+}
+
+/* Функції для електронних оболонок */
+function parseShellsFromConfig(conf) {
+  if (!conf || typeof conf !== 'string') return null;
+  try {
+    let cleanConfig = conf.replace(/\[.*?\]\s*/g, '');
+    const regex = /(\d)([spdf])(\d+)/g;
+    const shellsMap = {};
+    let match;
+    
+    while ((match = regex.exec(cleanConfig)) !== null) {
+      const shellNumber = parseInt(match[1]);
+      const electrons = parseInt(match[3]);
+      shellsMap[shellNumber] = (shellsMap[shellNumber] || 0) + electrons;
+    }
+    
+    const shellNumbers = Object.keys(shellsMap).map(Number).sort((a, b) => a - b);
+    const shells = shellNumbers.map(num => shellsMap[num]);
+    return shells.length > 0 ? shells : null;
+  } catch (e) {
+    console.warn('Помилка парсингу електронної конфігурації:', e);
+    return null;
+  }
+}
+
+function calculateShellsFromAtomicNumber(atomicNumber) {
+  const shells = [];
+  let remainingElectrons = atomicNumber;
+  const maxShells = [2, 8, 8, 18, 18, 32, 32];
+  
+  for (let i = 0; i < maxShells.length && remainingElectrons > 0; i++) {
+    const electronsInShell = Math.min(maxShells[i], remainingElectrons);
+    shells.push(electronsInShell);
+    remainingElectrons -= electronsInShell;
+  }
+  return shells;
+}
+
+function getElectronShells(element) {
+  if (element.shells && element.shells.length > 0) return element.shells;
+  if (element.electron_configuration) {
+    const shells = parseShellsFromConfig(element.electron_configuration);
+    if (shells) return shells;
+  }
+  return calculateShellsFromAtomicNumber(element.number);
+}
+
+function updateClassicalElectronPosition(electron) {
+  const data = electron.userData;
+  const radius = data.radius;
+  const angle = data.angle;
+  
+  const x = radius * Math.cos(angle);
+  const y = 0;
+  const z = radius * Math.sin(angle);
+  
+  const position = new THREE.Vector3(x, y, z);
+  position.applyAxisAngle(new THREE.Vector3(1, 0, 0), data.tiltX);
+  position.applyAxisAngle(new THREE.Vector3(0, 0, 1), data.tiltZ);
+  position.applyAxisAngle(new THREE.Vector3(0, 1, 0), data.rotationY);
+  
+  electron.position.copy(position);
+}
+
+function buildModel(el){
+  try{
+    const w = modelCanvasWrap.clientWidth || 520;
+    const h = modelCanvasWrap.clientHeight || 520;
+    renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, modelState.quality ? 2 : 1));
+    renderer.setSize(w,h);
+    modelCanvasWrap.appendChild(renderer.domElement);
+    
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 2000);
+    camera.position.set(0, 0, modelState.cameraDistance);
+    
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const dl = new THREE.DirectionalLight(0xffffff, 0.6); 
+    dl.position.set(30,30,40); 
+    scene.add(dl);
+    
+    const groupInfo = elementGroups[el.category] || elementGroups['unknown'];
+    const elementColor = getComputedStyle(document.documentElement).getPropertyValue(groupInfo.color.replace('var(', '').replace(')', '')) || '#78d6ff';
+
+    const protonCount = el.number || 1;
+    const neutrons = Math.max(0, Math.round((el.atomic_mass || el.number*1.5) - protonCount));
+    const nucleus = new THREE.Group();
+    const pMat = new THREE.MeshPhongMaterial({color:0xff6666, shininess:60});
+    const nMat = new THREE.MeshPhongMaterial({color:0x999999, shininess:40});
+    const unit = modelState.quality? 1.2 : 1.8;
+    const nucGeo = new THREE.SphereGeometry(unit, modelState.quality ? 20 : 12, modelState.quality ? 16 : 8);
+    
+    for(let i=0;i<protonCount;i++){
+      const m = new THREE.Mesh(nucGeo, pMat);
+      const phi = Math.acos(2*Math.random()-1), theta = 2*Math.PI*Math.random(), r = 0.8 + Math.random()*1.2;
+      m.position.set(r*Math.sin(phi)*Math.cos(theta), r*Math.sin(phi)*Math.sin(theta), r*Math.cos(phi));
+      nucleus.add(m);
+    }
+    for(let i=0;i<neutrons;i++){
+      const m = new THREE.Mesh(nucGeo, nMat);
+      const phi = Math.acos(2*Math.random()-1), theta = 2*Math.PI*Math.random(), r = 0.8 + Math.random()*1.5;
+      m.position.set(r*Math.sin(phi)*Math.cos(theta), r*Math.sin(phi)*Math.sin(theta), r*Math.cos(phi));
+      nucleus.add(m);
+    }
+    scene.add(nucleus);
+    modelState.nucleusGroup = nucleus;
+
+    const shells = getElectronShells(el);
+    console.log(`Елемент ${el.symbol}: оболонки`, shells);
+
+    if(modelState.mode === 'quantum'){
+      const cloudColors = [0x66d1ff, 0x8be0ff, 0xb0f0ff, 0xdffbff];
+      
+      for(let s=0;s<shells.length;s++){
+        const electronCount = shells[s];
+        const radius = 12 + s * 10;
+        
+        const cloudGeo = new THREE.SphereGeometry(radius, modelState.quality ? 48 : 32, modelState.quality ? 36 : 24);
+        const cloudMat = new THREE.MeshPhongMaterial({
+          color: cloudColors[s % cloudColors.length], 
+          transparent: true, 
+          opacity: 0.15, 
+          side: THREE.DoubleSide
+        });
+        const cloud = new THREE.Mesh(cloudGeo, cloudMat);
+        scene.add(cloud);
+        modelState.cloudMeshes.push({
+          mesh: cloud, 
+          baseRadius: radius, 
+          phase: Math.random()*Math.PI*2
+        });
+
+        const particleCount = electronCount;
+        
+        for(let i=0;i<particleCount;i++){
+          const pGeo = new THREE.SphereGeometry(modelState.quality?0.8:0.6, 10, 8);
+          const pMat = new THREE.MeshPhongMaterial({
+            color: cloudColors[s % cloudColors.length], 
+            emissive: 0x002233
+          });
+          const pMesh = new THREE.Mesh(pGeo, pMat);
+          
+          const rr = radius* (0.3 + Math.random()*0.7);
+          const theta = Math.random()*Math.PI*2;
+          const phi = Math.acos(2*Math.random()-1);
+          pMesh.position.set(
+            rr*Math.sin(phi)*Math.cos(theta), 
+            rr*Math.sin(phi)*Math.sin(theta), 
+            rr*Math.cos(phi)
+          );
+          
+          pMesh.userData = {
+            vel: new THREE.Vector3(
+              (Math.random()-0.5)*0.08, 
+              (Math.random()-0.5)*0.08, 
+              (Math.random()-0.5)*0.08
+            ), 
+            shellRadius: radius, 
+            minR: radius*0.25
+          };
+          scene.add(pMesh);
+          modelState.electronObjs.push(pMesh);
+        }
+      }
+    } else {
+      const elMat = new THREE.MeshPhongMaterial({
+        color: elementColor, 
+        shininess: 80, 
+        emissive: 0x002233
+      });
+      const elGeo = new THREE.SphereGeometry(modelState.quality?0.9:0.7, 14, 12);
+      
+      for(let s=0;s<shells.length;s++){
+        const electronCount = shells[s];
+        const radius = 12 + s * 10;
+        
+        const tiltX = (Math.PI / 6) + (s * Math.PI / 8);
+        const tiltZ = (Math.PI / 4) + (s * Math.PI / 6);
+        const rotationY = (Math.PI / 12) * s;
+        
+        for(let i=0;i<electronCount;i++){
+          const m = new THREE.Mesh(elGeo, elMat);
+          const angle = (i/electronCount)*Math.PI*2;
+          
+          m.userData = {
+            radius: radius,
+            angle: angle,
+            speed: 0.015 + s*0.004,
+            tiltX: tiltX,
+            tiltZ: tiltZ,
+            rotationY: rotationY
+          };
+          
+          updateClassicalElectronPosition(m);
+          scene.add(m);
+          modelState.electronObjs.push(m);
+        }
+        
+        const ringGeo = new THREE.RingGeometry(radius-0.2, radius+0.2, 72);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: 0x334455, 
+          side: THREE.DoubleSide, 
+          transparent: true, 
+          opacity: 0.12
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = tiltX;
+        ring.rotation.z = tiltZ;
+        ring.rotation.y = rotationY;
+        scene.add(ring);
+      }
+    }
+
+    let last = performance.now();
+    function animate(now){
+      const dt = (now-last)/16.666; 
+      last = now;
+      
+      nucleus.rotation.y += 0.001 * dt;
+      nucleus.rotation.x += 0.0005 * dt;
+      
+      for(const c of modelState.cloudMeshes){
+        c.phase += 0.006 * dt;
+        const s = 1 + Math.sin(c.phase)*0.03;
+        c.mesh.scale.set(s,s,s);
+        c.mesh.rotation.y += 0.001 * dt;
+      }
+      
+      for(const eobj of modelState.electronObjs){
+        if(modelState.mode === 'quantum'){
+          eobj.position.add(eobj.userData.vel.clone().multiplyScalar(dt));
+          const r = eobj.position.length();
+          if(r > eobj.userData.shellRadius){
+            eobj.userData.vel.reflect(eobj.position.clone().normalize());
+            eobj.position.multiplyScalar(0.95);
+          }
+          if(r < eobj.userData.minR){
+            eobj.position.multiplyScalar(1.08);
+          }
+          eobj.rotation.x += 0.015 * dt; 
+          eobj.rotation.y += 0.025 * dt;
+        } else {
+          eobj.userData.angle += eobj.userData.speed * dt;
+          updateClassicalElectronPosition(eobj);
+        }
+      }
+
+      renderer.render(scene, camera);
+      animId = requestAnimationFrame(animate);
+    }
+    last = performance.now();
+    animId = requestAnimationFrame(animate);
+
+    const ro = new ResizeObserver(()=>{ 
+      const ww = modelCanvasWrap.clientWidth, hh = modelCanvasWrap.clientHeight || 480; 
+      renderer.setSize(ww, hh); 
+      camera.aspect = ww / hh; 
+      camera.updateProjectionMatrix(); 
+    });
+    ro.observe(modelCanvasWrap);
+
+  }catch(e){
+    console.error('Помилка рендеринга 3D', e);
+  }
+}
+
+window.addEventListener('visibilitychange', ()=>{ 
+  if(document.hidden) { 
+    if(animId) cancelAnimationFrame(animId); 
+  } else { 
+    if(currentElement) startModelForElement(currentElement); 
+  } 
+});
+
+</script>
+</body>
+</html>

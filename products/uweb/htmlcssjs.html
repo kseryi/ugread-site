@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Веб-редактор — HTML / CSS / JS</title>
+
+  <!-- CodeMirror -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material.min.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0b0f14;
+      color: #dbe6ea;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    .editor-panel {
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      background: #0f1418;
+    }
+
+    .tabs {
+      display: flex;
+      background: #0a0e12;
+      border-bottom: 1px solid #1f2933;
+    }
+
+    .tab {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-right: 1px solid #1f2933;
+      color: #9aa2aa;
+      transition: all 0.3s;
+    }
+
+    .tab.active {
+      background: #071017;
+      color: #ffffff;
+      border-bottom: 2px solid #06f;
+    }
+
+    .tab:hover {
+      background: #0d1218;
+    }
+
+    .editor-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .CodeMirror {
+      height: 100% !important;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .preview-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: white;
+    }
+
+    .preview-header {
+      padding: 12px 20px;
+      background: #0a0e12;
+      color: #9aa2aa;
+      border-bottom: 1px solid #1f2933;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #preview {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+
+    .toolbar {
+      padding: 10px;
+      background: #0a0e12;
+      border-top: 1px solid #1f2933;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      background: #1a1f26;
+      border: 1px solid #2d3746;
+      color: #dbe6ea;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+    }
+
+    .btn:hover {
+      background: #2d3746;
+    }
+
+    .btn.primary {
+      background: #06f;
+      border-color: #06f;
+    }
+
+    .btn.primary:hover {
+      background: #0055cc;
+    }
+
+    .btn.new-project {
+      background: #00d26a;
+      border-color: #00d26a;
+      color: white;
+    }
+
+    .btn.new-project:hover {
+      background: #00b359;
+    }
+
+    .divider {
+      width: 8px;
+      background: #1f2933;
+      cursor: col-resize;
+      transition: background 0.3s;
+    }
+
+    .divider:hover {
+      background: #06f;
+    }
+
+    .auto-update {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      color: #9aa2aa;
+      font-size: 14px;
+    }
+
+    /* Images tab styles */
+    #images {
+      display: none;
+      padding: 20px;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    .upload-area {
+      border: 2px dashed #2d3746;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .upload-area:hover {
+      border-color: #06f;
+      background: rgba(0, 102, 255, 0.05);
+    }
+
+    .upload-area p {
+      color: #9aa2aa;
+      margin-bottom: 15px;
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .image-item {
+      text-align: center;
+      position: relative;
+    }
+
+    .image-item img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .image-item img:hover {
+      border-color: #06f;
+      transform: scale(1.05);
+    }
+
+    .image-name {
+      font-size: 12px;
+      color: #9aa2aa;
+      margin-top: 5px;
+      word-break: break-all;
+    }
+
+    .url-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .url-input input {
+      flex: 1;
+      padding: 10px;
+      background: #1a1f26;
+      border: 1px solid #2d3746;
+      border-radius: 4px;
+      color: #dbe6ea;
+    }
+
+    .image-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #9aa2aa;
+      padding: 40px;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ff4757;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      display: none;
+    }
+
+    .image-item:hover .delete-btn {
+      display: block;
+    }
+
+    /* Notification */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #06f;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 1000;
+      transform: translateX(150%);
+      transition: transform 0.3s ease;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .confirmation-dialog {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .confirmation-content {
+      background: #1a1f26;
+      padding: 30px;
+      border-radius: 8px;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .confirmation-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .confirmation-buttons .btn {
+      min-width: 80px;
+    }
+
+    /* Hidden template textareas */
+    .template-container {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="editor-panel">
+      <div class="tabs">
+        <div class="tab active" data-tab="html">HTML</div>
+        <div class="tab" data-tab="css">CSS</div>
+        <div class="tab" data-tab="js">JavaScript</div>
+        <div class="tab" data-tab="images">Зображення</div>
+      </div>
+
+      <div class="editor-container">
+        <!-- Основні textarea для редагування -->
+        <textarea id="html-code"><!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя веб-сторінка</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Ласкаво просимо на тестову сторінку!</h1>
+
+        <p class="highlight special-text">
+            Тут ви можете взаємодіяти з кнопками, завантажувати зображення та бачити приємні ефекти.
+        </p>
+
+        <div class="button-group">
+            <button onclick="showMessage()">Натисни мене</button>
+            <button onclick="animateElement(this)">Анімація кнопки</button>
+        </div>
+
+        <div id="message"></div>
+
+        <div class="image-preview">
+            <img src="cat.jpg" width=400 alt="Приклад" class="uploaded-image">
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html></textarea>
+
+        <textarea id="css-code" style="display: none;">/* Основні стилі сторінки */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    background: rgba(255,255,255,0.1);
+    padding: 40px;
+    border-radius: 15px;
+    backdrop-filter: blur(15px);
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 25px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.highlight {
+    background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+    padding: 12px;
+    border-radius: 10px;
+    color: #333;
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+.special-text {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+button {
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    margin: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.image-preview {
+    margin-top: 25px;
+}
+
+.uploaded-image {
+    border: 3px solid #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    transition: transform 0.3s ease;
+}
+
+.uploaded-image:hover {
+    transform: scale(1.05);
+}
+
+#message div {
+    background: rgba(255,255,255,0.2);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+    .container {
+        padding: 20px;
+    }
+    h1 {
+        font-size: 1.5em;
+    }
+}</textarea>
+
+        <textarea id="js-code" style="display: none;">console.log('JavaScript редактор завантажений!');
+
+// Функція для анімації кнопки
+function animateElement(element) {
+    element.style.transform = 'scale(1.1)';
+    setTimeout(() => {
+        element.style.transform = 'scale(1)';
+    }, 300);
+}
+
+// Показати випадкове повідомлення
+function showMessage() {
+    const messages = [
+        "Чудова робота! 🚀",
+        "JavaScript працює! 💫",
+        "Ви зробили це! 🎯",
+        "Код виконується! ⚡"
+    ];
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    const messageElement = document.getElementById('message');
+    if (messageElement) {
+        messageElement.innerHTML = `
+            <div>${randomMessage}</div>
+        `;
+    }
+}
+
+// Зміна кольору заголовка при кліку
+document.addEventListener('DOMContentLoaded', function() {
+    const h1 = document.querySelector('h1');
+    if (h1) {
+        h1.addEventListener('click', function() {
+            this.style.color = this.style.color === 'yellow' ? 'white' : 'yellow';
+        });
+    }
+});
+
+// Функція для відображення завантажених зображень
+function displayUploadedImages() {
+    const container = document.querySelector('.image-preview');
+    if (container) {
+        const images = container.querySelectorAll('img');
+        images.forEach(img => img.remove());
+        console.log('Функція відображення зображень готова!');
+    }
+}
+
+// Глобальні слухачі для кнопок
+document.addEventListener('click', function(e) {
+    if (e.target.tagName === 'BUTTON') {
+        animateElement(e.target);
+    }
+});</textarea>
+
+        <!-- Приховані textarea з базовими шаблонами -->
+        <div class="template-container">
+          <textarea id="html-template"><!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    
+    <script src="script.js"></script>
+</body>
+</html></textarea>
+
+          <textarea id="css-template">/* Додайте ваші CSS стилі тут */
+</textarea>
+
+          <textarea id="js-template">// Додайте ваш JavaScript код тут
+</textarea>
+        </div>
+
+        <div id="images" style="display: none;">
+          <div class="upload-area" id="dropZone">
+            <p>Перетягніть зображення сюди або</p>
+            <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+            <button class="btn" onclick="document.getElementById('fileInput').click()">Обрати файли</button>
+          </div>
+
+          <div class="url-input">
+            <input type="url" id="imageUrl" placeholder="Вставте URL зображення...">
+            <button class="btn" id="loadUrlBtn">Завантажити</button>
+          </div>
+
+          <div class="image-actions">
+            <button class="btn" id="clearImages">Очистити всі</button>
+            <button class="btn" id="copyPaths">Копіювати шляхи</button>
+          </div>
+
+          <div class="image-grid" id="imageGrid">
+            <div class="empty-state" id="emptyState">
+              <p>Ще немає зображень</p>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn new-project" id="newProjectBtn">🆕 Новий проект</button>
+        <button class="btn primary" id="runBtn">Запустити ▶️</button>
+        <button class="btn" id="downloadBtn">Експорт ZIP</button>
+        <button class="btn" id="importBtn">Імпорт ZIP</button>
+        <input type="file" id="zipInput" accept=".zip" style="display: none;">
+        
+        <div class="auto-update">
+          <input type="checkbox" id="autoUpdate" checked>
+          <label for="autoUpdate">Авто-оновлення</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider" id="divider"></div>
+
+    <div class="preview-panel">
+      <div class="preview-header">
+        <span>Попередній перегляд</span>
+        <span id="status">Готовий</span>
+      </div>
+      <iframe id="preview"></iframe>
+    </div>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <!-- Діалог підтвердження -->
+  <div class="confirmation-dialog" id="confirmationDialog" style="display: none;">
+    <div class="confirmation-content">
+      <h3 style="margin-bottom: 15px; color: #dbe6ea;">Створити новий проект?</h3>
+      <p style="color: #9aa2aa; margin-bottom: 20px;">Ця дія очистить всі вкладки та видалить завантажені зображення. Ви впевнені?</p>
+      <div class="confirmation-buttons">
+        <button class="btn" id="confirmCancelBtn">Скасувати</button>
+        <button class="btn primary" id="confirmNewProjectBtn">Створити</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CodeMirror -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+
+  <!-- JSZip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script>
+    // Ініціалізація редакторів
+    const htmlEditor = CodeMirror.fromTextArea(document.getElementById('html-code'), {
+      mode: 'htmlmixed',
+      theme: 'material',
+      lineNumbers: true,
+      autoCloseTags: true,
+      lineWrapping: true
+    });
+
+    const cssEditor = CodeMirror.fromTextArea(document.getElementById('css-code'), {
+      mode: 'css',
+      theme: 'material',
+      lineNumbers: true,
+      lineWrapping: true
+    });
+
+    const jsEditor = CodeMirror.fromTextArea(document.getElementById('js-code'), {
+      mode: 'javascript',
+      theme: 'material',
+      lineNumbers: true,
+      lineWrapping: true
+    });
+
+    // Змінні стану
+    const editors = { html: htmlEditor, css: cssEditor, js: jsEditor };
+    let currentTab = 'html';
+    const imageFiles = [];
+
+    // Елементи UI
+    const tabs = document.querySelectorAll('.tab');
+    const preview = document.getElementById('preview');
+    const newProjectBtn = document.getElementById('newProjectBtn');
+    const runBtn = document.getElementById('runBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const importBtn = document.getElementById('importBtn');
+    const zipInput = document.getElementById('zipInput');
+    const autoUpdate = document.getElementById('autoUpdate');
+    const status = document.getElementById('status');
+    const notification = document.getElementById('notification');
+    const confirmationDialog = document.getElementById('confirmationDialog');
+    const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+    const confirmNewProjectBtn = document.getElementById('confirmNewProjectBtn');
+
+    // Images elements
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const imageUrl = document.getElementById('imageUrl');
+    const loadUrlBtn = document.getElementById('loadUrlBtn');
+    const clearImages = document.getElementById('clearImages');
+    const copyPaths = document.getElementById('copyPaths');
+    const imageGrid = document.getElementById('imageGrid');
+    const emptyState = document.getElementById('emptyState');
+
+    // Базові шаблони з textarea
+    const htmlTemplate = document.getElementById('html-template').value;
+    const cssTemplate = document.getElementById('css-template').value;
+    const jsTemplate = document.getElementById('js-template').value;
+
+    // Функція для сповіщень
+    function showNotification(message, duration = 3000) {
+      notification.textContent = message;
+      notification.classList.add('show');
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, duration);
+    }
+
+    // Функція створення нового проекту
+    function createNewProject() {
+      // Очищаємо редактори з шаблонами з textarea
+      editors.html.setValue(htmlTemplate);
+      editors.css.setValue(cssTemplate);
+      editors.js.setValue(jsTemplate);
+      
+      // Очищаємо зображення
+      imageFiles.length = 0;
+      imageGrid.innerHTML = '';
+      emptyState.style.display = 'block';
+      
+      // Переходимо на вкладку HTML
+      showTab('html');
+      
+      // Оновлюємо перегляд
+      updatePreview();
+      
+      showNotification('Новий проект створено!');
+    }
+
+    // Показуємо діалог підтвердження
+    function showConfirmationDialog() {
+      confirmationDialog.style.display = 'flex';
+    }
+
+    // Ховаємо діалог підтвердження
+    function hideConfirmationDialog() {
+      confirmationDialog.style.display = 'none';
+    }
+
+    // Обробники для діалогу підтвердження
+    confirmCancelBtn.addEventListener('click', hideConfirmationDialog);
+    confirmNewProjectBtn.addEventListener('click', function() {
+      hideConfirmationDialog();
+      createNewProject();
+    });
+
+    // Кнопка нового проекту
+    newProjectBtn.addEventListener('click', showConfirmationDialog);
+
+    // Функції переключення вкладок
+    function showTab(tabName) {
+      tabs.forEach(tab => tab.classList.remove('active'));
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+      
+      // Показуємо відповідний редактор
+      htmlEditor.getWrapperElement().style.display = tabName === 'html' ? 'block' : 'none';
+      cssEditor.getWrapperElement().style.display = tabName === 'css' ? 'block' : 'none';
+      jsEditor.getWrapperElement().style.display = tabName === 'js' ? 'block' : 'none';
+      document.getElementById('images').style.display = tabName === 'images' ? 'block' : 'none';
+      
+      currentTab = tabName;
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => showTab(tab.dataset.tab));
+    });
+
+    // Оновлення preview
+    function updatePreview() {
+      status.textContent = 'Оновлення...';
+      
+      try {
+        const html = editors.html.getValue();
+        const css = editors.css.getValue();
+        const js = editors.js.getValue();
+        
+        // Створюємо HTML з підставленими зображеннями
+        let processedHtml = html;
+        
+        // Замінюємо посилання на зображення
+        imageFiles.forEach(img => {
+          const placeholder = `images/${img.name}`;
+          const regex = new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+          processedHtml = processedHtml.replace(regex, img.dataUrl);
+        });
+        
+        const fullHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>${css}</style>
+</head>
+<body>
+    ${processedHtml}
+    <script>${js}<\/script>
+</body>
+</html>`;
+        
+        preview.srcdoc = fullHtml;
+        status.textContent = 'Готовий';
+      } catch (error) {
+        status.textContent = 'Помилка: ' + error.message;
+        console.error('Помилка оновлення:', error);
+      }
+    }
+
+    // Авто-оновлення
+    let updateTimeout;
+    function scheduleUpdate() {
+      if (!autoUpdate.checked) return;
+      
+      clearTimeout(updateTimeout);
+      updateTimeout = setTimeout(updatePreview, 500);
+    }
+
+    // Слухачі подій для редакторів
+    htmlEditor.on('change', scheduleUpdate);
+    cssEditor.on('change', scheduleUpdate);
+    jsEditor.on('change', scheduleUpdate);
+    
+    runBtn.addEventListener('click', updatePreview);
+
+    // Resizer
+    const divider = document.getElementById('divider');
+    const editorPanel = document.querySelector('.editor-panel');
+    
+    divider.addEventListener('mousedown', startResize);
+    
+    function startResize(e) {
+      e.preventDefault();
+      document.addEventListener('mousemove', resize);
+      document.addEventListener('mouseup', stopResize);
+    }
+    
+    function resize(e) {
+      const newWidth = (e.clientX / window.innerWidth) * 100;
+      if (newWidth > 20 && newWidth < 80) {
+        editorPanel.style.width = newWidth + '%';
+      }
+    }
+    
+    function stopResize() {
+      document.removeEventListener('mousemove', resize);
+      document.removeEventListener('mouseup', stopResize);
+    }
+
+    // Функція для додавання зображення в галерею
+    function addImageToGallery(fileName, dataUrl, blob) {
+      const imageItem = document.createElement('div');
+      imageItem.className = 'image-item';
+      
+      const img = document.createElement('img');
+      img.src = dataUrl;
+      img.alt = fileName;
+      img.title = 'Клікніть для копіювання шляху';
+      
+      img.addEventListener('click', () => {
+        const path = `images/${fileName}`;
+        navigator.clipboard.writeText(path).then(() => {
+          showNotification(`Шлях скопійовано: ${path}`);
+        });
+      });
+      
+      // Кнопка видалення
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.innerHTML = '×';
+      deleteBtn.title = 'Видалити';
+      deleteBtn.onclick = (event) => {
+        event.stopPropagation();
+        removeImage(fileName);
+      };
+      
+      const name = document.createElement('div');
+      name.className = 'image-name';
+      name.textContent = fileName;
+      
+      imageItem.appendChild(deleteBtn);
+      imageItem.appendChild(img);
+      imageItem.appendChild(name);
+      imageGrid.appendChild(imageItem);
+      
+      // Зберігаємо файл
+      const existingIndex = imageFiles.findIndex(img => img.name === fileName);
+      if (existingIndex !== -1) {
+        imageFiles[existingIndex] = {
+          name: fileName,
+          blob: blob,
+          dataUrl: dataUrl
+        };
+      } else {
+        imageFiles.push({
+          name: fileName,
+          blob: blob,
+          dataUrl: dataUrl
+        });
+      }
+      
+      console.log('Додано зображення:', fileName);
+      scheduleUpdate();
+    }
+
+    // Images functionality
+    function handleImageFiles(files) {
+      if (files.length === 0) return;
+      
+      // Приховуємо пустий стан
+      emptyState.style.display = 'none';
+      
+      Array.from(files).forEach(file => {
+        if (!file.type.startsWith('image/')) {
+          alert(`Файл ${file.name} не є зображенням`);
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          addImageToGallery(file.name, e.target.result, file);
+        };
+        
+        reader.onerror = function() {
+          alert(`Помилка читання файлу: ${file.name}`);
+        };
+        
+        reader.readAsDataURL(file);
+      });
+      
+      showNotification(`Додано ${files.length} зображень`);
+    }
+
+    function removeImage(fileName) {
+      // Видаляємо з масиву
+      const index = imageFiles.findIndex(img => img.name === fileName);
+      if (index !== -1) {
+        imageFiles.splice(index, 1);
+      }
+      
+      // Видаляємо з DOM
+      const items = imageGrid.querySelectorAll('.image-item');
+      items.forEach(item => {
+        const nameEl = item.querySelector('.image-name');
+        if (nameEl && nameEl.textContent === fileName) {
+          item.remove();
+        }
+      });
+      
+      // Показуємо пустий стан, якщо немає зображень
+      if (imageFiles.length === 0) {
+        emptyState.style.display = 'block';
+      }
+      
+      scheduleUpdate();
+      showNotification(`Зображення "${fileName}" видалено`);
+    }
+
+    // Drag and drop для зображень
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = '#06f';
+      dropZone.style.background = 'rgba(0, 102, 255, 0.1)';
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.borderColor = '#2d3746';
+      dropZone.style.background = 'transparent';
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = '#2d3746';
+      dropZone.style.background = 'transparent';
+      handleImageFiles(e.dataTransfer.files);
+    });
+
+    // Обробка вибору файлів
+    fileInput.addEventListener('change', (e) => {
+      handleImageFiles(e.target.files);
+      e.target.value = ''; // Скидаємо значення, щоб можна було вибрати той самий файл знову
+    });
+
+    // Клік на зону завантаження
+    dropZone.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    // Завантаження з URL
+    loadUrlBtn.addEventListener('click', async () => {
+      const url = imageUrl.value.trim();
+      if (!url) {
+        alert('Будь ласка, введіть URL зображення');
+        return;
+      }
+      
+      if (!url.startsWith('http')) {
+        alert('Будь ласка, введіть коректний URL (має починатися з http:// або https://)');
+        return;
+      }
+      
+      try {
+        status.textContent = 'Завантаження зображення...';
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        
+        if (!blob.type.startsWith('image/')) {
+          throw new Error('Завантажений файл не є зображенням');
+        }
+        
+        // Створюємо унікальне ім'я файлу
+        const fileExtension = blob.type.split('/')[1] || 'png';
+        const fileName = `image_${Date.now()}.${fileExtension}`;
+        const file = new File([blob], fileName, { type: blob.type });
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          addImageToGallery(fileName, e.target.result, file);
+          imageUrl.value = '';
+          status.textContent = 'Готовий';
+          showNotification('Зображення завантажено з URL');
+        };
+        reader.readAsDataURL(blob);
+        
+      } catch (error) {
+        alert('Помилка завантаження: ' + error.message);
+        status.textContent = 'Помилка завантаження';
+        console.error('Помилка завантаження з URL:', error);
+      }
+    });
+
+    // Очищення всіх зображень
+    clearImages.addEventListener('click', () => {
+      if (imageFiles.length === 0) {
+        alert('Немає зображень для видалення');
+        return;
+      }
+      
+      if (confirm(`Видалити всі ${imageFiles.length} зображень?`)) {
+        imageFiles.length = 0;
+        imageGrid.innerHTML = '';
+        emptyState.style.display = 'block';
+        scheduleUpdate();
+        showNotification('Всі зображення видалено');
+      }
+    });
+
+    // Копіювання шляхів
+    copyPaths.addEventListener('click', () => {
+      if (imageFiles.length === 0) {
+        alert('Немає зображень для копіювання шляхів');
+        return;
+      }
+      
+      const paths = imageFiles.map(img => `images/${img.name}`).join('\n');
+      navigator.clipboard.writeText(paths).then(() => {
+        showNotification(`Скопійовано ${imageFiles.length} шляхів до зображень!`);
+      }).catch(err => {
+        // Fallback для старих браузерів
+        const textArea = document.createElement('textarea');
+        textArea.value = paths;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showNotification(`Скопійовано ${imageFiles.length} шляхів до зображень!`);
+      });
+    });
+
+    // Експорт ZIP
+    downloadBtn.addEventListener('click', async () => {
+      status.textContent = 'Створення ZIP...';
+      
+      try {
+        const zip = new JSZip();
+        
+        // Додаємо файли коду
+        zip.file('index.html', editors.html.getValue());
+        zip.file('style.css', editors.css.getValue());
+        zip.file('script.js', editors.js.getValue());
+        
+        // Додаємо зображення
+        if (imageFiles.length > 0) {
+          const imgFolder = zip.folder('images');
+          for (const img of imageFiles) {
+            imgFolder.file(img.name, img.blob);
+          }
+        }
+        
+        // Генеруємо та завантажуємо
+        const content = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'web-project.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        status.textContent = 'ZIP створено успішно!';
+        showNotification('Проект експортовано у ZIP файл');
+        setTimeout(() => status.textContent = 'Готовий', 2000);
+      } catch (error) {
+        status.textContent = 'Помилка створення ZIP';
+        showNotification('Помилка при експорті проекту', 5000);
+        console.error('Помилка експорту:', error);
+      }
+    });
+
+    // Імпорт ZIP
+    importBtn.addEventListener('click', () => {
+      zipInput.click();
+    });
+
+    zipInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      if (!file.name.endsWith('.zip')) {
+        alert('Будь ласка, виберіть ZIP файл');
+        return;
+      }
+      
+      status.textContent = 'Обробка ZIP файлу...';
+      
+      try {
+        const zip = await JSZip.loadAsync(file);
+        
+        // Очищаємо поточні дані
+        imageFiles.length = 0;
+        imageGrid.innerHTML = '';
+        emptyState.style.display = 'block';
+        
+        let foundFiles = {
+          html: false,
+          css: false,
+          js: false
+        };
+        
+        // Обробляємо файли
+        for (const [filename, fileEntry] of Object.entries(zip.files)) {
+          if (fileEntry.dir) continue;
+          
+          console.log('Обробка файлу:', filename);
+          
+          if (filename === 'index.html' || filename === 'index.htm' || filename.endsWith('.html')) {
+            const content = await fileEntry.async('text');
+            editors.html.setValue(content);
+            foundFiles.html = true;
+            console.log('Знайдено HTML файл');
+          } else if (filename === 'style.css' || filename.endsWith('.css')) {
+            const content = await fileEntry.async('text');
+            editors.css.setValue(content);
+            foundFiles.css = true;
+            console.log('Знайдено CSS файл');
+          } else if (filename === 'script.js' || filename.endsWith('.js')) {
+            const content = await fileEntry.async('text');
+            editors.js.setValue(content);
+            foundFiles.js = true;
+            console.log('Знайдено JS файл');
+          } else if (filename.includes('/') && filename.split('/').pop().includes('.')) {
+            // Спробуємо визначити чи це зображення за розширенням
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+            const fileExtension = filename.split('.').pop().toLowerCase();
+            
+            if (imageExtensions.includes(fileExtension)) {
+              try {
+                const blob = await fileEntry.async('blob');
+                const fileName = filename.split('/').pop();
+                
+                // Переконуємося, що blob має правильний MIME тип
+                if (blob.type.startsWith('image/') || 
+                    blob.size > 0 && blob.size < 50 * 1024 * 1024) { // Максимум 50MB
+                  
+                  const reader = new FileReader();
+                  reader.onload = function(e) {
+                    addImageToGallery(fileName, e.target.result, blob);
+                  };
+                  reader.readAsDataURL(blob);
+                  
+                  console.log('Додано зображення з ZIP:', fileName);
+                }
+              } catch (imgError) {
+                console.error('Помилка обробки зображення:', filename, imgError);
+              }
+            }
+          }
+        }
+        
+        // Якщо не знайдено стандартних файлів, шукаємо будь-які текстові файли
+        if (!foundFiles.html || !foundFiles.css || !foundFiles.js) {
+          for (const [filename, fileEntry] of Object.entries(zip.files)) {
+            if (fileEntry.dir) continue;
+            
+            const fileExtension = filename.split('.').pop().toLowerCase();
+            const fileName = filename.split('/').pop();
+            
+            // Якщо це не зображення і не в папці images, обробляємо як текст
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+            if (!imageExtensions.includes(fileExtension) && !filename.includes('images/')) {
+              try {
+                const content = await fileEntry.async('text');
+                
+                if (!foundFiles.html && (fileExtension === 'html' || fileExtension === 'htm')) {
+                  editors.html.setValue(content);
+                  foundFiles.html = true;
+                } else if (!foundFiles.css && fileExtension === 'css') {
+                  editors.css.setValue(content);
+                  foundFiles.css = true;
+                } else if (!foundFiles.js && fileExtension === 'js') {
+                  editors.js.setValue(content);
+                  foundFiles.js = true;
+                }
+              } catch (textError) {
+                console.error('Помилка читання текстового файлу:', filename, textError);
+              }
+            }
+          }
+        }
+        
+        status.textContent = 'ZIP файл успішно імпортовано!';
+        showNotification('Проект успішно імпортовано з ZIP');
+        setTimeout(() => status.textContent = 'Готовий', 2000);
+        
+        // Оновлюємо перегляд
+        updatePreview();
+        
+      } catch (error) {
+        status.textContent = 'Помилка імпорту ZIP';
+        showNotification('Помилка при імпорті проекту', 5000);
+        alert('Помилка при обробці ZIP файлу: ' + error.message);
+        console.error('Помилка імпорту:', error);
+      }
+      
+      // Скидаємо значення input
+      e.target.value = '';
+    });
+
+    // Ініціалізація
+    showTab('html');
+    updatePreview();
+
+    console.log('Веб-редактор успішно завантажений!');
+  </script>
+</body>
+</html>

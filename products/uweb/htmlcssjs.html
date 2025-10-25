@@ -777,6 +777,33 @@ document.addEventListener('click', function(e) {
 </html>`;
         
         preview.srcdoc = fullHtml;
+
+        
+// затримка href="#home" або href="/"
+setTimeout(() => {
+  const iframeDoc = preview.contentDocument || preview.contentWindow.document;
+  if (!iframeDoc) return;
+
+  iframeDoc.addEventListener('click', function(e) {
+    const link = e.target.closest('a');
+    if (link) {
+      const href = link.getAttribute('href');
+
+      if (!href || href === '#' || href.startsWith('#') || href === '/' || href.startsWith(window.location.origin)) {
+        e.preventDefault();
+        console.log('Перехід заблоковано:', href);
+        return;
+      }
+
+      if (href.startsWith('http')) {
+        e.preventDefault();
+        window.open(href, '_blank');
+      }
+    }
+  });
+}, 100);
+
+        
         status.textContent = 'Готовий';
       } catch (error) {
         status.textContent = 'Помилка: ' + error.message;

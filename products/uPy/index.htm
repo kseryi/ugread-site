@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blockly → Python → Turtle Demo</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Blockly  -->
+  <script src="js/blockly.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/12.3.0/python.min.js"></script>
+
+  <!-- Skulpt (Turtle) -->
+  <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+</head>
+<body>
+<header>
+  <h1 class = "htext">Blockly → Python → Turtle 🐢</h1>
+  <span id="status" class="status">Ready</span>
+</header>
+
+<div class="wrap">
+  <section class="panel">
+    <header><h2 class = "htext">1) Blockly</h2></header>
+    <div class="content">
+      <div id="blocklyArea"><div id="blocklyDiv"></div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <header><h2 class = "htext">2) Python Code</h2></header>
+    <div class="content">
+      <textarea id="code" spellcheck="false"></textarea>
+    </div>
+    <div class="note">Change blocks — code updates automatically.</div>
+  </section>
+
+  <section class="panel">
+    <header><h2 class = "htext">3) Turtle Execution</h2></header>
+    <div id="runbar">
+      <button id="runBtn">▶ Run</button>
+      <button id="stopBtn">⏹ Reset</button>
+      <button id="exampleBtn">💡 Example</button>
+    </div>
+    <div class="canvasWrap">
+      <div id="turtle-area"></div>
+    </div>
+    <pre id="output"></pre>
+  </section>
+</div>
+
+<!-- TOOLBOX -->
+<xml id="toolbox" style="display:none">
+  <category name="Start" colour='#e8b202'>
+    <block type="import_turtle"></block>
+    <block type="create_turtle"><field name="NAME">t</field></block>
+    <block type="set_speed">
+      <field name="NAME">t</field>
+      <value name="SPEED"><shadow type="math_number"><field name="NUM">5</field></shadow></value>
+    </block>
+     <block type="turtle_shape"></block>
+    <block type="import_random"></block>
+  </category>
+   <category name="Movement" colour="#343BBA">
+    <block type="t_forward"><value name="DIST"><shadow type="math_number"><field name="NUM">100</field></shadow></value></block>
+    <block type="t_backward"><value name="DIST"><shadow type="math_number"><field name="NUM">50</field></shadow></value></block>
+    <block type="t_left"><value name="ANGLE"><shadow type="math_number"><field name="NUM">90</field></shadow></value></block>
+    <block type="t_right"><value name="ANGLE"><shadow type="math_number"><field name="NUM">90</field></shadow></value></block>
+  </category>
+  <category name="Output" colour="#8059ff">
+    <block type="print">
+        <value name="TEXT">
+            <shadow type="text">
+                <field name="TEXT">Hello World</field>
+            </shadow>
+        </value>
+    </block>
+    <block type="text_literal">
+        <field name="TEXT">'Hello World'</field>
+    </block>
+</category>
+  
+
+  <category name="Pen" colour="#22c55e">
+    <block type="t_penup"></block>
+    <block type="t_pendown"></block>
+    <block type="t_pensize"><value name="SIZE"><shadow type="math_number"><field name="NUM">3</field></shadow></value></block>
+    <block type="t_color"><value name="COLOR"><shadow type="text"><field name="TEXT">blue</field></shadow></value></block>
+  </category>
+ 
+ 
+  <category name="Loops" colour="#FFAA00">
+    <block type="controls_repeat_ext"><value name="TIMES"><shadow type="math_number"><field name="NUM">4</field></shadow></value></block>
+    <block type="controls_whileUntil"></block>
+  </category>
+ <category name="Logic" colour="#ff9900">
+  <block type="logic_compare"></block>
+  <block type="logic_boolean"></block>
+  <block type="controls_if"></block>
+  <block type="controls_ifelse"></block>
+  
+</category>
+
+ 
+  <category name="Math" colour="#10b981">
+  <block type="math_number"><field name="NUM">0</field></block>
+  <block type="math_arithmetic"></block>
+  <block type="math_random_int">
+    <value name="FROM"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+    <value name="TO"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+  </block>
+</category>
+
+
+
+
+  <category name="Shapes" colour="#f59e0b">
+    <block type="t_square"><value name="A"><shadow type="math_number"><field name="NUM">50</field></shadow></value></block>
+    <block type="t_circle"><value name="R"><shadow type="math_number"><field name="NUM">40</field></shadow></value></block>
+  </category>
+</xml>
+
+<script src="app.js"></script>
+</body>
+</html>

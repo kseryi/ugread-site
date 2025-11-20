@@ -26,7 +26,7 @@ function clearTurtle() {
 }
 
 const MyTheme = Blockly.Theme.defineTheme('mytheme', {
-  base: Blockly.Themes.Classic, // або Blockly.Themes.Dark, якщо хочеш темну
+  base: Blockly.Themes.Classic,
   blockStyles: {
     loop_blocks: {
       colourPrimary:   "#FFAA00",
@@ -34,19 +34,23 @@ const MyTheme = Blockly.Theme.defineTheme('mytheme', {
       colourTertiary:  '#cf8b04'
     },
     math_blocks: {
-      colourPrimary:   "#10b981", // Математика → зелений
+      colourPrimary:   "#10b981",
       colourSecondary: "#039c69",
       colourTertiary:  '#039c69'
     },
-    logic_blocks: { // 🟠 додаємо стиль логіки
+    logic_blocks: {
       colourPrimary:   "#FFAA00",
       colourSecondary: "#cf8b04",
       colourTertiary:  "#cf8b04"
+    },
+    procedure_blocks: {
+      colourPrimary: "#a855f7",
+      colourSecondary: "#7c3aed",
+      colourTertiary: "#6d28d9",
+      hat: false
     }
   }
 });
-
-
 
 // ================= INITIALIZE BLOCKLY =================
 function initializeWorkspace() {
@@ -60,7 +64,6 @@ function initializeWorkspace() {
         grid: { spacing: 20, length: 3, colour: '#1f2937', snap: true },
         zoom: { controls: true, wheel: true },
         theme: MyTheme,
-        
     });
 
     const blocklyArea = document.getElementById('blocklyArea');
@@ -82,34 +85,28 @@ function initializeWorkspace() {
     workspace.addChangeListener(refreshCode);
     refreshCode();
     
-    Blockly.Blocks['controls_repeat_ext'].setColour('#f97316');  // помаранчевий
-    Blockly.Blocks['controls_whileUntil'].setColour('#0ea5e9');  // блакитний
-    
+    Blockly.Blocks['controls_repeat_ext'].setColour('#f97316');
+    Blockly.Blocks['controls_whileUntil'].setColour('#0ea5e9');
     
     // ===================== Динамічне фарбування лівої панелі =====================
-function updateToolboxColors() {
-    const toolboxDiv = document.querySelector('.blocklyToolboxDiv');
-    if (toolboxDiv) toolboxDiv.style.backgroundColor = '#1e40af'; // фон панелі
+    function updateToolboxColors() {
+        const toolboxDiv = document.querySelector('.blocklyToolboxDiv');
+        if (toolboxDiv) toolboxDiv.style.backgroundColor = '#1e40af';
 
-    const labels = document.querySelectorAll('.blocklyTreeLabel');
-labels.forEach(l => {
-    l.style.color = '#facc15';   // жовтий текст
-    l.style.fontWeight = 'bold'; // додатково можна зробити жирним
-});
+        const labels = document.querySelectorAll('.blocklyTreeLabel');
+        labels.forEach(l => {
+            l.style.color = '#facc15';
+            l.style.fontWeight = 'bold';
+        });
+    }
 
-}
-
-// спочатку почекати, поки Blockly намалює toolbox
-setTimeout(updateToolboxColors, 100);
-
-
-    
+    setTimeout(updateToolboxColors, 100);
 }
 
 // ================= BLOCKS & GENERATORS =================
 function defineBlocksAndGenerators() {
     Blockly.defineBlocksWithJsonArray([
-        { type: "import_turtle", message0: "🚩 Start (import turtle)", nextStatement: null, colour: '#e8b202', tooltip: "Початок програми", hat: "cap" },
+        { type: "import_turtle", message0: "🚩 import turtle", previousStatement: null, nextStatement: null, colour: '#e8b202', tooltip: "Початок програми", hat: "cap" },
         { type: "create_turtle", message0: "Create Turtle as %1", args0: [{ type: "field_input", name: "NAME", text: "t" }], previousStatement: null, nextStatement: null, colour: '#e8b202', tooltip: "Створити нового черепаху" },
         { type: "set_speed", message0: "Set %1 speed %2", args0: [{ type: "field_input", name: "NAME", text: "t" }, { type: "input_value", name: "SPEED", check: "Number" }], previousStatement: null, nextStatement: null, colour: '#e8b202'},
         { type: "t_forward", message0: "Move forward %1", args0: [{ type: "input_value", name: "DIST", check: "Number" }], previousStatement: null, nextStatement: null, colour: '#343BBA' },
@@ -121,8 +118,50 @@ function defineBlocksAndGenerators() {
         { type: "t_pensize", message0: "Set pen size %1", args0: [{ type: "input_value", name: "SIZE", check: "Number" }], previousStatement: null, nextStatement: null, colour: "#22c55e" },
         { type: "t_color", message0: "Set pen color %1", args0: [{ type: "input_value", name: "COLOR", check: "String" }], previousStatement: null, nextStatement: null, colour: "#22c55e" },
         { type: "t_square", message0: "Square side %1", args0: [{ type: "input_value", name: "A", check: "Number" }], previousStatement: null, nextStatement: null, colour: 230 },
-        { type: "t_circle", message0: "Circle radius %1", args0: [{ type: "input_value", name: "R", check: "Number" }], previousStatement: null, nextStatement: null, colour: 230 }
-       
+        { type: "t_circle", message0: "Circle radius %1", args0: [{ type: "input_value", name: "R", check: "Number" }], previousStatement: null, nextStatement: null, colour: 230 },
+        
+        // Функції з параметрами
+        // Функції з параметрами
+{ 
+
+  type: "define_function",
+  message0: "Define function %1 parameters: %2\n do %3",
+  style: "procedure_blocks",
+  inputsInline: false,
+  args0: [
+    { type: "field_input", name: "FUNC_NAME", text: "myfunc" },
+    { type: "field_input", name: "PARAMS", text: "" },
+    { type: "input_statement", name: "BODY" }
+  ],
+  previousStatement: null,
+  nextStatement: null,
+  tooltip: "Створити функцію з параметрами (через кому)"
+},
+
+        
+        { type: "call_function", message0: "Call %1 arguments: %2", 
+          args0: [
+            { type: "field_dropdown", name: "FUNC", options: [[ "(none)", "" ]] },
+            { type: "field_input", name: "ARGS", text: "" }
+          ], 
+          previousStatement: null, nextStatement: null, colour: "#a855f7", tooltip: "Викликати функцію з аргументами (через кому)" },
+        
+        { type: "function_parameter", message0: "parameter %1", 
+          args0: [
+            { type: "field_dropdown", name: "PARAM_NAME", options: [[ "(no params)", "" ]] }
+          ], 
+          output: null, colour: "#a855f7", tooltip: "Параметр функції" },
+        
+        // Fill color blocks
+        { type: "t_fillcolor_manual", message0: "Fill color (manual) %1", args0: [{ type: "input_value", name: "COLOR", check: "String" }], previousStatement: null, nextStatement: null, colour: "#22c55e", tooltip: "Задати колір заливки вручну" },
+        { type: "t_fillcolor_list", message0: "Fill color %1", args0: [{ type: "field_dropdown", name: "COLOR", options: [
+            ["red", "red"], ["blue", "blue"], ["green", "green"], ["yellow", "yellow"], ["orange", "orange"], 
+            ["purple", "purple"], ["pink", "pink"], ["brown", "brown"], ["black", "black"], ["white", "white"], 
+            ["gray", "gray"], ["cyan", "cyan"], ["magenta", "magenta"], ["gold", "gold"], ["silver", "silver"],
+            ["lime", "lime"], ["navy", "navy"], ["maroon", "maroon"], ["olive", "olive"], ["teal", "teal"]
+        ]}], previousStatement: null, nextStatement: null, colour: "#22c55e", tooltip: "Вибрати колір заливки зі списку" },
+        { type: "t_begin_fill", message0: "Begin fill", previousStatement: null, nextStatement: null, colour: "#22c55e", tooltip: "Почати заливку" },
+        { type: "t_end_fill", message0: "End fill", previousStatement: null, nextStatement: null, colour: "#22c55e", tooltip: "Завершити заливку" }
     ]);
 
     if (!Blockly.Python) {
@@ -155,7 +194,6 @@ function defineBlocksAndGenerators() {
             if (Blockly.Python[t]) {
                 code += Blockly.Python[t](target);
             }
-            // переміщаємось по next тільки всередині DO, без рекурсії simpleBlockToCode
             target = target.getNextBlock();
         }
         return code;
@@ -163,6 +201,7 @@ function defineBlocksAndGenerators() {
 
     const gen = Blockly.Python;
 
+    // Turtle basic commands
     gen['import_turtle'] = () => 'import turtle\n';
     gen['create_turtle'] = block => {
         currentTurtleName = block.getFieldValue('NAME') || 't';
@@ -186,182 +225,176 @@ function defineBlocksAndGenerators() {
         return `for _ in range(4):\n    ${currentTurtleName}.forward(${a})\n    ${currentTurtleName}.right(90)\n`;
     };
     gen['t_circle'] = block => `${currentTurtleName}.circle(${gen.valueToCode(block, 'R', gen.ORDER_NONE) || 50})\n`;
-   
-   //========================================
-   
-   // === Import random ===
-Blockly.Blocks['import_random'] = {
-  init: function() {
-    this.appendDummyInput()
-        .appendField("import random");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setColour('#e8b202');
-    this.setTooltip("Імпортує модуль random");
-    this.setHelpUrl("");
-  }
-};
 
-gen['import_random'] = function(block) {
-  return "import random\n";
-};
+    // Fill color generators
+    gen['t_fillcolor_manual'] = function(block) {
+        const v = Blockly.Python.valueToCode(block, 'COLOR', Blockly.Python.ORDER_NONE) || '"black"';
+        const quoted = (/^['"]/.test(v) ? v : `"${v}"`);
+        return `${currentTurtleName}.fillcolor(${quoted})\n`;
+    };
+    gen['t_fillcolor_list'] = function(block) {
+        const color = block.getFieldValue('COLOR');
+        return `${currentTurtleName}.fillcolor("${color}")\n`;
+    };
+    gen['t_begin_fill'] = () => `${currentTurtleName}.begin_fill()\n`;
+    gen['t_end_fill'] = () => `${currentTurtleName}.end_fill()\n`;
 
-// ======= BLOCK =======
-Blockly.Blocks['turtle_shape'] = {
-  init: function() {
-    this.appendDummyInput()
-        .appendField("Turtle shape")
-        .appendField(new Blockly.FieldDropdown([
-          ["turtle", "turtle"],
-          ["circle", "circle"],
-          ["arrow", "arrow"]
-        ]), "SHAPE");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setColour('#e8b202');
-    this.setTooltip("Змінює форму черепашки");
-    this.setHelpUrl("");
-  }
-};
+    // Import blocks
+    Blockly.Blocks['import_random'] = {
+        init: function() {
+            this.appendDummyInput().appendField("import random");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour('#e8b202');
+            this.setTooltip("Імпортує модуль random");
+        }
+    };
+    gen['import_random'] = () => "import random\n";
 
-// ======= GENERATOR =======
-Blockly.Python['turtle_shape'] = function(block) {
-  const shape = block.getFieldValue('SHAPE');
-  return `${currentTurtleName}.shape("${shape}")\n`;
-};
+    Blockly.Blocks['import_math'] = {
+        init: function() {
+            this.appendDummyInput().appendField("import math");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour('#e8ba02');
+            this.setTooltip("Імпортує модуль math");
+        }
+    };
+    gen['import_math'] = () => "import math\n";
 
+    // Turtle shape
+    Blockly.Blocks['turtle_shape'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("Turtle shape")
+                .appendField(new Blockly.FieldDropdown([
+                    ["turtle", "turtle"],
+                    ["circle", "circle"],
+                    ["arrow", "arrow"]
+                ]), "SHAPE");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour('#e8b202');
+            this.setTooltip("Змінює форму черепашки");
+        }
+    };
+    gen['turtle_shape'] = block => `${currentTurtleName}.shape("${block.getFieldValue('SHAPE')}")\n`;
 
-// ======= BLOCK =======
-Blockly.Blocks['print'] = {
-  init: function() {
-    this.appendValueInput("VALUE")
-        .setCheck(null)   // <-- дозволяє будь-що (і число, і текст, і вираз)
-        .appendField("print");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setColour('#8059ff'); // оранжевий
-    this.setTooltip("Виводить текст, число або вираз у консоль");
-    this.setHelpUrl("");
-  }
-};
+    // Print and text
+    Blockly.Blocks['print'] = {
+        init: function() {
+            this.appendValueInput("VALUE").setCheck(null).appendField("print");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour('#8059ff');
+            this.setTooltip("Виводить текст, число або вираз у консоль");
+        }
+    };
+    gen['print'] = block => `print(${Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_NONE) || '""'})\n`;
 
-// ======= GENERATOR =======
-Blockly.Python['print'] = function(block) {
-  const val = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_NONE) || '""';
-  return `print(${val})\n`;
-};
+    Blockly.Blocks['text_literal'] = {
+        init: function() {
+            this.appendDummyInput().appendField(new Blockly.FieldTextInput("текст"), "TEXT");
+            this.setOutput(true, "String");
+            this.setColour('#22c55e');
+            this.setTooltip("Рядковий літерал");
+        }
+    };
+    gen['text_literal'] = block => {
+        const text = block.getFieldValue('TEXT') || "";
+        const safe = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+        return [`"${safe}"`, Blockly.Python.ORDER_ATOMIC];
+    };
 
-// ======= BLOCK =======
-Blockly.Blocks['text_literal'] = {
-  init: function() {
-    this.appendDummyInput()
-        .appendField(new Blockly.FieldTextInput("текст"), "TEXT");
-    this.setOutput(true, "String");  // блок видає значення типу String
-    this.setColour('#22c55e');      // зелений (можна інший)
-    this.setTooltip("Рядковий літерал: будь-який текст, який автоматично береться в лапки");
-    this.setHelpUrl("");
-  }
-};
+    // Math blocks
+    gen['math_number'] = block => block.getFieldValue('NUM');
+    gen['math_arithmetic'] = block => {
+        const OPERATORS = { ADD: '+', MINUS: '-', MULTIPLY: '*', DIVIDE: '/', POWER: '**' };
+        const op = OPERATORS[block.getFieldValue('OP')];
+        const arg0 = gen.valueToCode(block, 'A', gen.ORDER_NONE) || '0';
+        const arg1 = gen.valueToCode(block, 'B', gen.ORDER_NONE) || '0';
+        return `(${arg0} ${op} ${arg1})`;
+    };
+    gen['math_random_int'] = block => {
+        const from = gen.valueToCode(block, 'FROM', gen.ORDER_NONE) || '0';
+        const to = gen.valueToCode(block, 'TO', gen.ORDER_NONE) || '10';
+        return `random.randint(${from}, ${to})`;
+    };
 
-// ======= GENERATOR =======
-Blockly.Python['text_literal'] = function(block) {
-  const text = block.getFieldValue('TEXT') || "";
-  // Екрануємо лапки всередині
-  const safe = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-  return [`"${safe}"`, Blockly.Python.ORDER_ATOMIC];
-};
+    // Logic blocks
+    gen['logic_compare'] = block => {
+        const OPERATORS = { EQ: '==', NEQ: '!=', LT: '<', LTE: '<=', GT: '>', GTE: '>=' };
+        const op = OPERATORS[block.getFieldValue('OP')];
+        const arg0 = gen.valueToCode(block, 'A', gen.ORDER_NONE) || '0';
+        const arg1 = gen.valueToCode(block, 'B', gen.ORDER_NONE) || '0';
+        return `(${arg0} ${op} ${arg1})`;
+    };
+    gen['logic_boolean'] = block => (block.getFieldValue('BOOL') === 'TRUE') ? 'True' : 'False';
 
+    // Control structures
+    gen['controls_if'] = block => {
+        const cond = gen.valueToCode(block, 'IF0', gen.ORDER_NONE) || 'False';
+        let branch = gen.statementToCode(block, 'DO0') || '    pass\n';
+        branch = branch.split('\n').filter(line => line.trim() !== '').map(line => '    ' + line).join('\n') + '\n';
+        return `if ${cond}:\n${branch}`;
+    };
 
+    gen['controls_ifelse'] = block => {
+        const cond = gen.valueToCode(block, 'IF0', gen.ORDER_NONE) || 'False';
+        let branchIf = gen.statementToCode(block, 'DO0') || '    pass\n';
+        let branchElse = gen.statementToCode(block, 'ELSE') || '    pass\n';
+        const indent = code => code.split('\n').filter(line => line.trim() !== '').map(line => '    ' + line).join('\n') + '\n';
+        branchIf = indent(branchIf);
+        branchElse = indent(branchElse);
+        return `if ${cond}:\n${branchIf}else:\n${branchElse}`;
+    };
 
-   
-   // === Math ===
-gen['math_number'] = block => block.getFieldValue('NUM');
-gen['math_arithmetic'] = block => {
-    const OPERATORS = { ADD: '+', MINUS: '-', MULTIPLY: '*', DIVIDE: '/', POWER: '**' };
-    const op = OPERATORS[block.getFieldValue('OP')];
-    const arg0 = gen.valueToCode(block, 'A', gen.ORDER_NONE) || '0';
-    const arg1 = gen.valueToCode(block, 'B', gen.ORDER_NONE) || '0';
-    return `(${arg0} ${op} ${arg1})`;
-};
-gen['math_random_int'] = block => {
-    const from = gen.valueToCode(block, 'FROM', gen.ORDER_NONE) || '0';
-    const to = gen.valueToCode(block, 'TO', gen.ORDER_NONE) || '10';
-    return `random.randint(${from}, ${to})`;
-};
+    gen['controls_whileUntil'] = block => {
+        const mode = block.getFieldValue('MODE');
+        let cond = gen.valueToCode(block, 'BOOL', gen.ORDER_NONE) || 'False';
+        if (mode === 'UNTIL') cond = `not (${cond})`;
+        let branch = gen.statementToCode(block, 'DO') || '    pass\n';
+        branch = branch.split('\n').map(l => l ? '    ' + l : l).join('\n');
+        return `while ${cond}:\n${branch}`;
+    };
 
-// === Logic ===
-gen['logic_compare'] = block => {
-    const OPERATORS = { EQ: '==', NEQ: '!=', LT: '<', LTE: '<=', GT: '>', GTE: '>=' };
-    const op = OPERATORS[block.getFieldValue('OP')];
-    const arg0 = gen.valueToCode(block, 'A', gen.ORDER_NONE) || '0';
-    const arg1 = gen.valueToCode(block, 'B', gen.ORDER_NONE) || '0';
-    return `(${arg0} ${op} ${arg1})`;
-    this.setColour('#8059ff'); // оранжевий
-};
-gen['logic_boolean'] = block => (block.getFieldValue('BOOL') === 'TRUE') ? 'True' : 'False';
+    gen['controls_repeat_ext'] = block => {
+        const repeats = gen.valueToCode(block, 'TIMES', gen.ORDER_NONE) || '0';
+        const branch = gen.statementToCode(block, 'DO') || '    pass\n';
+        const bs = branch.split('\n').map(l => l ? '    ' + l : l).join('\n');
+        let code = `for _ in range(${repeats}):\n${bs}\n`;
+        const next = block.getNextBlock();
+        if (next) code += simpleBlockToCode(next);
+        return code;
+    };
 
-gen['controls_if'] = block => {
-    const cond = gen.valueToCode(block, 'IF0', gen.ORDER_NONE) || 'False';
-    let branch = gen.statementToCode(block, 'DO0') || '    pass\n';
-    branch = branch
-        .split('\n')
-        .filter(line => line.trim() !== '')
-        .map(line => '    ' + line)
-        .join('\n') + '\n';
-    return `if ${cond}:\n${branch}`;
-};
+    // Function blocks
+    gen['define_function'] = function(block) {
+        const func = block.getFieldValue("FUNC_NAME");
+        const params = block.getFieldValue("PARAMS") || "";
+        const cleanParams = params.split(',').map(p => p.trim()).filter(p => p !== "").join(', ');
+        let body = Blockly.Python.statementToCode(block, "BODY") || "";
+        
+        if (!body.trim()) {
+            body = "    pass\n";
+        } else {
+            body = body.split('\n').filter(line => line.trim() !== "").map(line => "    " + line).join('\n') + "\n";
+        }
+        return `def ${func}(${cleanParams}):\n${body}`;
+    };
 
-gen['controls_ifelse'] = block => {
-    const cond = gen.valueToCode(block, 'IF0', gen.ORDER_NONE) || 'False';
-    let branchIf = gen.statementToCode(block, 'DO0') || '    pass\n';
-    let branchElse = gen.statementToCode(block, 'ELSE') || '    pass\n';
+    gen['call_function'] = function(block) {
+        const func = block.getFieldValue("FUNC");
+        const args = block.getFieldValue("ARGS") || "";
+        if (!func) return "";
+        const cleanArgs = args.split(',').map(a => a.trim()).filter(a => a !== "").join(', ');
+        return `${func}(${cleanArgs})\n`;
+    };
 
-    // Додаємо відступ у кожен рядок тіла блоку
-    const indent = code =>
-        code
-            .split('\n')
-            .filter(line => line.trim() !== '')
-            .map(line => '    ' + line)
-            .join('\n') + '\n';
-
-    branchIf = indent(branchIf);
-    branchElse = indent(branchElse);
-
-    return `if ${cond}:\n${branchIf}else:\n${branchElse}`;
-};
-
-gen['controls_whileUntil'] = block => {
-    const mode = block.getFieldValue('MODE'); // WHILE або UNTIL
-    let cond = gen.valueToCode(block, 'BOOL', gen.ORDER_NONE) || 'False';
-    if (mode === 'UNTIL') cond = `not (${cond})`;
-
-    // Беремо тіло DO
-    let branch = gen.statementToCode(block, 'DO') || '    pass\n';
-    
-    // Вирівнюємо відступи
-    branch = branch.split('\n').map(l => l ? '    ' + l : l).join('\n');
-
-    return `while ${cond}:\n${branch}`;
-};
-
-
-
-
-   
-   //========================================
-   
-   gen['controls_repeat_ext'] = block => {
-    const repeats = gen.valueToCode(block, 'TIMES', gen.ORDER_NONE) || '0';
-    const branch = gen.statementToCode(block, 'DO') || '    pass\n';
-    const bs = branch.split('\n').map(l => l ? '    ' + l : l).join('\n');
-    let code = `for _ in range(${repeats}):\n${bs}\n`;
-
-    // 🔥 Додаємо підтримку nextBlock після циклу
-    const next = block.getNextBlock();
-    if (next) code += simpleBlockToCode(next);
-
-    return code;
-};
+    gen['function_parameter'] = function(block) {
+        const paramName = block.getFieldValue('PARAM_NAME');
+        return [paramName, Blockly.Python.ORDER_ATOMIC];
+    };
 
     function simpleBlockToCode(block) {
         if (!block) return '';
@@ -370,7 +403,6 @@ gen['controls_whileUntil'] = block => {
         if (Blockly.Python[t]) {
             code += Blockly.Python[t](block);
         }
-        // Обробляємо next тільки якщо блок не statement
         const statementBlocks = ['controls_repeat_ext', 'if', 'if_else', 'while'];
         if (!statementBlocks.includes(t)) {
             const next = block.getNextBlock();
@@ -378,6 +410,73 @@ gen['controls_whileUntil'] = block => {
         }
         return code;
     }
+
+    // ==========================================================
+    //               ДОПОМІЖНІ ФУНКЦІЇ ДЛЯ ФУНКЦІЙ
+    // ==========================================================
+
+    // Отримати імена визначених функцій
+    function getDefinedFunctionNames() {
+        if (!workspace) return [];
+        return workspace.getAllBlocks(false)
+            .filter(b => b.type === "define_function")
+            .map(b => b.getFieldValue("FUNC_NAME"))
+            .filter(n => n);
+    }
+
+    // Отримати параметри конкретної функції
+    function getFunctionParameters(funcBlock) {
+        if (funcBlock.type !== 'define_function') return [];
+        const params = funcBlock.getFieldValue('PARAMS') || '';
+        return params.split(',')
+            .map(p => p.trim())
+            .filter(p => p !== "")
+            .map(p => [p, p]);
+    }
+
+    // Знайти батьківську функцію для блоку
+    function findParentFunction(block) {
+        let current = block.getParent();
+        while (current) {
+            if (current.type === 'define_function') {
+                return current;
+            }
+            current = current.getParent();
+        }
+        return null;
+    }
+
+    // ==========================================================
+    //         ОНОВЛЕННЯ WORKSPACE LISTENER
+    // ==========================================================
+
+    workspace.addChangeListener(() => {
+        const blocks = workspace.getAllBlocks(false);
+        
+        blocks.forEach(b => {
+            // Оновлюємо виклики функцій
+            if (b.type === "call_function") {
+                const field = b.getField("FUNC");
+                const names = getDefinedFunctionNames();
+                const menu = names.length ? names.map(n => [n, n]) : [["(none)", ""]];
+                field.menuGenerator_ = menu;
+                if (!menu.map(m => m[1]).includes(field.getValue())) {
+                    field.setValue(menu[0][1]);
+                }
+            }
+            
+            // Оновлюємо параметри в блоках параметрів
+            if (b.type === "function_parameter") {
+                const field = b.getField("PARAM_NAME");
+                const parentFunc = findParentFunction(b);
+                const params = parentFunc ? getFunctionParameters(parentFunc) : [["(no params)", ""]];
+                field.menuGenerator_ = params;
+                if (!params.map(p => p[1]).includes(field.getValue())) {
+                    field.setValue(params[0] ? params[0][1] : "");
+                }
+            }
+        });
+    });
 }
 
 // ================= REFRESH CODE =================
@@ -385,7 +484,6 @@ function refreshCode() {
     if (!Blockly || !Blockly.Python) return;
     try {
         let code = Blockly.Python.workspaceToCode(workspace) || '';
-        //if (!/turtle/.test(code)) code = 'import turtle\n' + code;
         document.getElementById('code').value = code || "# add blocks";
     } catch (e) {
         document.getElementById('code').value = "# Помилка генерації: " + e;
@@ -417,7 +515,6 @@ async function runCode() {
 // ================= EXAMPLE =================
 function loadExample() {
     workspace.clear();
- // ================= EXAMPLE =================// ================= EXAMPLE =================// ================= EXAMPLE =================   
     const xmlDom = Blockly.Xml.textToDom(xmlText);
     Blockly.Xml.domToWorkspace(xmlDom, workspace);
     refreshCode();

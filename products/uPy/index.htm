@@ -61,6 +61,7 @@
     </block>
      <block type="turtle_shape"></block>
     <block type="import_random"></block>
+    <block type="import_math"></block>
   </category>
    <category name="Movement" colour="#343BBA">
     <block type="t_forward"><value name="DIST"><shadow type="math_number"><field name="NUM">100</field></shadow></value></block>
@@ -87,6 +88,20 @@
     <block type="t_pendown"></block>
     <block type="t_pensize"><value name="SIZE"><shadow type="math_number"><field name="NUM">3</field></shadow></value></block>
     <block type="t_color"><value name="COLOR"><shadow type="text"><field name="TEXT">blue</field></shadow></value></block>
+    <block type="t_fillcolor_manual">
+    <value name="COLOR">
+        <shadow type="text">
+            <field name="TEXT">red</field>
+        </shadow>
+    </value>
+</block>
+
+<block type="t_fillcolor_list"></block>
+
+<block type="t_begin_fill"></block>
+<block type="t_end_fill"></block>
+
+    
   </category>
  
  
@@ -119,6 +134,12 @@
     <block type="t_square"><value name="A"><shadow type="math_number"><field name="NUM">50</field></shadow></value></block>
     <block type="t_circle"><value name="R"><shadow type="math_number"><field name="NUM">40</field></shadow></value></block>
   </category>
+  
+  <category name="Functions" colour="#a855f7">
+    <block type="define_function"></block>
+    <block type="call_function"></block>
+</category>
+  
 </xml>
 
 <script src="app.js"></script>

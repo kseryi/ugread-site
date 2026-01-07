@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>uCutPDF</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>uCutPDF</h1>
+    <div class="controls">
+      <input id="fileInput" type="file" accept="application/pdf" />
+      <button id="dropAreaBtn">Drop PDF</button>
+    </div>
+  </header>
+
+  <main>
+    <aside id="thumbnailsPanel">
+      <h2>Сторінки</h2>
+      <div id="thumbnailsContainer"></div>
+    </aside>
+
+    <section id="viewerWrapper">
+      <div id="viewer" tabindex="0"></div>
+    </section>
+
+    <aside id="toolsPanel">
+      <h2>Інструменти</h2>
+
+      <section class="tool">
+        <h3>Масштаб</h3>
+        <div class="zoom-controls">
+          <input type="range" id="zoomSlider" min="25" max="400" value="100" />
+          <span id="scaleLabel">100%</span>
+          <div class="quick-zoom">
+            
+          </div>
+        </div>
+      </section>
+
+      <section class="tool">
+        <h3>Вирізати сторінки</h3>
+        <input type="text" id="cutPages" placeholder="Приклад: 1,3,5-7" />
+        <button id="cutBtn">Вирізати</button>
+      </section>
+
+      <section class="tool">
+        <h3>Вирізати зображення</h3>
+        <div class="button-group">
+          <button id="selectToPdf">Select to PDF</button>
+          <button id="selectToPng">Select to PNG</button>
+        </div>
+        <p class="hint">Клікни й потягни на сторінці, щоб виділити ділянку.</p>
+      </section>
+
+      <section class="tool">
+        <h3>Завантажити</h3>
+        <button id="downloadBtn" disabled>Завантажити результат</button>
+      </section>
+
+      <section class="tool">
+        <h3>Інформація</h3>
+        <div id="info">Нічого не завантажено</div>
+      </section>
+    </aside>
+  </main>
+
+  <template id="pageTemplate">
+    <canvas></canvas>
+  </template>
+
+  <template id="thumbnailTemplate">
+    <div class="thumbnail">
+      <canvas></canvas>
+      <span class="page-number"></span>
+    </div>
+  </template>
+
+  <!-- Loader shims (will load real libs from CDN at runtime) -->
+  <script src="pdfjs/pdf.js"></script>
+  <script src="libs/pdf-lib.min.js"></script>
+
+  <script src="app.js"></script>
+</body>
+</html>

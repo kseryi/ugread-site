@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сонячнна система 2D</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #000;
+            color: #f1f1f1;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            text-align: center;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border-bottom: 1px solid rgba(76, 201, 240, 0.3);
+            z-index: 100;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            color: #ffd166;
+            text-shadow: 0 0 10px rgba(255, 209, 102, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #aaa;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        .simulation-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #simulation-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: grab;
+        }
+
+        #simulation-canvas:active {
+            cursor: grabbing;
+        }
+
+        .controls-panel {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            background: rgba(10, 15, 30, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            width: 320px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(76, 201, 240, 0.3);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+            transition: transform 0.3s;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .controls-panel.collapsed {
+            transform: translateX(-290px);
+        }
+
+        .toggle-panel {
+            position: absolute;
+            right: -40px;
+            top: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(10, 15, 30, 0.95);
+            border: 1px solid rgba(76, 201, 240, 0.3);
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #4cc9f0;
+            font-size: 1.2rem;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #4cc9f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            margin: 15px 0 10px 0;
+            color: #72efdd;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(76, 201, 240, 0.2);
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .slider-container {
+            margin-bottom: 15px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .slider-label span:first-child {
+            color: #ccc;
+        }
+
+        .slider-label span:last-child {
+            font-weight: bold;
+            color: #ffd166;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(90deg, #06d6a0, #118ab2);
+            border-radius: 4px;
+            outline: none;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .slider:hover {
+            opacity: 1;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffd166;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 209, 102, 0.9);
+            border: 2px solid white;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-group input {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            cursor: pointer;
+            color: #ccc;
+            font-size: 0.95rem;
+        }
+
+        .checkbox-group label:hover {
+            color: white;
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            background: rgba(10, 15, 30, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            width: 320px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(76, 201, 240, 0.3);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+            transition: transform 0.3s;
+        }
+
+        .info-panel.collapsed {
+            transform: translateX(340px);
+        }
+
+        .toggle-info {
+            position: absolute;
+            left: -40px;
+            top: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(10, 15, 30, 0.95);
+            border: 1px solid rgba(76, 201, 240, 0.3);
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #4cc9f0;
+            font-size: 1.2rem;
+        }
+
+        .celestial-info {
+            margin-top: 15px;
+        }
+
+        .celestial-name {
+            font-size: 1.4rem;
+            color: #ffd166;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .celestial-type {
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(76, 201, 240, 0.2);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #4cc9f0;
+            margin-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 3px;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .planet-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .planet-btn {
+            flex: 1;
+            min-width: 40px;
+            padding: 8px 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            font-size: 0.9rem;
+        }
+
+        .planet-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .planet-btn.active {
+            background: rgba(76, 201, 240, 0.2);
+            border-color: #4cc9f0;
+            color: #4cc9f0;
+        }
+
+        .time-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .time-btn {
+            padding: 8px 15px;
+            background: rgba(76, 201, 240, 0.2);
+            border: 1px solid rgba(76, 201, 240, 0.5);
+            border-radius: 6px;
+            color: #4cc9f0;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .time-btn:hover {
+            background: rgba(76, 201, 240, 0.3);
+        }
+
+        .time-btn.active {
+            background: rgba(76, 201, 240, 0.4);
+            box-shadow: 0 0 10px rgba(76, 201, 240, 0.5);
+        }
+
+        .current-date {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1.1rem;
+            color: #ffd166;
+            font-weight: bold;
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 15, 30, 0.8);
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(76, 201, 240, 0.2);
+            font-size: 0.9rem;
+            color: #ccc;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .instructions strong {
+            color: #ffd166;
+        }
+
+        .scale-indicator {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            background: rgba(10, 15, 30, 0.8);
+            border-radius: 8px;
+            padding: 10px 15px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(76, 201, 240, 0.2);
+            font-size: 0.9rem;
+        }
+
+        .scale-value {
+            color: #ffd166;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .view-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .view-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(10, 15, 30, 0.9);
+            border: 1px solid rgba(76, 201, 240, 0.3);
+            color: #4cc9f0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .view-btn:hover {
+            background: rgba(76, 201, 240, 0.2);
+            transform: scale(1.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            gap: 15px;
+            z-index: 5;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffd166;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        @media (max-width: 768px) {
+            .controls-panel, .info-panel {
+                width: 280px;
+                font-size: 0.9rem;
+            }
+            
+            .controls-panel.collapsed {
+                transform: translateX(-250px);
+            }
+            
+            .info-panel.collapsed {
+                transform: translateX(300px);
+            }
+            
+            .instructions {
+                font-size: 0.8rem;
+                padding: 10px 15px;
+                bottom: 10px;
+            }
+            
+            .view-controls {
+                bottom: 80px;
+                right: 10px;
+            }
+            
+            .scale-indicator {
+                bottom: 80px;
+                left: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-globe-americas"></i>Сонячна системи 2D</h1>
+            
+        </header>
+        
+        <div class="simulation-area">
+            <canvas id="simulation-canvas"></canvas>
+            
+            <div class="stats">
+				                <div class="stat-item">
+                    <div class="stat-value" id="active-comets">2</div>
+                    <div class="stat-label">Комети</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="visible-asteroids">4</div>
+                    <div class="stat-label">Астероїди</div>
+                </div>
+                
+                <div class="stat-item">
+                    <div class="stat-value" id="time-speed">1x</div>
+                    <div class="stat-label">Швидкість</div>
+                </div>
+            </div>
+            
+            <div class="controls-panel">
+                <div class="toggle-panel" id="toggle-panel">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                
+                <h2><i class="fas fa-sliders-h"></i> Налаштування</h2>
+                
+                <div class="control-group">
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Швидкість часу</span>
+                            <span id="time-speed-value">1x</span>
+                        </div>
+                        <input type="range" min="0" max="200" value="100" class="slider" id="time-speed-slider">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Розмір тіл</span>
+                            <span id="size-value">100%</span>
+                        </div>
+                        <input type="range" min="10" max="500" value="100" class="slider" id="size-slider">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Відстань масштабу</span>
+                            <span id="distance-value">100%</span>
+                        </div>
+                        <input type="range" min="10" max="500" value="100" class="slider" id="distance-slider">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Відображення</h3>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="show-orbits" checked>
+                        <label for="show-orbits">Орбіти планет</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="show-labels">
+                        <label for="show-labels">Назви тіл</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="show-satellites">
+                        <label for="show-satellites">Супутники</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="show-asteroid-belt">
+                        <label for="show-asteroid-belt">Пояс астероїдів</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="show-greeks-trojans">
+                        <label for="show-greeks-trojans">Греки & Троянці</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="show-comets">
+                        <label for="show-comets">Комети</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="show-comet-tails" checked>
+                        <label for="show-comet-tails">Хвости комет</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="show-koiper">
+                        <label for="show-koiper">Пояс Койпера</label>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Управління часом</h3>
+                    <div class="time-controls">
+                        <button class="time-btn" id="pause-btn">
+                            <i class="fas fa-pause"></i>
+                        </button>
+                        <button class="time-btn active" id="real-time-btn">
+                            1x
+                        </button>
+                        <button class="time-btn" id="slow-btn">
+                            0.1x
+                        </button>
+                        <button class="time-btn" id="fast-btn">
+                            10x
+                        </button>
+                        <button class="time-btn" id="faster-btn">
+                            100x
+                        </button>
+                    </div>
+                    <div class="current-date" id="current-date">
+                        1 січня 2024
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Швидкий вибір</h3>
+                    <div class="planet-selector">
+                        <div class="planet-btn" data-target="sun">☉</div>
+                        <div class="planet-btn" data-target="mercury">☿</div>
+                        <div class="planet-btn" data-target="venus">♀</div>
+                        <div class="planet-btn" data-target="earth">♁</div>
+                        <div class="planet-btn" data-target="mars">♂</div>
+                        <div class="planet-btn active" data-target="jupiter">♃</div>
+                        <div class="planet-btn" data-target="saturn">♄</div>
+                        <div class="planet-btn" data-target="uranus">♅</div>
+                        <div class="planet-btn" data-target="neptune">♆</div>
+                        <div class="planet-btn" data-target="pluto">♇</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="toggle-info" id="toggle-info">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                
+                <h2><i class="fas fa-info-circle"></i> Інформація</h2>
+                
+                <div class="celestial-info" id="celestial-info">
+                    <div class="celestial-name">Юпітер</div>
+                    <div class="celestial-type">Планета-гігант</div>
+                    
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Діаметр</div>
+                            <div class="info-value">139,820 км</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Маса</div>
+                            <div class="info-value">1.9×10²⁷ кг</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Відстань від Сонця</div>
+                            <div class="info-value">778 млн км</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Період обертання</div>
+                            <div class="info-value">11.86 років</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Супутники</div>
+                            <div class="info-value">95</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Температура</div>
+                            <div class="info-value">-145°C</div>
+                        </div>
+                    </div>
+                    
+                    <div class="satellite-info" id="satellite-info">
+                        <strong>Головні супутники:</strong> Ганімед, Каллісто, Іо, Європа
+                    </div>
+                </div>
+            </div>
+            
+            <div class="view-controls">
+                <div class="view-btn" id="reset-view" title="Скинути вид">
+                    <i class="fas fa-crosshairs"></i>
+                </div>
+                <div class="view-btn" id="zoom-in" title="Збільшити">
+                    <i class="fas fa-search-plus"></i>
+                </div>
+                <div class="view-btn" id="zoom-out" title="Зменшити">
+                    <i class="fas fa-search-minus"></i>
+                </div>
+            </div>
+            
+            <div class="scale-indicator">
+                Масштаб: <span class="scale-value" id="scale-value">1:10 млрд</span>
+            </div>
+            
+            <div class="instructions">
+                <strong>Керування:</strong> Коліщатко миші — масштаб • Перетягування — навігація
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Отримання елементів DOM
+        const canvas = document.getElementById('simulation-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Налаштування розмірів canvas
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Змінні симуляції
+        let zoom = 1.0;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let simulationTime = 0;
+        let timeSpeed = 1.0;
+        let bodySizeMultiplier = 1.0;
+        let distanceMultiplier = 1.0;
+        let isPaused = false;
+        let selectedCelestial = 'jupiter';
+        
+        // Статичне зоряне небо
+        const stars = [];
+        for (let i = 0; i < 500; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 1.5,
+                brightness: Math.random() * 0.5 + 0.5
+            });
+        }
+        
+        // ДАНІ ПРО НЕБЕСНІ ТІЛА
+        const celestialBodies = {
+            sun: {
+                name: "Сонце",
+                type: "Зоря",
+                color: "#ffd166",
+                radius: 20,
+                orbitRadius: 0,
+                orbitalPeriod: 0,
+                distance: 0,
+                angle: 0,
+                satellites: [],
+                info: {
+                    diameter: "1,391,000 км",
+                    mass: "1.99×10³⁰ кг",
+                    distanceFromSun: "0 км",
+                    orbitalPeriod: "25-35 днів",
+                    satellites: "8 планет",
+                    temperature: "5,500°C"
+                }
+            },
+            mercury: {
+                name: "Меркурій",
+                type: "Планета",
+                color: "#8a8a8a",
+                radius: 4,
+                orbitRadius: 60,
+                orbitalPeriod: 88,
+                distance: 57.9,
+                angle: 0,
+                satellites: [],
+                info: {
+                    diameter: "4,879 км",
+                    mass: "3.3×10²³ кг",
+                    distanceFromSun: "57.9 млн км",
+                    orbitalPeriod: "88 днів",
+                    satellites: "0",
+                    temperature: "-173 до 427°C"
+                }
+            },
+            venus: {
+                name: "Венера",
+                type: "Планета",
+                color: "#e39e1c",
+                radius: 6,
+                orbitRadius: 90,
+                orbitalPeriod: 225,
+                distance: 108.2,
+                angle: Math.PI/2,
+                satellites: [],
+                info: {
+                    diameter: "12,104 км",
+                    mass: "4.87×10²⁴ кг",
+                    distanceFromSun: "108.2 млн км",
+                    orbitalPeriod: "225 днів",
+                    satellites: "0",
+                    temperature: "462°C"
+                }
+            },
+            earth: {
+                name: "Земля",
+                type: "Планета",
+                color: "#06d6a0",
+                radius: 6.5,
+                orbitRadius: 120,
+                orbitalPeriod: 365,
+                distance: 149.6,
+                angle: Math.PI,
+                satellites: [
+                    { name: "Місяць", distance: 10, radius: 1.8, orbitalPeriod: 27.3, color: "#8a8a8a" }
+                ],
+                info: {
+                    diameter: "12,742 км",
+                    mass: "5.97×10²⁴ кг",
+                    distanceFromSun: "149.6 млн км",
+                    orbitalPeriod: "365 днів",
+                    satellites: "1",
+                    temperature: "15°C"
+                }
+            },
+            mars: {
+                name: "Марс",
+                type: "Планета",
+                color: "#ef476f",
+                radius: 5,
+                orbitRadius: 150,
+                orbitalPeriod: 687,
+                distance: 227.9,
+                angle: 3*Math.PI/2,
+                satellites: [
+                    { name: "Фобос", distance: 8, radius: 0.7, orbitalPeriod: 0.32, color: "#a05252" },
+                    { name: "Деймос", distance: 12, radius: 0.5, orbitalPeriod: 1.26, color: "#8a4242" }
+                ],
+                info: {
+                    diameter: "6,779 км",
+                    mass: "6.42×10²³ кг",
+                    distanceFromSun: "227.9 млн км",
+                    orbitalPeriod: "687 днів",
+                    satellites: "2",
+                    temperature: "-63°C"
+                }
+            },
+            jupiter: {
+                name: "Юпітер",
+                type: "Планета-гігант",
+                color: "#ff9e00",
+                radius: 15,
+                orbitRadius: 220,
+                orbitalPeriod: 4332,
+                distance: 778.5,
+                angle: 0,
+                satellites: [
+                    { name: "Ганімед", distance: 25, radius: 2.6, orbitalPeriod: 7.15, color: "#a0a0c0" },
+                    { name: "Каллісто", distance: 30, radius: 2.4, orbitalPeriod: 16.69, color: "#9090b0" },
+                    { name: "Іо", distance: 18, radius: 2.2, orbitalPeriod: 1.77, color: "#ffb366" },
+                    { name: "Європа", distance: 22, radius: 1.9, orbitalPeriod: 3.55, color: "#ffffcc" }
+                ],
+                info: {
+                    diameter: "139,820 км",
+                    mass: "1.9×10²⁷ кг",
+                    distanceFromSun: "778.5 млн км",
+                    orbitalPeriod: "11.86 років",
+                    satellites: "95",
+                    temperature: "-145°C"
+                }
+            },
+            saturn: {
+                name: "Сатурн",
+                type: "Планета-гігант",
+                color: "#ffd166",
+                radius: 13,
+                orbitRadius: 280,
+                orbitalPeriod: 10759,
+                distance: 1432,
+                angle: Math.PI/3,
+                satellites: [
+                    { name: "Титан", distance: 30, radius: 2.6, orbitalPeriod: 15.95, color: "#cc9966" },
+                    { name: "Рея", distance: 25, radius: 1.5, orbitalPeriod: 4.52, color: "#cccccc" },
+                    { name: "Япет", distance: 35, radius: 1.4, orbitalPeriod: 79.33, color: "#666666" },
+                    { name: "Діона", distance: 22, radius: 1.1, orbitalPeriod: 2.74, color: "#aaaaaa" }
+                ],
+                rings: {
+                    innerRadius: 18,
+                    outerRadius: 25,
+                    color: "#ffcc99"
+                },
+                info: {
+                    diameter: "116,460 км",
+                    mass: "5.68×10²⁶ кг",
+                    distanceFromSun: "1.43 млрд км",
+                    orbitalPeriod: "29.46 років",
+                    satellites: "82",
+                    temperature: "-178°C"
+                }
+            },
+            uranus: {
+                name: "Уран",
+                type: "Планета-гігант",
+                color: "#72efdd",
+                radius: 10,
+                orbitRadius: 330,
+                orbitalPeriod: 30688,
+                distance: 2867,
+                angle: 2*Math.PI/3,
+                satellites: [
+                    { name: "Титанія", distance: 20, radius: 1.6, orbitalPeriod: 8.71, color: "#99ccff" },
+                    { name: "Оберон", distance: 23, radius: 1.5, orbitalPeriod: 13.46, color: "#6699cc" },
+                    { name: "Умбрієль", distance: 17, radius: 1.2, orbitalPeriod: 4.14, color: "#336699" },
+                    { name: "Арієль", distance: 14, radius: 1.2, orbitalPeriod: 2.52, color: "#aaddff" }
+                ],
+                info: {
+                    diameter: "50,724 км",
+                    mass: "8.68×10²⁵ кг",
+                    distanceFromSun: "2.87 млрд км",
+                    orbitalPeriod: "84 роки",
+                    satellites: "27",
+                    temperature: "-224°C"
+                }
+            },
+            neptune: {
+                name: "Нептун",
+                type: "Планета-гігант",
+                color: "#4361ee",
+                radius: 10,
+                orbitRadius: 380,
+                orbitalPeriod: 60182,
+                distance: 4515,
+                angle: Math.PI,
+                satellites: [
+                    { name: "Тритон", distance: 22, radius: 1.7, orbitalPeriod: 5.88, color: "#aaddff" },
+                    { name: "Протей", distance: 18, radius: 1.0, orbitalPeriod: 1.12, color: "#88bbee" },
+                    { name: "Нереїда", distance: 35, radius: 0.9, orbitalPeriod: 360, color: "#6699cc" }
+                ],
+                info: {
+                    diameter: "49,244 км",
+                    mass: "1.02×10²⁶ кг",
+                    distanceFromSun: "4.5 млрд км",
+                    orbitalPeriod: "164.8 років",
+                    satellites: "14",
+                    temperature: "-214°C"
+                }
+            },
+            pluto: {
+                name: "Плутон",
+                type: "Карликова планета",
+                color: "#a855f7",
+                radius: 3.5,
+                orbitRadius: 420,
+                orbitalPeriod: 90560,
+                distance: 5906,
+                angle: 4*Math.PI/3,
+                satellites: [
+                    { name: "Харон", distance: 8, radius: 1.8, orbitalPeriod: 6.39, color: "#9966cc" }
+                ],
+                info: {
+                    diameter: "2,376 км",
+                    mass: "1.31×10²² кг",
+                    distanceFromSun: "5.9 млрд км",
+                    orbitalPeriod: "248 років",
+                    satellites: "5",
+                    temperature: "-229°C"
+                }
+            }
+        };
+        
+        // ПОЯС АСТЕРОЇДІВ
+        const asteroidBelt = {
+            innerRadius: 165,
+            outerRadius: 200,
+            asteroids: []
+        };
+        
+        // Ініціалізація поясу астероїдів
+        function initAsteroidBelt() {
+            asteroidBelt.asteroids = [];
+            
+            // Великі астероїди
+            const largeAsteroids = [
+                { name: "Церера", size: 3.0, color: "#8a8a8a", orbitalPeriod: 1680 },
+                { name: "Веста", size: 2.5, color: "#a0a0a0", orbitalPeriod: 1325 },
+                { name: "Паллада", size: 2.2, color: "#909090", orbitalPeriod: 1687 },
+                { name: "Гигея", size: 2.0, color: "#808080", orbitalPeriod: 2030 }
+            ];
+            
+            // Додаємо великі астероїди
+            largeAsteroids.forEach((asteroid, i) => {
+                const distance = asteroidBelt.innerRadius + 
+                               (asteroidBelt.outerRadius - asteroidBelt.innerRadius) * 
+                               (i + 1) / (largeAsteroids.length + 1);
+                asteroidBelt.asteroids.push({
+                    name: asteroid.name,
+                    distance: distance,
+                    size: asteroid.size,
+                    color: asteroid.color,
+                    orbitalPeriod: asteroid.orbitalPeriod,
+                    angle: Math.random() * Math.PI * 2
+                });
+            });
+            
+            // Додаємо дрібні астероїди
+            for (let i = 0; i < 50; i++) {
+                const distance = asteroidBelt.innerRadius + 
+                               Math.random() * (asteroidBelt.outerRadius - asteroidBelt.innerRadius);
+                asteroidBelt.asteroids.push({
+                    name: "",
+                    distance: distance,
+                    size: 0.1 + Math.random() * 0.8,
+                    color: `rgba(160, 120, 220, ${0.5 + Math.random() * 0.3})`,
+                    orbitalPeriod: 1095 + Math.random() * 1095,
+                    angle: Math.random() * Math.PI * 2
+                });
+            }
+        }
+        
+        initAsteroidBelt();
+        
+        // ГРЕКИ ТА ТРОЯНЦІ
+        const greeksTrojans = {
+            l4: [], // Греки (L4) - 60° попереду Юпітера
+            l5: []  // Троянці (L5) - 60° позаду Юпітера
+        };
+        
+        // Ініціалізація Греків та Троянців
+        function initGreeksTrojans() {
+            greeksTrojans.l4 = [];
+            greeksTrojans.l5 = [];
+            
+            const jupiterDistance = celestialBodies.jupiter.orbitRadius;
+            const jupiterPeriod = celestialBodies.jupiter.orbitalPeriod;
+            
+            // Греки (L4) - 60° попереду Юпітера
+            for (let i = 0; i < 20; i++) {
+                greeksTrojans.l4.push({
+                    name: i === 0 ? "624 Гектор" : i === 1 ? "588 Ахілл" : "",
+                    distance: jupiterDistance,
+                    size: i < 2 ? 1.5 + Math.random() * 0.5 : 0.5 + Math.random() * 0.7,
+                    color: "#ff9966",
+                    orbitalPeriod: jupiterPeriod,
+                    baseAngleOffset: Math.PI/3,
+                    libration: (Math.random() - 0.5) * 0.3,
+                    angle: Math.random() * Math.PI * 2
+                });
+            }
+            
+            // Троянці (L5) - 60° позаду Юпітера
+            for (let i = 0; i < 20; i++) {
+                greeksTrojans.l5.push({
+                    name: i === 0 ? "617 Патрокл" : i === 1 ? "884 Пріам" : "",
+                    distance: jupiterDistance,
+                    size: i < 2 ? 1.5 + Math.random() * 0.5 : 0.5 + Math.random() * 0.7,
+                    color: "#6699ff",
+                    orbitalPeriod: jupiterPeriod,
+                    baseAngleOffset: -Math.PI/3,
+                    libration: (Math.random() - 0.5) * 0.3,
+                    angle: Math.random() * Math.PI * 2
+                });
+            }
+        }
+        
+        initGreeksTrojans();
+        
+        // КОМЕТИ З ПРАВИЛЬНИМИ НАПРЯМКАМИ ХВОСТІВ
+        const comets = [
+            {
+                name: "Галлея",
+                color: "#72efdd",
+                maxTailLength: 100,
+                orbitRadius: 35 * 30,
+                perihelionRadius: 0.586 * 30,
+                orbitalPeriod: 75.32 * 365.25,
+                angle: 0,
+                size: 2.0,
+                eccentricity: 0.967
+            },
+            {
+                name: "Енке",
+                color: "#ff9e6d",
+                maxTailLength: 70,
+                orbitRadius: 4.1 * 30,
+                perihelionRadius: 0.34 * 30,
+                orbitalPeriod: 3.30 * 365.25,
+                angle: Math.PI,
+                size: 1.8,
+                eccentricity: 0.847
+            },
+            {
+                name: "Чурюмова-Герасименко",
+                color: "#a855f7",
+                maxTailLength: 50,
+                orbitRadius: 5.68 * 30,
+                perihelionRadius: 1.24 * 30,
+                orbitalPeriod: 6.44 * 365.25,
+                angle: Math.PI/2,
+                size: 1.5,
+                eccentricity: 0.641
+            }
+        ];
+        
+        // ПОЯС КОЙПЕРА
+        const kuiperBelt = {
+            innerRadius: 400,
+            outerRadius: 480,
+            objects: []
+        };
+        
+        // Ініціалізація Поясу Койпера
+        function initKuiperBelt() {
+            kuiperBelt.objects = [];
+            
+            // Великі об'єкти Поясу Койпера
+            const largeObjects = [
+                { name: "Хаумеа", distance: 430, size: 2.5, color: "#cccccc", orbitalPeriod: 285 * 365.25 },
+                { name: "Макемаке", distance: 445, size: 2.3, color: "#aaaaaa", orbitalPeriod: 306 * 365.25 },
+                { name: "Ерида", distance: 460, size: 2.6, color: "#dddddd", orbitalPeriod: 557 * 365.25 },
+                { name: "Седна", distance: 500, size: 1.5, color: "#999999", orbitalPeriod: 11400 * 365.25 }
+            ];
+            
+            // Додаємо великі об'єкти
+            largeObjects.forEach(obj => {
+                kuiperBelt.objects.push({
+                    name: obj.name,
+                    distance: obj.distance,
+                    size: obj.size,
+                    color: obj.color,
+                    orbitalPeriod: obj.orbitalPeriod,
+                    angle: Math.random() * Math.PI * 2
+                });
+            });
+            
+            // Додаємо дрібні об'єкти
+            for (let i = 0; i < 30; i++) {
+                const distance = kuiperBelt.innerRadius + 
+                               Math.random() * (kuiperBelt.outerRadius - kuiperBelt.innerRadius);
+                kuiperBelt.objects.push({
+                    name: "",
+                    distance: distance,
+                    size: 0.1 + Math.random() * 0.7,
+                    color: `rgba(180, 140, 255, ${0.3 + Math.random() * 0.4})`,
+                    orbitalPeriod: (200 + Math.random() * 400) * 365.25,
+                    angle: Math.random() * Math.PI * 2
+                });
+            }
+        }
+        
+        initKuiperBelt();
+        
+        // ФУНКЦІЇ ДЛЯ МАЛЮВАННЯ
+        
+        // Малювання зоряного неба
+        function drawStars() {
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+                ctx.fill();
+            });
+        }
+        
+        // Малювання орбіти
+        function drawOrbit(radius, color = 'rgba(255, 255, 255, 0.1)', isComet = false, cometData = null) {
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = isComet ? 0.5 : 1;
+            
+            if (isComet && cometData && cometData.eccentricity) {
+                // Еліптична орбіта для комет
+                const a = (cometData.orbitRadius + cometData.perihelionRadius) / 2 * distanceMultiplier;
+                const b = a * Math.sqrt(1 - cometData.eccentricity * cometData.eccentricity);
+                
+                ctx.ellipse(0, 0, a, b, 0, 0, Math.PI * 2);
+                ctx.setLineDash([5, 5]);
+            } else {
+                // Кругова орбіта
+                ctx.arc(0, 0, radius * distanceMultiplier, 0, Math.PI * 2);
+                if (isComet) ctx.setLineDash([5, 5]);
+            }
+            
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // Малювання орбіт комет
+        function drawCometOrbits() {
+            if (!document.getElementById('show-orbits').checked) return;
+            
+            comets.forEach(comet => {
+                const orbitColor = comet.color + '40';
+                drawOrbit(comet.orbitRadius, orbitColor, true, comet);
+            });
+        }
+        
+        // Малювання поясу астероїдів
+        function drawAsteroidBelt() {
+            ctx.save();
+            
+            const gradient = ctx.createRadialGradient(0, 0, asteroidBelt.innerRadius * distanceMultiplier, 
+                                                      0, 0, asteroidBelt.outerRadius * distanceMultiplier);
+            gradient.addColorStop(0, 'rgba(160, 120, 220, 0.05)');
+            gradient.addColorStop(0.5, 'rgba(160, 120, 220, 0.03)');
+            gradient.addColorStop(1, 'rgba(160, 120, 220, 0.01)');
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, asteroidBelt.outerRadius * distanceMultiplier, 0, Math.PI * 2);
+            ctx.arc(0, 0, asteroidBelt.innerRadius * distanceMultiplier, 0, Math.PI * 2, true);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        // Малювання астероїдів
+        function drawAsteroids() {
+            let visibleAsteroids = 0;
+            
+            asteroidBelt.asteroids.forEach(asteroid => {
+                const angle = asteroid.angle + (simulationTime * 2 * Math.PI) / asteroid.orbitalPeriod;
+                const x = Math.cos(angle) * asteroid.distance * distanceMultiplier;
+                const y = Math.sin(angle) * asteroid.distance * distanceMultiplier;
+                
+                if (asteroid.name) visibleAsteroids++;
+                drawAsteroid(x, y, asteroid.size, asteroid.color, asteroid.name);
+            });
+            
+            document.getElementById('visible-asteroids').textContent = visibleAsteroids;
+        }
+        
+        // Малювання астероїда
+        function drawAsteroid(x, y, size, color, name = '') {
+            const asteroidSize = size * bodySizeMultiplier;
+            
+            ctx.save();
+            ctx.translate(x, y);
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, asteroidSize, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            if (document.getElementById('show-labels').checked && name) {
+                ctx.restore();
+                ctx.save();
+                ctx.fillStyle = 'rgba(200, 200, 200, 0.9)';
+                ctx.font = `${Math.max(10, 10/zoom)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(name, x, y - asteroidSize - 3);
+            }
+            
+            ctx.restore();
+        }
+        
+        // Малювання планети
+        function drawPlanet(x, y, radius, color, name = '', isSun = false) {
+            ctx.save();
+            
+            if (isSun) {
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 2);
+                gradient.addColorStop(0, '#fff');
+                gradient.addColorStop(0.2, '#ffea00');
+                gradient.addColorStop(0.5, '#ff9e00');
+                gradient.addColorStop(1, 'rgba(255, 158, 0, 0)');
+                
+                ctx.beginPath();
+                ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+            }
+            
+            const bodyRadius = radius * bodySizeMultiplier;
+            const gradient = ctx.createRadialGradient(
+                x - bodyRadius/3, y - bodyRadius/3, 0,
+                x, y, bodyRadius
+            );
+            
+            gradient.addColorStop(0, lightenColor(color, 40));
+            gradient.addColorStop(0.7, color);
+            gradient.addColorStop(1, darkenColor(color, 30));
+            
+            ctx.beginPath();
+            ctx.arc(x, y, bodyRadius, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(x, y, bodyRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            if (document.getElementById('show-labels').checked && name && !isSun) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.font = `${Math.max(12, 12/zoom)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(name, x, y - bodyRadius - 5);
+            }
+            
+            ctx.restore();
+        }
+        
+        // Малювання супутника
+        function drawSatellite(planetX, planetY, satellite, planetAngle) {
+            const satAngle = planetAngle + (simulationTime * 2 * Math.PI) / satellite.orbitalPeriod;
+            const x = planetX + Math.cos(satAngle) * satellite.distance;
+            const y = planetY + Math.sin(satAngle) * satellite.distance;
+            
+            const radius = satellite.radius * bodySizeMultiplier;
+            
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = satellite.color;
+            ctx.fill();
+        }
+        
+        // Малювання кільця Сатурна
+        function drawSaturnRings(x, y) {
+            const rings = celestialBodies.saturn.rings;
+            if (!rings) return;
+            
+            ctx.save();
+            
+            const gradient = ctx.createRadialGradient(x, y, rings.innerRadius, x, y, rings.outerRadius);
+            gradient.addColorStop(0, 'rgba(255, 204, 153, 0.3)');
+            gradient.addColorStop(0.5, 'rgba(255, 204, 153, 0.6)');
+            gradient.addColorStop(1, 'rgba(255, 204, 153, 0.2)');
+            
+            ctx.beginPath();
+            ctx.ellipse(x, y, rings.outerRadius, rings.outerRadius * 0.3, 0, 0, Math.PI * 2);
+            ctx.ellipse(x, y, rings.innerRadius, rings.innerRadius * 0.3, 0, 0, Math.PI * 2, true);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        // Малювання Греків та Троянців
+        function drawGreeksTrojans(jupiterAngle) {
+            const jupiterOrbitRadius = celestialBodies.jupiter.orbitRadius * distanceMultiplier;
+            
+            // Греки (L4) - 60° попереду Юпітера
+            greeksTrojans.l4.forEach(asteroid => {
+                const libration = Math.sin(simulationTime * 0.001 + asteroid.angle) * asteroid.libration;
+                const angle = jupiterAngle + asteroid.baseAngleOffset + libration;
+                const x = Math.cos(angle) * jupiterOrbitRadius;
+                const y = Math.sin(angle) * jupiterOrbitRadius;
+                
+                drawAsteroid(x, y, asteroid.size, asteroid.color, asteroid.name);
+            });
+            
+            // Троянці (L5) - 60° позаду Юпітера
+            greeksTrojans.l5.forEach(asteroid => {
+                const libration = Math.sin(simulationTime * 0.001 + asteroid.angle) * asteroid.libration;
+                const angle = jupiterAngle + asteroid.baseAngleOffset + libration;
+                const x = Math.cos(angle) * jupiterOrbitRadius;
+                const y = Math.sin(angle) * jupiterOrbitRadius;
+                
+                drawAsteroid(x, y, asteroid.size, asteroid.color, asteroid.name);
+            });
+        }
+        
+        // Малювання комети З ПРАВИЛЬНИМ НАПРЯМКОМ ХВОСТА
+        function drawComet(comet) {
+            // Оновлюємо кут комети залежно від швидкості симуляції
+            comet.angle += (2 * Math.PI / comet.orbitalPeriod) * timeSpeed;
+            
+            let currentRadius, trueAnomaly;
+            
+            if (comet.eccentricity) {
+                // ЕЛІПТИЧНА ОРБІТА
+                const meanAnomaly = comet.angle;
+                // Ітеративний розрахунок ексцентричної аномалії
+                let E = meanAnomaly;
+                for (let i = 0; i < 5; i++) {
+                    E = meanAnomaly + comet.eccentricity * Math.sin(E);
+                }
+                // Істинна аномалія
+                trueAnomaly = 2 * Math.atan2(
+                    Math.sqrt(1 + comet.eccentricity) * Math.sin(E/2),
+                    Math.sqrt(1 - comet.eccentricity) * Math.cos(E/2)
+                );
+                
+                // Радіус в поточній точці орбіти
+                currentRadius = comet.perihelionRadius * (1 + comet.eccentricity) / 
+                              (1 + comet.eccentricity * Math.cos(trueAnomaly)) * distanceMultiplier;
+            } else {
+                // КРУГОВА ОРБІТА
+                trueAnomaly = comet.angle;
+                currentRadius = comet.orbitRadius * distanceMultiplier;
+            }
+            
+            const x = Math.cos(trueAnomaly) * currentRadius;
+            const y = Math.sin(trueAnomaly) * currentRadius;
+            
+            const cometSize = comet.size * bodySizeMultiplier;
+            
+            // Напрямок ДО Сонця (вектор від комети до Сонця)
+            // Сонце знаходиться в точці (0, 0), тому вектор до Сонця = (-x, -y)
+            const sunDirection = Math.atan2(-y, -x);
+            
+            // Хвіст спрямований ВІД Сонця (протилежно вектору до Сонця)
+            // Це означає, що хвіст спрямований в тому ж напрямку, що і вектор від Сонця до комети
+            const tailDirection = Math.atan2(y, x);
+            
+            // Хвіст комети
+            let tailLength = 0;
+            if (document.getElementById('show-comet-tails').checked) {
+                // Відстань до Сонця
+                const distanceToSun = Math.sqrt(x*x + y*y);
+                // Хвіст збільшується при наближенні до Сонця
+                const tailFactor = Math.max(0, 1 - distanceToSun / (200 * distanceMultiplier));
+                tailLength = comet.maxTailLength * tailFactor * tailFactor * (1 + timeSpeed * 0.05);
+                
+                if (tailLength > 2) {
+                    // Кінцева точка хвоста - у напрямку ВІД Сонця
+                    const tailEndX = x + Math.cos(tailDirection) * tailLength;
+                    const tailEndY = y + Math.sin(tailDirection) * tailLength;
+                    
+                    const tailGradient = ctx.createLinearGradient(
+                        x, y,
+                        tailEndX, tailEndY
+                    );
+                    tailGradient.addColorStop(0, `${comet.color}80`);
+                    tailGradient.addColorStop(0.5, `${comet.color}40`);
+                    tailGradient.addColorStop(1, `${comet.color}00`);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(tailEndX, tailEndY);
+                    ctx.strokeStyle = tailGradient;
+                    ctx.lineWidth = 2 + tailFactor * 3;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                }
+            }
+            
+            // Ядро комети
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, cometSize);
+            gradient.addColorStop(0, lightenColor(comet.color, 70));
+            gradient.addColorStop(0.7, comet.color);
+            gradient.addColorStop(1, darkenColor(comet.color, 20));
+            
+            ctx.beginPath();
+            ctx.arc(x, y, cometSize, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Обвідка ядра
+            ctx.beginPath();
+            ctx.arc(x, y, cometSize, 0, Math.PI * 2);
+            ctx.strokeStyle = lightenColor(comet.color, 30);
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+            
+            if (document.getElementById('show-labels').checked && comet.name) {
+                ctx.fillStyle = 'rgba(200, 230, 255, 0.9)';
+                ctx.font = `${Math.max(11, 11/zoom)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                const labelY = tailLength > 0 ? y - cometSize - tailLength/2 - 5 : y - cometSize - 5;
+                ctx.fillText(comet.name, x, labelY);
+            }
+            
+            return { active: tailLength > 2, x, y };
+        }
+        
+        // Малювання Поясу Койпера
+        function drawKuiperBelt() {
+            ctx.save();
+            
+            const gradient = ctx.createRadialGradient(0, 0, kuiperBelt.innerRadius * distanceMultiplier, 
+                                                      0, 0, kuiperBelt.outerRadius * distanceMultiplier);
+            gradient.addColorStop(0, 'rgba(180, 140, 255, 0.03)');
+            gradient.addColorStop(0.5, 'rgba(180, 140, 255, 0.02)');
+            gradient.addColorStop(1, 'rgba(180, 140, 255, 0.01)');
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, kuiperBelt.outerRadius * distanceMultiplier, 0, Math.PI * 2);
+            ctx.arc(0, 0, kuiperBelt.innerRadius * distanceMultiplier, 0, Math.PI * 2, true);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        // Малювання об'єктів Поясу Койпера
+        function drawKuiperObjects() {
+            kuiperBelt.objects.forEach(obj => {
+                const angle = obj.angle + (simulationTime * 2 * Math.PI) / obj.orbitalPeriod;
+                const x = Math.cos(angle) * obj.distance * distanceMultiplier;
+                const y = Math.sin(angle) * obj.distance * distanceMultiplier;
+                
+                drawKuiperObject(x, y, obj.size, obj.color, obj.name);
+            });
+        }
+        
+        // Малювання об'єкта Поясу Койпера
+        function drawKuiperObject(x, y, size, color, name = '') {
+            const objectSize = size * bodySizeMultiplier;
+            
+            ctx.save();
+            ctx.translate(x, y);
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, objectSize, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            if (document.getElementById('show-labels').checked && name) {
+                ctx.restore();
+                ctx.save();
+                ctx.fillStyle = 'rgba(200, 200, 255, 0.9)';
+                ctx.font = `${Math.max(10, 10/zoom)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(name, x, y - objectSize - 3);
+            }
+            
+            ctx.restore();
+        }
+        
+        // Функції для роботи з кольорами
+        function lightenColor(color, percent) {
+            const num = parseInt(color.replace("#", ""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.min(255, (num >> 16) + amt);
+            const G = Math.min(255, (num >> 8 & 0x00FF) + amt);
+            const B = Math.min(255, (num & 0x0000FF) + amt);
+            return `#${(0x1000000 + (R * 0x10000) + (G * 0x100) + B).toString(16).slice(1)}`;
+        }
+        
+        function darkenColor(color, percent) {
+            const num = parseInt(color.replace("#", ""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.max(0, (num >> 16) - amt);
+            const G = Math.max(0, (num >> 8 & 0x00FF) - amt);
+            const B = Math.max(0, (num & 0x0000FF) - amt);
+            return `#${(0x1000000 + (R * 0x10000) + (G * 0x100) + B).toString(16).slice(1)}`;
+        }
+        
+        // ГОЛОВНА ФУНКЦІЯ МАЛЮВАННЯ
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawStars();
+            
+            if (!isPaused) {
+                simulationTime += 1 * timeSpeed;
+            }
+            
+            updateCurrentDate();
+            
+            ctx.save();
+            ctx.translate(canvas.width/2 + offsetX, canvas.height/2 + offsetY);
+            ctx.scale(zoom, zoom);
+            
+            // Малювання орбіт планет
+            if (document.getElementById('show-orbits').checked) {
+                Object.values(celestialBodies).forEach(body => {
+                    if (body.orbitRadius > 0) {
+                        drawOrbit(body.orbitRadius);
+                    }
+                });
+            }
+            
+            // Малювання орбіт комет
+            if (document.getElementById('show-comets').checked) {
+                drawCometOrbits();
+            }
+            
+            // Малювання поясу астероїдів
+            if (document.getElementById('show-asteroid-belt').checked) {
+                drawAsteroidBelt();
+                drawAsteroids();
+            }
+            
+            // Малювання планет
+            let jupiterAngle = 0;
+            
+            Object.entries(celestialBodies).forEach(([id, body]) => {
+                if (id === 'sun') {
+                    drawPlanet(0, 0, body.radius, body.color, body.name, true);
+                } else {
+                    const angle = body.angle + (simulationTime * 2 * Math.PI) / body.orbitalPeriod;
+                    const x = Math.cos(angle) * body.orbitRadius * distanceMultiplier;
+                    const y = Math.sin(angle) * body.orbitRadius * distanceMultiplier;
+                    
+                    drawPlanet(x, y, body.radius, body.color, body.name);
+                    
+                    if (id === 'jupiter') {
+                        jupiterAngle = angle;
+                    }
+                    
+                    if (id === 'saturn') {
+                        drawSaturnRings(x, y);
+                    }
+                    
+                    if (document.getElementById('show-satellites').checked && body.satellites) {
+                        body.satellites.forEach(satellite => {
+                            drawSatellite(x, y, satellite, angle);
+                        });
+                    }
+                }
+            });
+            
+            // Малювання Греків та Троянців
+            if (document.getElementById('show-greeks-trojans').checked) {
+                drawGreeksTrojans(jupiterAngle);
+            }
+            
+            // Малювання комет
+            let activeComets = 0;
+            if (document.getElementById('show-comets').checked) {
+                comets.forEach(comet => {
+                    const result = drawComet(comet);
+                    if (result.active) {
+                        activeComets++;
+                    }
+                });
+                document.getElementById('active-comets').textContent = activeComets;
+            }
+            
+            // Малювання Поясу Койпера
+            if (document.getElementById('show-koiper').checked) {
+                drawKuiperBelt();
+                drawKuiperObjects();
+            }
+            
+            ctx.restore();
+            
+            requestAnimationFrame(draw);
+        }
+        
+        // Оновлення дати
+        function updateCurrentDate() {
+            const baseDate = new Date('2024-01-01');
+            const daysToAdd = Math.floor(simulationTime);
+            const currentDate = new Date(baseDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+            const formattedDate = currentDate.toLocaleDateString('uk-UA', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('current-date').textContent = formattedDate;
+        }
+        
+        // Оновлення інформації
+        function updateCelestialInfo(bodyId) {
+            const body = celestialBodies[bodyId];
+            if (!body) return;
+            
+            selectedCelestial = bodyId;
+            document.querySelector('.celestial-name').textContent = body.name;
+            document.querySelector('.celestial-type').textContent = body.type;
+            
+            const infoGrid = document.querySelector('.info-grid');
+            infoGrid.innerHTML = '';
+            
+            Object.entries(body.info).forEach(([key, value]) => {
+                const label = {
+                    diameter: "Діаметр",
+                    mass: "Маса",
+                    distanceFromSun: "Відстань від Сонця",
+                    orbitalPeriod: "Період обертання",
+                    satellites: "Супутники",
+                    temperature: "Температура"
+                }[key];
+                
+                const infoItem = document.createElement('div');
+                infoItem.className = 'info-item';
+                infoItem.innerHTML = `<div class="info-label">${label}</div><div class="info-value">${value}</div>`;
+                infoGrid.appendChild(infoItem);
+            });
+            
+            const satelliteInfo = document.getElementById('satellite-info');
+            if (body.satellites && body.satellites.length > 0) {
+                satelliteInfo.innerHTML = `<strong>Головні супутники:</strong> ${body.satellites.map(s => s.name).join(', ')}`;
+                satelliteInfo.style.display = 'block';
+            } else {
+                satelliteInfo.style.display = 'none';
+            }
+        }
+        
+        // ОБРОБНИКИ ПОДІЙ
+        
+        // Миша
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            dragStartX = e.clientX - offsetX;
+            dragStartY = e.clientY - offsetY;
+            canvas.style.cursor = 'grabbing';
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            offsetX = e.clientX - dragStartX;
+            offsetY = e.clientY - dragStartY;
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+        
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomFactor = 1.1;
+            const mouseX = e.clientX - canvas.getBoundingClientRect().left;
+            const mouseY = e.clientY - canvas.getBoundingClientRect().top;
+            
+            const worldX = (mouseX - canvas.width/2 - offsetX) / zoom;
+            const worldY = (mouseY - canvas.height/2 - offsetY) / zoom;
+            
+            if (e.deltaY < 0) {
+                zoom *= zoomFactor;
+                if (zoom > 10) zoom = 10;
+            } else {
+                zoom /= zoomFactor;
+                if (zoom < 0.1) zoom = 0.1;
+            }
+            
+            offsetX = mouseX - canvas.width/2 - worldX * zoom;
+            offsetY = mouseY - canvas.height/2 - worldY * zoom;
+            updateScaleValue();
+        });
+        
+        // Слайдери
+        document.getElementById('time-speed-slider').addEventListener('input', function() {
+            timeSpeed = this.value / 100;
+            document.getElementById('time-speed-value').textContent = timeSpeed.toFixed(1) + 'x';
+            document.getElementById('time-speed').textContent = timeSpeed.toFixed(1) + 'x';
+        });
+        
+        document.getElementById('size-slider').addEventListener('input', function() {
+            bodySizeMultiplier = this.value / 100;
+            document.getElementById('size-value').textContent = Math.round(bodySizeMultiplier * 100) + '%';
+        });
+        
+        document.getElementById('distance-slider').addEventListener('input', function() {
+            distanceMultiplier = this.value / 100;
+            document.getElementById('distance-value').textContent = Math.round(distanceMultiplier * 100) + '%';
+        });
+        
+        // Кнопки часу
+        document.getElementById('pause-btn').addEventListener('click', function() {
+            isPaused = !isPaused;
+            this.innerHTML = isPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+        });
+        
+        document.getElementById('real-time-btn').addEventListener('click', function() {
+            timeSpeed = 1.0;
+            updateTimeButtons(this);
+        });
+        
+        document.getElementById('slow-btn').addEventListener('click', function() {
+            timeSpeed = 0.1;
+            updateTimeButtons(this);
+        });
+        
+        document.getElementById('fast-btn').addEventListener('click', function() {
+            timeSpeed = 10.0;
+            updateTimeButtons(this);
+        });
+        
+        document.getElementById('faster-btn').addEventListener('click', function() {
+            timeSpeed = 100.0;
+            updateTimeButtons(this);
+        });
+        
+        function updateTimeButtons(activeButton) {
+            document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+            activeButton.classList.add('active');
+            document.getElementById('time-speed-slider').value = timeSpeed * 100;
+            document.getElementById('time-speed-value').textContent = timeSpeed.toFixed(1) + 'x';
+            document.getElementById('time-speed').textContent = timeSpeed.toFixed(1) + 'x';
+        }
+        
+        // Кнопки планет
+        document.querySelectorAll('.planet-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const target = this.getAttribute('data-target');
+                document.querySelectorAll('.planet-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                centerOnObject(target);
+                if (celestialBodies[target]) {
+                    updateCelestialInfo(target);
+                }
+            });
+        });
+        
+        // Центрування
+        function centerOnObject(objectId) {
+            const body = celestialBodies[objectId];
+            if (!body) return;
+            
+            if (objectId === 'sun') {
+                offsetX = 0;
+                offsetY = 0;
+                zoom = 1.0;
+            } else {
+                const angle = body.angle + (simulationTime * 2 * Math.PI) / body.orbitalPeriod;
+                const planetX = Math.cos(angle) * body.orbitRadius * distanceMultiplier;
+                const planetY = Math.sin(angle) * body.orbitRadius * distanceMultiplier;
+                
+                offsetX = -planetX * zoom;
+                offsetY = -planetY * zoom;
+                
+                if (body.orbitRadius > 300) zoom = 0.5;
+                else if (body.orbitRadius > 200) zoom = 1;
+                else zoom = 2;
+            }
+            updateScaleValue();
+        }
+        
+        // Кнопки виду
+        document.getElementById('reset-view').addEventListener('click', () => {
+            offsetX = 0;
+            offsetY = 0;
+            zoom = 1.0;
+            updateScaleValue();
+        });
+        
+        document.getElementById('zoom-in').addEventListener('click', () => {
+            zoom *= 1.2;
+            if (zoom > 10) zoom = 10;
+            updateScaleValue();
+        });
+        
+        document.getElementById('zoom-out').addEventListener('click', () => {
+            zoom /= 1.2;
+            if (zoom < 0.1) zoom = 0.1;
+            updateScaleValue();
+        });
+        
+        // Перемикачі панелей
+        document.getElementById('toggle-panel').addEventListener('click', function() {
+            document.querySelector('.controls-panel').classList.toggle('collapsed');
+            this.querySelector('i').classList.toggle('fa-chevron-right');
+            this.querySelector('i').classList.toggle('fa-chevron-left');
+        });
+        
+        document.getElementById('toggle-info').addEventListener('click', function() {
+            document.querySelector('.info-panel').classList.toggle('collapsed');
+            this.querySelector('i').classList.toggle('fa-chevron-left');
+            this.querySelector('i').classList.toggle('fa-chevron-right');
+        });
+        
+        // Оновлення масштабу
+        function updateScaleValue() {
+            const scaleMap = [
+                { min: 0, max: 0.5, text: "1:1 трлн" },
+                { min: 0.5, max: 1, text: "1:100 млрд" },
+                { min: 1, max: 2, text: "1:10 млрд" },
+                { min: 2, max: 4, text: "1:1 млрд" },
+                { min: 4, max: 8, text: "1:100 млн" },
+                { min: 8, max: Infinity, text: "1:10 млн" }
+            ];
+            const scale = scaleMap.find(s => zoom >= s.min && zoom < s.max);
+            document.getElementById('scale-value').textContent = scale ? scale.text : "1:10 млрд";
+        }
+        
+        // ІНІЦІАЛІЗАЦІЯ
+        updateCelestialInfo('jupiter');
+        updateScaleValue();
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Модель Рослинної Клітини</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c3d2a 0%, #1a5c40 100%);
+            color: #e8f5e9;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        #app {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        /* Панель керування зліва */
+        .control-panel {
+            width: 350px;
+            background: rgba(0, 20, 10, 0.85);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .control-panel h2 {
+            color: #81c784;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(129, 199, 132, 0.3);
+        }
+        
+        .control-section {
+            margin-bottom: 30px;
+        }
+        
+        .control-section h3 {
+            color: #a5d6a7;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-section h3 i {
+            font-size: 1.4rem;
+        }
+        
+        .organelle-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .organelle-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .organelle-btn:hover {
+            background: rgba(76, 175, 80, 0.15);
+            transform: translateX(5px);
+        }
+        
+        .organelle-btn.selected {
+            background: rgba(76, 175, 80, 0.25);
+            border-color: #4caf50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+        
+        .visibility-toggle {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .visibility-toggle.visible::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #69f0ae;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .organelle-name {
+            flex: 1;
+            font-size: 0.95rem;
+            color: #e8f5e9;
+        }
+        
+        .organelle-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #69f0ae;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .organelle-btn.selected .organelle-status {
+            opacity: 1;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        
+        .slider-group {
+            margin: 15px 0;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #c8e6c9;
+            font-size: 0.9rem;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4caf50;
+            cursor: pointer;
+            border: 2px solid white;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4caf50;
+            cursor: pointer;
+            border: 2px solid white;
+        }
+        
+        /* Кнопки керування панелями */
+        .panel-toggle {
+            position: fixed;
+            top: 20px;
+            z-index: 1000;
+            background: rgba(0, 20, 10, 0.9);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .panel-toggle:hover {
+            transform: scale(1.1);
+            background: rgba(0, 30, 15, 0.9);
+        }
+        
+        #toggle-controls {
+            left: 20px;
+        }
+        
+        #toggle-info {
+            right: 20px;
+        }
+        
+        /* Панель інформації справа */
+        .info-panel {
+            width: 380px;
+            background: rgba(0, 20, 10, 0.85);
+            backdrop-filter: blur(10px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+            transform: translateX(0);
+            transition: transform 0.4s ease;
+        }
+        
+        .info-panel.collapsed {
+            transform: translateX(100%);
+        }
+        
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(129, 199, 132, 0.3);
+        }
+        
+        .info-header h2 {
+            color: #81c784;
+            font-size: 1.8rem;
+        }
+        
+        .close-info {
+            background: none;
+            border: none;
+            color: #81c784;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .close-info:hover {
+            background: rgba(129, 199, 132, 0.1);
+            transform: rotate(90deg);
+        }
+        
+        .info-content {
+            line-height: 1.6;
+        }
+        
+        .info-content h3 {
+            color: #a5d6a7;
+            font-size: 1.4rem;
+            margin: 20px 0 10px 0;
+        }
+        
+        .info-content p {
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        
+        .organelle-stats {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .organelle-stats h4 {
+            color: #81c784;
+            margin-bottom: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .stat-item {
+            font-size: 0.9rem;
+        }
+        
+        .stat-label {
+            color: #c8e6c9;
+        }
+        
+        .stat-value {
+            color: #69f0ae;
+            font-weight: bold;
+        }
+        
+        /* Контейнер для 3D сцени */
+        .scene-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #cell-scene {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        
+        #cell-scene:active {
+            cursor: grabbing;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid #4caf50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Адаптивність */
+        @media (max-width: 1200px) {
+            .control-panel, .info-panel {
+                width: 300px;
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .control-panel, .info-panel {
+                position: fixed;
+                height: 100%;
+                top: 0;
+                z-index: 1000;
+            }
+            
+            .control-panel {
+                left: 0;
+                transform: translateX(0);
+                transition: transform 0.4s ease;
+            }
+            
+            .control-panel.collapsed {
+                transform: translateX(-100%);
+            }
+            
+            .info-panel {
+                right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Панель керування зліва -->
+        <div class="control-panel" id="controlPanel">
+            <h2>Керування моделлю</h2>
+            
+            <div class="control-section">
+                <h3><i>●</i> Відображення органел</h3>
+                <div class="organelle-controls" id="organelleControls">
+                    <!-- Органели будуть додані через JavaScript -->
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3><i>🎨</i> Зовнішній вигляд</h3>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Прозорість цитоплазми:</span>
+                        <span id="cytoplasmOpacityValue">0.1</span>
+                    </div>
+                    <input type="range" min="0" max="0.3" step="0.05" value="0.1" class="slider" id="cytoplasmOpacity">
+                </div>
+                
+                <div class="organelle-controls" style="margin-top: 20px;">
+                    <div class="organelle-btn" id="resetView" style="justify-content: center; background: rgba(76, 175, 80, 0.2);">
+                        <span style="color: #e8f5e9; font-weight: bold;">Скинути вид</span>
+                    </div>
+                    <div class="organelle-btn" id="autoRotate" style="justify-content: center; background: rgba(76, 175, 80, 0.2);">
+                        <span style="color: #e8f5e9; font-weight: bold;">Автообертання</span>
+                        <div class="organelle-status" style="margin-left: 10px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3><i>⚙️</i> Налаштування камери</h3>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Чутливість обертання:</span>
+                        <span id="cameraSensitivityValue">0.5</span>
+                    </div>
+                    <input type="range" min="0.1" max="1" step="0.1" value="0.5" class="slider" id="cameraSensitivity">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Кнопки перемикання панелей -->
+        <button class="panel-toggle" id="toggle-controls">⚙️</button>
+        <button class="panel-toggle" id="toggle-info">ℹ️</button>
+        
+        <!-- Контейнер для 3D сцени -->
+        <div class="scene-container">
+            <div id="cell-scene">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Завантаження 3D моделі...
+                </div>
+            </div>
+        </div>
+        
+        <!-- Панель інформації справа -->
+        <div class="info-panel" id="infoPanel">
+            <div class="info-header">
+                <h2>Інформація</h2>
+                <button class="close-info" id="closeInfo">×</button>
+            </div>
+            <div class="info-content">
+                <h3 id="elementName">Рослинна клітина</h3>
+                <p id="elementDescription">Рослинна клітина — основна структурна та функціональна одиниця рослин.</p>
+                <p id="elementFunction"><strong>Функція:</strong> Виконує всі життєві процеси, включаючи фотосинтез, дихання, синтез білків та розмноження.</p>
+                
+                
+                
+                <h3>Взаємодія з моделлю</h3>
+                <p><strong>Ліва кнопка миші:</strong> Обертання камери</p>
+                <p><strong>Колесо миші:</strong> Збільшення/зменшення</p>
+                <p><strong>Клік на елемент:</strong> Виділення та інформація</p>
+                <p><strong>Клік на панелі:</strong> Вибір органели</p>
+                <p><strong>Клік у просторі:</strong> Скидання виділення</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Підключаємо Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    
+    <script>
+        // Інформація про елементи клітини
+        const cellElementsInfo = {
+            'cell-wall': {
+                name: 'Клітинна стінка',
+                description: 'Зовнішній жорсткий шар, що оточує клітинну мембрану рослинних клітин. Складається переважно з целюлози.',
+                function: 'Забезпечує структурну підтримку та захист, підтримує форму клітини, запобігає надмірному поглинанню води.'
+            },
+            'membrane': {
+                name: 'Плазматична мембрана',
+                description: 'Напівпроникна ліпідна бішарова мембрана, що оточує цитоплазму клітини.',
+                function: 'Контролює рух речовин всередину та назовні клітини, забезпечує комунікацію між клітинами, підтримує гомеостаз.'
+            },
+            'cytoplasm': {
+                name: 'Цитоплазма',
+                description: 'Гелеподібна речовина (цитозоль), що заповнює внутрішній простір клітини між ядром та клітинною мембраною.',
+                function: 'Служить середовищем для органел, забезпечує транспорт поживних речовин і відходів всередині клітини.'
+            },
+            'nucleus': {
+                name: 'Ядро',
+                description: 'Найбільша органела клітини, що містить генетичний матеріал (ДНК). Оточене ядерною оболонкою.',
+                function: 'Контролює всі клітинні процеси, включаючи ріст, метаболізм та розмноження. Містить хромосоми з генетичною інформацією.'
+            },
+            'chloroplasts': {
+                name: 'Хлоропласти',
+                description: 'Пластиди, що містять хлорофіл і відповідають за фотосинтез. Мають власну ДНК.',
+                function: 'Перетворюють сонячну енергію на хімічну енергію (глюкозу) в процесі фотосинтезу.'
+            },
+            'vacuole': {
+                name: 'Вакуоль з клітинним соком',
+                description: 'Велика центральна вакуоль, заповнена рідиною (клітинним соком). Займає до 90% об\'єму клітини.',
+                function: 'Зберігає воду, поживні речовини, іони та відходи. Підтримує тургорний тиск, що допомагає підтримувати форму клітини.'
+            },
+            'mitochondria': {
+                name: 'Мітохондрії',
+                description: 'Органели, які є "енергетичними станціями" клітини. Мають власну ДНК.',
+                function: 'Виробляють енергію (АТФ) в процесі клітинного дихання шляхом розщеплення глюкози.'
+            },
+            'ribosomes': {
+                name: 'Рибосоми',
+                description: 'Невеликі нуклеопротеїнові комплекси, що складаються з РНК та білків.',
+                function: 'Синтезують білки шляхом трансляції інформації з мРНК.'
+            },
+            'endoplasmic': {
+                name: 'Ендоплазматична сітка',
+                description: 'Система взаємопов\'язаних мембранних каналів у цитоплазмі.',
+                function: 'Транспортує білки та ліпіди між органелами, бере участь у синтезі білків та ліпідів, детоксикація.'
+            },
+            'golgi': {
+                name: 'Комплекс Гольджі',
+                description: 'Складова система мембранних цистерн, що бере участь у модифікації, сортуванні та транспортуванні білків.',
+                function: 'Модифікує, сортує та упаковує білки для транспортування до кінцевих місць призначення.'
+            }
+        };
+
+        // Основні змінні Three.js
+        let scene, camera, renderer, controls;
+        let cellElements = {};
+        
+        // Глобальні налаштування
+        let settings = {
+            autoRotate: false,
+            cameraSensitivity: 0.5
+        };
+        
+        // Стан додатку
+        let state = {
+            selectedElement: null,
+            highlightedElement: null,
+            originalMaterials: new Map(),
+            organelleVisibility: {}
+        };
+        
+        // Створення списку органел
+        function createOrganelleControls() {
+            const container = document.getElementById('organelleControls');
+            
+            for (const [id, info] of Object.entries(cellElementsInfo)) {
+                const btn = document.createElement('div');
+                btn.className = 'organelle-btn';
+                btn.dataset.id = id;
+                
+                // Ініціалізуємо видимість
+                state.organelleVisibility[id] = true;
+                
+                btn.innerHTML = `
+                    <div class="visibility-toggle visible"></div>
+                    <div class="organelle-name">${info.name}</div>
+                    <div class="organelle-status"></div>
+                `;
+                
+                container.appendChild(btn);
+                
+                // Додаємо обробники подій
+                const visibilityToggle = btn.querySelector('.visibility-toggle');
+                visibilityToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleOrganelleVisibility(id);
+                });
+                
+                btn.addEventListener('click', function(e) {
+                    if (e.target !== visibilityToggle) {
+                        selectOrganelle(id);
+                    }
+                });
+            }
+        }
+        
+        // Перемикання видимості органели
+        function toggleOrganelleVisibility(organelleId) {
+            const toggle = document.querySelector(`[data-id="${organelleId}"] .visibility-toggle`);
+            const isVisible = toggle.classList.contains('visible');
+            
+            if (isVisible) {
+                toggle.classList.remove('visible');
+                hideElement(organelleId);
+                state.organelleVisibility[organelleId] = false;
+                
+                // Якщо вимкнули обрану органелу, знімаємо виділення
+                if (state.selectedElement === organelleId) {
+                    clearSelection();
+                }
+            } else {
+                toggle.classList.add('visible');
+                showElement(organelleId);
+                state.organelleVisibility[organelleId] = true;
+            }
+        }
+        
+        // Вибір органели
+        function selectOrganelle(organelleId) {
+            // Видаляємо попереднє виділення
+            clearSelection();
+            
+            // Додаємо виділення на списку
+            const btn = document.querySelector(`[data-id="${organelleId}"]`);
+            btn.classList.add('selected');
+            
+            // Оновлюємо інформацію
+            showElementInfo(organelleId);
+            
+            // Відкриваємо праву панель, якщо вона закрита
+            document.getElementById('infoPanel').classList.remove('collapsed');
+            
+            // Підсвічуємо органелу в сцені
+            highlightOrganelle(organelleId);
+            
+            // Зберігаємо обраний елемент
+            state.selectedElement = organelleId;
+        }
+        
+        // Скидання виділення
+        function clearSelection() {
+            // Видаляємо виділення зі списку
+            document.querySelectorAll('.organelle-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Видаляємо підсвічування
+            removeHighlight();
+            
+            // Показуємо загальну інформацію
+            showDefaultInfo();
+            
+            // Скидаємо вибраний елемент
+            state.selectedElement = null;
+        }
+        
+        // Підсвічування органели
+        function highlightOrganelle(organelleId) {
+            // Видаляємо попереднє підсвічування
+            removeHighlight();
+            
+            if (!cellElements[organelleId] || !state.organelleVisibility[organelleId]) return;
+            
+            // Підсвічуємо основний об'єкт
+            const object = cellElements[organelleId];
+            highlightObject(object);
+            state.highlightedElement = organelleId;
+            
+            // Підсвічуємо всі об'єкти цієї органели
+            scene.traverse((obj) => {
+                if (obj.name && obj.name.startsWith(organelleId) && obj !== object) {
+                    highlightObject(obj);
+                }
+            });
+        }
+        
+        // Підсвічування конкретного об'єкта
+        function highlightObject(object) {
+            if (!object.material) return;
+            
+            // Зберігаємо оригінальний матеріал
+            if (!state.originalMaterials.has(object)) {
+                state.originalMaterials.set(object, {
+                    emissive: object.material.emissive ? object.material.emissive.getHex() : 0x000000,
+                    emissiveIntensity: object.material.emissiveIntensity || 0
+                });
+            }
+            
+            // Підсвічуємо
+            if (object.material.emissive) {
+                object.material.emissive.setHex(0xFFFFFF);
+                object.material.emissiveIntensity = 0.5;
+            }
+        }
+        
+        // Видалення підсвічування
+        function removeHighlight() {
+            if (!state.highlightedElement) return;
+            
+            // Відновлюємо всі матеріали
+            state.originalMaterials.forEach((original, object) => {
+                if (object.material) {
+                    if (object.material.emissive) {
+                        object.material.emissive.setHex(original.emissive);
+                        object.material.emissiveIntensity = original.emissiveIntensity;
+                    }
+                }
+            });
+            
+            state.originalMaterials.clear();
+            state.highlightedElement = null;
+        }
+        
+        // Створення шестикутника зі скругленими кутами
+        function createRoundedHexagonGeometry(radius, height, cornerRadius = 0.5) {
+            const shape = new THREE.Shape();
+            const sides = 6;
+            const angleStep = (Math.PI * 2) / sides;
+            
+            // Починаємо з першої точки
+            for (let i = 0; i < sides; i++) {
+                const angle = i * angleStep;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                
+                if (i === 0) {
+                    shape.moveTo(x, y);
+                } else {
+                    shape.lineTo(x, y);
+                }
+            }
+            
+            shape.closePath();
+            
+            // Додаємо скруглення кутів
+            const roundedShape = new THREE.Shape();
+            const vertices = shape.getPoints();
+            const numPoints = vertices.length;
+            
+            for (let i = 0; i < numPoints; i++) {
+                const p1 = vertices[i];
+                const p2 = vertices[(i + 1) % numPoints];
+                const p3 = vertices[(i + 2) % numPoints];
+                
+                // Обчислюємо вектор від p1 до p2
+                const v1 = new THREE.Vector2().subVectors(p2, p1);
+                const v2 = new THREE.Vector2().subVectors(p3, p2);
+                
+                // Нормалізуємо вектори
+                v1.normalize();
+                v2.normalize();
+                
+                // Обчислюємо бісектрису кута
+                const bisector = new THREE.Vector2().addVectors(v1, v2).normalize();
+                
+                // Обчислюємо точку скруглення
+                const cornerPoint = new THREE.Vector2().addVectors(
+                    p2,
+                    bisector.multiplyScalar(-cornerRadius / Math.cos(Math.PI / sides))
+                );
+                
+                if (i === 0) {
+                    roundedShape.moveTo(cornerPoint.x, cornerPoint.y);
+                }
+                
+                // Додаємо дугу
+                const controlPoint1 = new THREE.Vector2().addVectors(p2, v1.multiplyScalar(-cornerRadius));
+                const controlPoint2 = new THREE.Vector2().addVectors(p2, v2.multiplyScalar(cornerRadius));
+                
+                roundedShape.quadraticCurveTo(controlPoint1.x, controlPoint1.y, cornerPoint.x, cornerPoint.y);
+                roundedShape.quadraticCurveTo(controlPoint2.x, controlPoint2.y, controlPoint2.x, controlPoint2.y);
+            }
+            
+            roundedShape.closePath();
+            
+            // Екструдуємо форму
+            const extrudeSettings = {
+                depth: height,
+                bevelEnabled: false,
+                curveSegments: 24
+            };
+            
+            return new THREE.ExtrudeGeometry(roundedShape, extrudeSettings);
+        }
+        
+        // Створення комплексу Гольджі
+        function createGolgiComplex() {
+            const group = new THREE.Group();
+            group.name = 'golgi';
+            
+            // Створюємо кілька цистерн (шарів)
+            const layers = 5;
+            const layerSpacing = 0.3;
+            
+            for (let i = 0; i < layers; i++) {
+                const radius = 1.5 - (i * 0.2);
+                const height = 0.1;
+                
+                const cylinderGeometry = new THREE.CylinderGeometry(radius, radius, height, 32);
+                const cylinderMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0x4300E8,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const layer = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+                layer.position.y = i * layerSpacing;
+                
+                if (i > 0) {
+                    layer.rotation.x = Math.sin(i * 0.5) * 0.1;
+                    layer.rotation.z = Math.cos(i * 0.5) * 0.1;
+                }
+                
+                group.add(layer);
+            }
+            
+            // Додаємо везикули навколо
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const distance = 2.0;
+                const x = Math.cos(angle) * distance;
+                const z = Math.sin(angle) * distance;
+                const y = Math.random() * layers * layerSpacing;
+                
+                const vesicleGeometry = new THREE.SphereGeometry(0.15, 8, 8);
+                const vesicleMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0x4300E8
+                });
+                
+                const vesicle = new THREE.Mesh(vesicleGeometry, vesicleMaterial);
+                vesicle.position.set(x, y, z);
+                group.add(vesicle);
+            }
+            
+            return group;
+        }
+        
+        // Показ стандартної інформації
+        function showDefaultInfo() {
+            document.getElementById('elementName').textContent = 'Рослинна клітина';
+            document.getElementById('elementDescription').textContent = 'Рослинна клітина — основна структурна та функціональна одиниця рослин. Вона має характерну шестикутну форму зі скругленими кутами, що дозволяє щільно прилягати до сусідніх клітин.';
+            document.getElementById('elementFunction').innerHTML = '<strong>Функція:</strong> Виконує всі життєві процеси, включаючи фотосинтез, дихання, синтез білків та розмноження.';
+        }
+        
+        // Показ інформації про елемент
+        function showElementInfo(elementName) {
+            const baseName = elementName.replace(/\d+$/, '');
+            
+            if (cellElementsInfo[baseName]) {
+                const info = cellElementsInfo[baseName];
+                document.getElementById('elementName').textContent = info.name;
+                document.getElementById('elementDescription').textContent = info.description;
+                document.getElementById('elementFunction').innerHTML = `<strong>Функція:</strong> ${info.function}`;
+            }
+        }
+        
+        // Ініціалізація сцени
+        function init() {
+            // Перевірка Three.js
+            if (typeof THREE === 'undefined') {
+                document.querySelector('.loading').innerHTML = 'Помилка: Three.js не завантажився.';
+                return;
+            }
+            
+            // Видаляємо повідомлення про завантаження
+            const loadingElement = document.querySelector('.loading');
+            if (loadingElement) loadingElement.style.display = 'none';
+            
+            // Створюємо список органел
+            createOrganelleControls();
+            
+            // Створення сцени
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a291d);
+            
+            // Створення камери
+            const container = document.getElementById('cell-scene');
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(25, 20, 25);
+            
+            // Створення рендерера
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true, 
+                alpha: true,
+                powerPreference: "high-performance"
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+            
+            // Додавання контролів для обертання камери
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 15;
+            controls.maxDistance = 60;
+            controls.rotateSpeed = settings.cameraSensitivity;
+            
+            // Додавання освітлення
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight1.position.set(20, 30, 15);
+            directionalLight1.castShadow = true;
+            scene.add(directionalLight1);
+            
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+            directionalLight2.position.set(-20, 20, -15);
+            scene.add(directionalLight2);
+            
+            // Створення моделі рослинної клітини
+            createPlantCell();
+            
+            // Обробка подій миші
+            setupMouseEvents();
+            
+            // Налаштування керування
+            setupControls();
+            
+            // Анімація
+            animate();
+            
+            // Обробка зміни розміру вікна
+            window.addEventListener('resize', onWindowResize);
+            
+            // Обробка кліку за межами для скидання виділення
+            renderer.domElement.addEventListener('click', function(event) {
+                const raycaster = new THREE.Raycaster();
+                const mouse = new THREE.Vector2();
+                const rect = renderer.domElement.getBoundingClientRect();
+                
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(scene.children, true);
+                
+                // Якщо клікнули в пусте місце
+                if (intersects.length === 0 && !event.target.closest('.control-panel') && !event.target.closest('.panel-toggle')) {
+                    clearSelection();
+                }
+            });
+        }
+        
+        // Створення моделі рослинної клітини
+        function createPlantCell() {
+            try {
+                const cellRadius = 8;  // Збільшуємо радіус для більшої клітини
+                const cellHeight = 12;
+                const centerY = cellHeight / 2;
+                const centerZ = -6
+                
+                // Клітинна стінка (шестикутник зі скругленими кутами)
+                const wallGeometry = createRoundedHexagonGeometry(cellRadius, cellHeight, 0.8);
+                const wallMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0x8BC34A,
+                    transparent: true,
+                    opacity: 0.6,
+                    side: THREE.DoubleSide
+                });
+                const cellWall = new THREE.Mesh(wallGeometry, wallMaterial);
+                cellWall.name = 'cell-wall';
+                cellWall.position.y = centerY;
+                cellWall.position.z = -6.1;
+                scene.add(cellWall);
+                cellElements['cell-wall'] = cellWall;
+                
+                // Плазматична мембрана (всередині стінки, трохи менша)
+                const membraneGeometry = createRoundedHexagonGeometry(cellRadius * 0.9, cellHeight * 0.99, 0.7);
+                const membraneMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xFF9800,
+                    transparent: true,
+                    opacity: 0.5,
+                    side: THREE.DoubleSide
+                });
+                const membrane = new THREE.Mesh(membraneGeometry, membraneMaterial);
+                membrane.name = 'membrane';
+                membrane.position.y = centerY;
+                membrane.position.z = centerZ;
+                scene.add(membrane);
+                cellElements['membrane'] = membrane;
+                
+                // Цитоплазма (напівпрозора внутрішня частина)
+                const cytoplasmGeometry = createRoundedHexagonGeometry(cellRadius * 0.85, cellHeight * 0.85, 0.6);
+                const cytoplasmMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xFFFFFF,
+                    transparent: true,
+                    opacity: 0.1,
+                    side: THREE.DoubleSide
+                });
+                const cytoplasm = new THREE.Mesh(cytoplasmGeometry, cytoplasmMaterial);
+                cytoplasm.name = 'cytoplasm';
+                cytoplasm.position.y = centerY;
+                cytoplasm.position.z = -6;
+                scene.add(cytoplasm);
+                cellElements['cytoplasm'] = cytoplasm;
+                
+                // ВАКУОЛЬ - непрозора приплюснута сфера
+                const vacuoleGeometry = new THREE.SphereGeometry(2, 32, 32);
+                const vacuoleMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0x9C27B0,
+                    transparent: false,  // Непрозора!
+                    opacity: 1.0
+                });
+                const vacuole = new THREE.Mesh(vacuoleGeometry, vacuoleMaterial);
+                vacuole.name = 'vacuole';
+                vacuole.position.set(0, centerY, 2);  // По центру клітини
+                // Приплюснута форма
+                vacuole.scale.set(0.9, 1.4, 1.2);  // Приплюснута по вертикалі
+                scene.add(vacuole);
+                cellElements['vacuole'] = vacuole;
+                
+                // ЯДРО - зміщуємо вбік від вакуолі
+                const nucleusGeometry = new THREE.SphereGeometry(1.2, 32, 32);
+                const nucleusMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xF44336,
+                    emissive: 0x441111,
+                    shininess: 30
+                });
+                const nucleus = new THREE.Mesh(nucleusGeometry, nucleusMaterial);
+                nucleus.name = 'nucleus';
+                nucleus.position.set(0, centerY, -2.5);  // Зміщуємо від вакуолі
+                scene.add(nucleus);
+                cellElements['nucleus'] = nucleus;
+                
+                // ХЛОРОПЛАСТИ - розташовуємо навколо вакуолі, але не всередині неї
+                const innerRadius = 2.5;  // Радіус для хлоропластів
+                for (let i = 0; i < 10; i++) {
+                    const angle = (i / 10) * Math.PI * 2;
+                    const distance = innerRadius + (Math.random() * 2);  // Відстань від центру
+                    const x = Math.cos(angle) * distance;
+                    const z = Math.sin(angle) * distance;
+                    const y = centerY + (Math.random() - 0.5) * 7;  // Розкид по висоті
+                    
+                    // Створюємо еліпсоїд для хлоропласта
+                    const chloroplastGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+                    const chloroplastMaterial = new THREE.MeshPhongMaterial({ 
+                        color: 0x4CAF50,
+                        emissive: 0x1b5e20,
+                        emissiveIntensity: 0.2
+                    });
+                    const chloroplast = new THREE.Mesh(chloroplastGeometry, chloroplastMaterial);
+                    chloroplast.name = 'chloroplasts';
+                    chloroplast.position.set(x, y, z);
+                    // Робимо його еліпсоїдальним
+                    chloroplast.scale.set(1.2, 0.8, 1.2);
+                    // Випадкове обертання
+                    chloroplast.rotation.x = Math.random() * Math.PI;
+                    chloroplast.rotation.y = Math.random() * Math.PI;
+                    scene.add(chloroplast);
+                    
+                    if (i === 0) cellElements['chloroplasts'] = chloroplast;
+                }
+                
+                // МІТОХОНДРІЇ - витягнуті сфери
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2 + Math.PI / 6;
+                    const distance = innerRadius + 0.5 + (Math.random() * 1.5);  // Трохи далі від центру
+                    const x = Math.cos(angle) * distance;
+                    const z = Math.sin(angle) * distance;
+                    const y = centerY + (Math.random() - 0.5) * 5;
+                    
+                    // Створюємо витягнуту сферу для мітохондрії
+                    const mitochondriaGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+                    const mitochondriaMaterial = new THREE.MeshPhongMaterial({ 
+                        color: 0x2196F3,
+                        emissive: 0x0d47a1,
+                        emissiveIntensity: 0.2
+                    });
+                    const mitochondria = new THREE.Mesh(mitochondriaGeometry, mitochondriaMaterial);
+                    mitochondria.name = 'mitochondria';
+                    mitochondria.position.set(x, y, z);
+                    // Робимо її витягнутою
+                    mitochondria.scale.set(1.8, 0.6, 1.8);  // Витягнута форма
+                    // Випадкове обертання
+                    mitochondria.rotation.x = Math.random() * Math.PI;
+                    mitochondria.rotation.y = Math.random() * Math.PI;
+                    scene.add(mitochondria);
+                    
+                    if (i === 0) cellElements['mitochondria'] = mitochondria;
+                }
+                
+                // РИБОСОМИ - маленькі крапки в цитоплазмі
+                for (let i = 0; i < 40; i++) {
+                    // Випадкові координати всередині цитоплазми (але не в вакуолі)
+                    let x, y, z;
+                    let attempts = 0;
+                    do {
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = Math.random() * cellRadius * 0.6;
+                        x = Math.cos(angle) * distance;
+                        z = Math.sin(angle) * distance;
+                        y = Math.random() * cellHeight;
+                        attempts++;
+                        // Перевіряємо, чи не знаходиться точка всередині вакуолі
+                        const distanceToCenter = Math.sqrt(x*x + z*z);
+                    } while (attempts < 100);
+                    
+                    const ribosomeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+                    const ribosomeMaterial = new THREE.MeshPhongMaterial({ 
+                        color: 0xFFEB3B,
+                        emissive: 0xff9800,
+                        emissiveIntensity: 0.3
+                    });
+                    const ribosome = new THREE.Mesh(ribosomeGeometry, ribosomeMaterial);
+                    ribosome.name = 'ribosomes';
+                    ribosome.position.set(x, y, z);
+                    scene.add(ribosome);
+                    
+                    if (i === 0) cellElements['ribosomes'] = ribosome;
+                }
+                
+                // ЕНДОПЛАЗМАТИЧНА СІТКА - поруч з ядром
+                const endoplasmicGeometry = new THREE.TorusKnotGeometry(1, 0.3, 64, 8, 2, 3);
+                const endoplasmicMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xFF5722,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const endoplasmic = new THREE.Mesh(endoplasmicGeometry, endoplasmicMaterial);
+                endoplasmic.name = 'endoplasmic';
+                endoplasmic.position.set(0, centerY, -2.5);  // Поруч з ядром
+                endoplasmic.scale.set(3, 3, 3);
+                scene.add(endoplasmic);
+                cellElements['endoplasmic'] = endoplasmic;
+                
+                // КОМПЛЕКС ГОЛЬДЖІ - система циліндричних шарів з везикулами
+                const golgi = createGolgiComplex();
+                golgi.name = 'golgi';
+                golgi.position.set(3, centerY, 2);
+                golgi.scale.set(1.5, 1.5, 1.5);
+                scene.add(golgi);
+                cellElements['golgi'] = golgi;
+                
+                console.log('3D модель успішно створена!');
+                console.log('Розміри клітини: радіус =', cellRadius, 'висота =', cellHeight);
+            } catch (error) {
+                console.error('Помилка при створенні 3D моделі:', error);
+                document.querySelector('.loading').innerHTML = 'Помилка при створенні 3D моделі. Перевірте консоль для деталей.';
+                document.querySelector('.loading').style.display = 'block';
+            }
+        }
+        
+        // Налаштування обробки подій миші
+        function setupMouseEvents() {
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            
+            // Обробка кліку миші на об'єкти
+            renderer.domElement.addEventListener('click', (event) => {
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(scene.children, true);
+                
+                if (intersects.length > 0) {
+                    const clickedObject = intersects[0].object;
+                    
+                    // Визначаємо ID органели
+                    let organelleId = clickedObject.name;
+                    
+                    // Якщо це частина комплексу Гольджі
+                    if (clickedObject.parent && clickedObject.parent.name === 'golgi') {
+                        organelleId = 'golgi';
+                    }
+                    
+                    // Вибираємо цю органелу
+                    if (cellElementsInfo[organelleId] && state.organelleVisibility[organelleId]) {
+                        selectOrganelle(organelleId);
+                    }
+                }
+            });
+        }
+        
+        // Налаштування керування
+        function setupControls() {
+            // Прозорість цитоплазми
+            document.getElementById('cytoplasmOpacity').addEventListener('input', function() {
+                const value = parseFloat(this.value);
+                document.getElementById('cytoplasmOpacityValue').textContent = value;
+                if (cellElements['cytoplasm']) {
+                    cellElements['cytoplasm'].material.opacity = value;
+                }
+            });
+            
+            // Налаштування камери
+            document.getElementById('cameraSensitivity').addEventListener('input', function() {
+                const value = parseFloat(this.value);
+                document.getElementById('cameraSensitivityValue').textContent = value;
+                settings.cameraSensitivity = value;
+                controls.rotateSpeed = value;
+            });
+            
+            // Автообертання
+            document.getElementById('autoRotate').addEventListener('click', function() {
+                settings.autoRotate = !settings.autoRotate;
+                const statusDot = this.querySelector('.organelle-status');
+                statusDot.style.opacity = settings.autoRotate ? '1' : '0';
+                
+                if (settings.autoRotate) {
+                    controls.autoRotate = true;
+                    controls.autoRotateSpeed = 0.5;
+                } else {
+                    controls.autoRotate = false;
+                }
+            });
+            
+            // Скидання виду
+            document.getElementById('resetView').addEventListener('click', function() {
+                controls.reset();
+                camera.position.set(25, 20, 25);
+                controls.update();
+            });
+            
+            // Перемикання панелей
+            document.getElementById('toggle-controls').addEventListener('click', function() {
+                document.getElementById('controlPanel').classList.toggle('collapsed');
+            });
+            
+            document.getElementById('toggle-info').addEventListener('click', function() {
+                document.getElementById('infoPanel').classList.toggle('collapsed');
+            });
+            
+            document.getElementById('closeInfo').addEventListener('click', function() {
+                document.getElementById('infoPanel').classList.add('collapsed');
+            });
+        }
+        
+        // Приховування елемента
+        function hideElement(elementId) {
+            if (cellElements[elementId]) {
+                cellElements[elementId].visible = false;
+                
+                scene.traverse((object) => {
+                    if (object.name && object.name.startsWith(elementId)) {
+                        object.visible = false;
+                    }
+                });
+                
+                // Якщо приховали підсвічену органелу, знімаємо підсвічування
+                if (state.highlightedElement === elementId) {
+                    removeHighlight();
+                }
+            }
+        }
+        
+        // Відображення елемента
+        function showElement(elementId) {
+            if (cellElements[elementId]) {
+                cellElements[elementId].visible = true;
+                
+                scene.traverse((object) => {
+                    if (object.name && object.name.startsWith(elementId)) {
+                        object.visible = true;
+                    }
+                });
+            }
+        }
+        
+        // Анімація
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Оновлення контролів
+            controls.update();
+            
+            // Рендеринг сцени
+            renderer.render(scene, camera);
+        }
+        
+        // Обробка зміни розміру вікна
+        function onWindowResize() {
+            const container = document.getElementById('cell-scene');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        // Запуск додатка
+        window.addEventListener('load', init);
+        
+        // Альтернативний запуск
+        if (document.readyState === 'complete') {
+            setTimeout(init, 100);
+        }
+    </script>
+</body>
+</html>

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
+
+<html lang="uk"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Сонячнна система 2D</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./Симулятор Сонячної системи 2D_files/all.min.css">
     <style>
         * {
             margin: 0;
@@ -500,10 +500,10 @@
         </header>
         
         <div class="simulation-area">
-            <canvas id="simulation-canvas"></canvas>
+            <canvas id="simulation-canvas" width="1920" height="966" style="cursor: grab;"></canvas>
             
             <div class="stats">
-				                <div class="stat-item">
+                <div class="stat-item">
                     <div class="stat-value" id="active-comets">2</div>
                     <div class="stat-label">Комети</div>
                 </div>
@@ -511,9 +511,8 @@
                     <div class="stat-value" id="visible-asteroids">4</div>
                     <div class="stat-label">Астероїди</div>
                 </div>
-                
                 <div class="stat-item">
-                    <div class="stat-value" id="time-speed">1x</div>
+                    <div class="stat-value" id="time-speed">0.2x</div>
                     <div class="stat-label">Швидкість</div>
                 </div>
             </div>
@@ -529,7 +528,7 @@
                     <div class="slider-container">
                         <div class="slider-label">
                             <span>Швидкість часу</span>
-                            <span id="time-speed-value">1x</span>
+                            <span id="time-speed-value">0.2x</span>
                         </div>
                         <input type="range" min="0" max="200" value="100" class="slider" id="time-speed-slider">
                     </div>
@@ -554,7 +553,7 @@
                 <div class="control-group">
                     <h3>Відображення</h3>
                     <div class="checkbox-group">
-                        <input type="checkbox" id="show-orbits" checked>
+                        <input type="checkbox" id="show-orbits" checked="">
                         <label for="show-orbits">Орбіти планет</label>
                     </div>
                     <div class="checkbox-group">
@@ -571,14 +570,14 @@
                     </div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="show-greeks-trojans">
-                        <label for="show-greeks-trojans">Греки & Троянці</label>
+                        <label for="show-greeks-trojans">Греки &amp; Троянці</label>
                     </div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="show-comets">
                         <label for="show-comets">Комети</label>
                     </div>
                     <div class="checkbox-group">
-                        <input type="checkbox" id="show-comet-tails" checked>
+                        <input type="checkbox" id="show-comet-tails" checked="">
                         <label for="show-comet-tails">Хвости комет</label>
                     </div>
                     <div class="checkbox-group">
@@ -606,9 +605,7 @@
                             100x
                         </button>
                     </div>
-                    <div class="current-date" id="current-date">
-                        1 січня 2024
-                    </div>
+                    <div class="current-date" id="current-date">01 лютого 2047 р.</div>
                 </div>
                 
                 <div class="control-group">
@@ -639,36 +636,9 @@
                     <div class="celestial-name">Юпітер</div>
                     <div class="celestial-type">Планета-гігант</div>
                     
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <div class="info-label">Діаметр</div>
-                            <div class="info-value">139,820 км</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Маса</div>
-                            <div class="info-value">1.9×10²⁷ кг</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Відстань від Сонця</div>
-                            <div class="info-value">778 млн км</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Період обертання</div>
-                            <div class="info-value">11.86 років</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Супутники</div>
-                            <div class="info-value">95</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Температура</div>
-                            <div class="info-value">-145°C</div>
-                        </div>
-                    </div>
+                    <div class="info-grid"><div class="info-item"><div class="info-label">Діаметр</div><div class="info-value">139,820 км</div></div><div class="info-item"><div class="info-label">Маса</div><div class="info-value">1.9×10²⁷ кг</div></div><div class="info-item"><div class="info-label">Відстань від Сонця</div><div class="info-value">778.5 млн км</div></div><div class="info-item"><div class="info-label">Період обертання</div><div class="info-value">11.86 років</div></div><div class="info-item"><div class="info-label">Супутники</div><div class="info-value">95</div></div><div class="info-item"><div class="info-label">Температура</div><div class="info-value">-145°C</div></div></div>
                     
-                    <div class="satellite-info" id="satellite-info">
-                        <strong>Головні супутники:</strong> Ганімед, Каллісто, Іо, Європа
-                    </div>
+                    <div class="satellite-info" id="satellite-info" style="display: block;"><strong>Головні супутники:</strong> Ганімед, Каллісто, Іо, Європа</div>
                 </div>
             </div>
             
@@ -685,11 +655,11 @@
             </div>
             
             <div class="scale-indicator">
-                Масштаб: <span class="scale-value" id="scale-value">1:10 млрд</span>
+                Масштаб: <span class="scale-value" id="scale-value">1:1 млрд</span>
             </div>
             
             <div class="instructions">
-                <strong>Керування:</strong> Коліщатко миші — масштаб • Перетягування — навігація
+                <strong>Керування:</strong> Коліщатко миші — масштаб • Перетягування — навігація • Клік по об'єкту — інформація
             </div>
         </div>
     </div>
@@ -1023,10 +993,10 @@
             const jupiterDistance = celestialBodies.jupiter.orbitRadius;
             const jupiterPeriod = celestialBodies.jupiter.orbitalPeriod;
             
-            // Греки (L4) - 60° попереду Юпітера
+            // Троянці (L5) - 60° позаду Юпітера
             for (let i = 0; i < 20; i++) {
                 greeksTrojans.l4.push({
-                    name: i === 0 ? "624 Гектор" : i === 1 ? "588 Ахілл" : "",
+                    name: i === 0 ? "617 Патрокл" : i === 1 ? "884 Пріам" : "",
                     distance: jupiterDistance,
                     size: i < 2 ? 1.5 + Math.random() * 0.5 : 0.5 + Math.random() * 0.7,
                     color: "#ff9966",
@@ -1037,10 +1007,12 @@
                 });
             }
             
-            // Троянці (L5) - 60° позаду Юпітера
+            
+            // Греки (L4) - 60° попереду Юпітера
             for (let i = 0; i < 20; i++) {
                 greeksTrojans.l5.push({
                     name: i === 0 ? "617 Патрокл" : i === 1 ? "884 Пріам" : "",
+                    name: i === 0 ? "624 Гектор" : i === 1 ? "588 Ахілл" : "",
                     distance: jupiterDistance,
                     size: i < 2 ? 1.5 + Math.random() * 0.5 : 0.5 + Math.random() * 0.7,
                     color: "#6699ff",
@@ -1208,7 +1180,7 @@
             let visibleAsteroids = 0;
             
             asteroidBelt.asteroids.forEach(asteroid => {
-                const angle = asteroid.angle + (simulationTime * 2 * Math.PI) / asteroid.orbitalPeriod;
+                const angle = asteroid.angle - (simulationTime * 2 * Math.PI) / asteroid.orbitalPeriod;
                 const x = Math.cos(angle) * asteroid.distance * distanceMultiplier;
                 const y = Math.sin(angle) * asteroid.distance * distanceMultiplier;
                 
@@ -1295,7 +1267,7 @@
         
         // Малювання супутника
         function drawSatellite(planetX, planetY, satellite, planetAngle) {
-            const satAngle = planetAngle + (simulationTime * 2 * Math.PI) / satellite.orbitalPeriod;
+            const satAngle = planetAngle - (simulationTime * 2 * Math.PI) / satellite.orbitalPeriod;
             const x = planetX + Math.cos(satAngle) * satellite.distance;
             const y = planetY + Math.sin(satAngle) * satellite.distance;
             
@@ -1356,7 +1328,7 @@
         // Малювання комети З ПРАВИЛЬНИМ НАПРЯМКОМ ХВОСТА
         function drawComet(comet) {
             // Оновлюємо кут комети залежно від швидкості симуляції
-            comet.angle += (2 * Math.PI / comet.orbitalPeriod) * timeSpeed;
+            comet.angle -= (2 * Math.PI / comet.orbitalPeriod) * timeSpeed;
             
             let currentRadius, trueAnomaly;
             
@@ -1480,7 +1452,7 @@
         // Малювання об'єктів Поясу Койпера
         function drawKuiperObjects() {
             kuiperBelt.objects.forEach(obj => {
-                const angle = obj.angle + (simulationTime * 2 * Math.PI) / obj.orbitalPeriod;
+                const angle = obj.angle - (simulationTime * 2 * Math.PI) / obj.orbitalPeriod;
                 const x = Math.cos(angle) * obj.distance * distanceMultiplier;
                 const y = Math.sin(angle) * obj.distance * distanceMultiplier;
                 
@@ -1574,7 +1546,7 @@
                 if (id === 'sun') {
                     drawPlanet(0, 0, body.radius, body.color, body.name, true);
                 } else {
-                    const angle = body.angle + (simulationTime * 2 * Math.PI) / body.orbitalPeriod;
+                    const angle = body.angle - (simulationTime * 2 * Math.PI) / body.orbitalPeriod;
                     const x = Math.cos(angle) * body.orbitRadius * distanceMultiplier;
                     const y = Math.sin(angle) * body.orbitRadius * distanceMultiplier;
                     
@@ -1862,5 +1834,5 @@
         updateScaleValue();
         draw();
     </script>
-</body>
-</html>
+
+</body></html>

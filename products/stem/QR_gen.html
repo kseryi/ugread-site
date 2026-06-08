@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRO QR Generator</title>
+
+<style>
+body {
+    font-family: Arial;
+    background:#111;
+    display:flex;
+    justify-content:center;
+    padding:30px;
+}
+
+.container {
+    width:500px;
+    background:#fff;
+    padding:20px;
+    border-radius:15px;
+}
+
+h2 {
+    text-align:center;
+}
+
+/* УНІФІКОВАНІ ПОЛЯ */
+input, select {
+    width:100%;
+    box-sizing:border-box;
+    padding:10px;
+    margin:5px 0;
+    border-radius:8px;
+    border:1px solid #ddd;
+    font-size:14px;
+}
+
+button {
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    background:#00aaff;
+    color:white;
+    font-size:14px;
+}
+
+button:hover {
+    background:#0088cc;
+}
+
+/* QR білий квадрат */
+#qr {
+    margin-top:20px;
+    display:flex;
+    justify-content:center;
+    padding:15px;
+    background:#fff;
+    border-radius:10px;
+}
+
+.row {
+    display:flex;
+    gap:10px;
+}
+.row input {
+    flex:1;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>PRO QR Generator</h2>
+
+<select id="type" onchange="switchType()">
+    <option value="text">Text / URL</option>
+    <option value="wifi">Wi-Fi</option>
+    <option value="email">Email</option>
+    <option value="phone">Phone</option>
+    <option value="vcard">vCard</option>
+</select>
+
+<div id="inputs"></div>
+
+<button onclick="generateQR()">Generate QR</button>
+<button onclick="downloadQR()">Download PNG</button>
+
+<div id="qr"></div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+
+let qr;
+
+function switchType(){
+    const type = document.getElementById("type").value;
+    const box = document.getElementById("inputs");
+
+    if(type === "text"){
+        box.innerHTML = `<input id="data" placeholder="Text or URL">`;
+    }
+
+    if(type === "wifi"){
+        box.innerHTML = `
+        <input id="ssid" placeholder="WiFi Name">
+        <input id="pass" placeholder="Password">
+        `;
+    }
+
+    if(type === "email"){
+        box.innerHTML = `
+        <input id="email" placeholder="Email">
+        <input id="subject" placeholder="Subject">
+        `;
+    }
+
+    if(type === "phone"){
+        box.innerHTML = `<input id="phone" placeholder="Phone number">`;
+    }
+
+    if(type === "vcard"){
+        box.innerHTML = `
+        <input id="name" placeholder="Name">
+        <input id="phone" placeholder="Phone">
+        <input id="email" placeholder="Email">
+        `;
+    }
+}
+
+switchType();
+
+function buildData(){
+    const type = document.getElementById("type").value;
+
+    if(type === "text"){
+        return document.getElementById("data").value;
+    }
+
+    if(type === "wifi"){
+        return `WIFI:T:WPA;S:${document.getElementById("ssid").value};P:${document.getElementById("pass").value};;`;
+    }
+
+    if(type === "email"){
+        return `mailto:${document.getElementById("email").value}?subject=${document.getElementById("subject").value}`;
+    }
+
+    if(type === "phone"){
+        return `tel:${document.getElementById("phone").value}`;
+    }
+
+    if(type === "vcard"){
+        return `BEGIN:VCARD
+VERSION:3.0
+FN:${document.getElementById("name").value}
+TEL:${document.getElementById("phone").value}
+EMAIL:${document.getElementById("email").value}
+END:VCARD`;
+    }
+}
+
+function generateQR(){
+
+    const text = buildData();
+
+    document.getElementById("qr").innerHTML = "";
+
+    qr = new QRCode(document.getElementById("qr"), {
+        text: text,
+        width: 256,
+        height: 256,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+}
+
+function downloadQR(){
+    const img = document.querySelector("#qr img");
+    if(!img) return;
+
+    const link = document.createElement("a");
+    link.href = img.src;
+    link.download = "qr.png";
+    link.click();
+}
+
+</script>
+
+</body>
+</html>

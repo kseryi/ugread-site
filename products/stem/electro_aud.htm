@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Енергоаудит </title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+--bg:#f4f7fb;
+--card:#ffffff;
+--accent:#2563eb;
+--accent2:#06b6d4;
+}
+body{
+margin:0;
+font-family:Segoe UI,Arial,sans-serif;
+background:var(--bg);
+}
+header{
+padding:24px;
+color:white;
+background:linear-gradient(135deg,var(--accent),var(--accent2));
+box-shadow:0 4px 20px rgba(0,0,0,.15);
+}
+.container{max-width:1200px;margin:auto;padding:20px;}
+.card{
+background:var(--card);
+border-radius:20px;
+padding:20px;
+margin-bottom:16px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:10px;
+}
+input,select{
+width:100%;
+padding:10px;
+border:1px solid #d0d7e2;
+border-radius:10px;
+box-sizing:border-box;
+}
+label{font-size:.9em;color:#555;}
+.summary{
+font-size:2rem;
+font-weight:bold;
+text-align:center;
+}
+button{
+border:none;
+padding:12px 18px;
+border-radius:12px;
+cursor:pointer;
+background:var(--accent);
+color:white;
+}
+.fab{
+position:fixed;
+right:25px;
+bottom:25px;
+width:60px;
+height:60px;
+border-radius:50%;
+font-size:30px;
+}
+.hidden{display:none;}
+#qrcode{margin-top:15px;}
+</style>
+</head>
+<body>
+<header>
+<h1>⚡ Енергоаудит</h1>
+<p>Розрахунок споживної потужності обладнання</p>
+</header>
+
+<div class="container">
+<div class="card">
+<label>Назва кабінету</label>
+<input id="room" placeholder="STEM лабораторія">
+</div>
+
+<div id="devices"></div>
+
+<div class="card">
+<label><b>Загальна максимальна потужність кабінету:</b></label>
+<div class="summary" id="total">0 Вт</div>
+<hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+<div id="energy"></div>
+<br>
+<button onclick="generateQR()">Створити QR-паспорт</button>
+<div id="qrcode"></div>
+</div>
+</div>
+
+<button class="fab" onclick="addDevice()">+</button>
+
+<script>
+const devices=document.getElementById('devices');
+
+function addDevice(){
+const div=document.createElement('div');
+div.className='card';
+div.innerHTML=`
+<div class="grid">
+<div>
+<label>Назва пристрою</label>
+<input class="name" placeholder="Ноутбук">
+</div>
+<div>
+<label>Кількість (шт)</label>
+<input class="qty" type="number" value="1" min="1">
+</div>
+<div>
+<label>Час роботи (год/день)</label>
+<input class="hours" type="number" step="0.1" min="0" max="24" value="0">
+</div>
+<div>
+<label>Режим</label>
+<select class="mode">
+<option value="power">Потужність (Вт)</option>
+<option value="ui">Напруга + Струм</option>
+</select>
+</div>
+
+<div class="powerBox">
+<label>Потужність (Вт)</label>
+<input class="power" type="number" value="65">
+</div>
+
+<div class="uiBox hidden">
+<label>Напруга (В)</label>
+<input class="voltage" type="number" value="19">
+</div>
+
+<div class="uiBox hidden">
+<label>Струм (А)</label>
+<input class="current" type="number" step="0.01" value="3.42">
+</div>
+</div>
+<p style="margin-top:10px; margin-bottom:0;">
+<b>Пікова потужність:</b> <span class="subtotal">65</span> Вт | 
+<b>Споживання на день:</b> <span class="subtotal-energy">0.39</span> кВт·год
+</p>
+`;
+
+devices.appendChild(div);
+
+const mode=div.querySelector('.mode');
+mode.addEventListener('change',()=>{
+const powerBox=div.querySelector('.powerBox');
+const uiBoxes=div.querySelectorAll('.uiBox');
+if(mode.value==='power'){
+powerBox.classList.remove('hidden');
+uiBoxes.forEach(x=>x.classList.add('hidden'));
+}else{
+powerBox.classList.add('hidden');
+uiBoxes.forEach(x=>x.classList.remove('hidden'));
+}
+calculate();
+});
+
+div.querySelectorAll('input,select').forEach(el=>{
+el.addEventListener('input',calculate);
+});
+calculate();
+}
+
+function calculate(){
+let totalPower=0;
+let totalEnergyPerDay=0;
+let totalEnergyPerHour=0;
+
+document.querySelectorAll('#devices .card').forEach(card=>{
+const qty=+card.querySelector('.qty').value||0;
+const mode=card.querySelector('.mode').value;
+let hours = +card.querySelector('.hours').value || 0;
+
+// обмеження 0–24
+if (hours < 0) hours = 6;
+if (hours > 24) hours = 24;
+let power=0;
+
+if(mode==='power'){
+power=+card.querySelector('.power').value||0;
+}else{
+const u=+card.querySelector('.voltage').value||0;
+const i=+card.querySelector('.current').value||0;
+power=u*i;
+}
+
+const subtotalPower = power * qty;
+const subtotalEnergyDay = (subtotalPower / 1000) * hours;
+const subtotalEnergyHour = subtotalPower / 1000;
+
+card.querySelector('.subtotal').textContent = subtotalPower.toFixed(1);
+card.querySelector('.subtotal-energy').textContent = subtotalEnergyDay.toFixed(2);
+
+totalPower += subtotalPower;
+totalEnergyPerHour += subtotalEnergyHour;
+totalEnergyPerDay += subtotalEnergyDay;
+});
+
+document.getElementById('total').innerHTML = totalPower.toFixed(1)+' Вт ('+(totalPower/1000).toFixed(2)+' кВт)';
+
+const monthEnergy = totalEnergyPerDay * 20;
+
+document.getElementById('energy').innerHTML=`
+<p>Загальне споживання за 1 годину (якщо увімкнено все разом): <b>${totalEnergyPerHour.toFixed(2)} кВт·год</b></p>
+<p>Загальне споживання за день (з урахуванням індивідуальних годин): <b>${totalEnergyPerDay.toFixed(2)} кВт·год</b></p>
+<p>Загальне споживання за 20 навчальних днів: <b>${monthEnergy.toFixed(2)} кВт·год</b></p>
+`;
+
+return { power: totalPower, energyDay: totalEnergyPerDay };
+}
+
+function generateQR(){
+const res=calculate();
+const data={
+cabinet:document.getElementById('room').value,
+max_power_kw:(res.power/1000).toFixed(2),
+energy_day_kwh:res.energyDay.toFixed(2),
+energy_month_kwh:(res.energyDay * 20).toFixed(2),
+devices_count:document.querySelectorAll('#devices .card').length
+};
+
+document.getElementById('qrcode').innerHTML='';
+new QRCode(document.getElementById('qrcode'),{
+text:JSON.stringify(data,null,2),
+width:220,
+height:220
+});
+}
+
+addDevice();
+</script>
+</body>
+</html>

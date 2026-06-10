@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Онлайн зчитувач штрихкодів | Камера або фото</title>
+    <!-- Підключення бібліотеки QuaggaJS для потужного розпізнавання штрихкодів -->
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+    <!-- Font Awesome для іконок (зручний візуал) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f6f9fc 0%, #eef2f5 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .main-card {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255,255,255,0.95);
+            border-radius: 48px;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.05);
+            overflow: hidden;
+            backdrop-filter: blur(0px);
+            transition: all 0.2s;
+        }
+
+        /* шапка */
+        .header {
+            background: #1e2a3e;
+            color: white;
+            padding: 1.5rem 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-weight: 700;
+            font-size: 1.8rem;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .header h1 i {
+            font-size: 2rem;
+            color: #ffc107;
+        }
+
+        .header p {
+            opacity: 0.8;
+            margin-top: 8px;
+            font-size: 0.95rem;
+        }
+
+        /* панель управління */
+        .control-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 1.5rem 2rem;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            justify-content: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s ease;
+            background: #f1f5f9;
+            color: #1e293b;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .btn-primary {
+            background: #0f3b5f;
+            color: white;
+            box-shadow: 0 4px 8px rgba(15,59,95,0.2);
+        }
+
+        .btn-primary:hover {
+            background: #0a2c46;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            border: 1px solid #cbd5e1;
+            background: white;
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-success {
+            background: #2b9348;
+            color: white;
+        }
+
+        .file-label {
+            background: #e9ecef;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+
+        .file-label:hover {
+            background: #dee2e6;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* головна сітка: відео/зображення + результат */
+        .scan-area {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 1.5rem 2rem;
+            gap: 2rem;
+        }
+
+        .camera-box {
+            flex: 1.2;
+            min-width: 280px;
+            background: #0000000c;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transition: 0.2s;
+        }
+
+        .preview-box {
+            flex: 1;
+            min-width: 260px;
+            background: white;
+            border-radius: 32px;
+            padding: 1.2rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-container {
+            position: relative;
+            background: #111;
+            aspect-ratio: 4 / 3;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        video, #image-preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #0f172a;
+        }
+
+        #interactive.viewport canvas, #interactive.viewport video {
+            width: 100%;
+            border-radius: 24px;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            background: #0f172a;
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .result-area {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 1.2rem;
+            margin-top: 1rem;
+            border-left: 5px solid #0f3b5f;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #475569;
+        }
+
+        .result-value {
+            font-size: 1.7rem;
+            font-weight: 800;
+            word-break: break-all;
+            color: #0f172a;
+            margin-top: 5px;
+            font-family: monospace;
+        }
+
+        .result-meta {
+            font-size: 0.85rem;
+            color: #2c6e9e;
+            margin-top: 8px;
+        }
+
+        .status-badge {
+            background: #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        hr {
+            margin: 15px 0;
+            border-color: #e2e8f0;
+        }
+
+        .info-text {
+            font-size: 0.8rem;
+            color: #4b5563;
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        @media (max-width: 760px) {
+            .control-bar { flex-direction: column; align-items: stretch; }
+            .btn, .file-label { justify-content: center; }
+            .result-value { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-card">
+    <div class="header">
+        <h1><i class="fas fa-barcode"></i> Barcode Scanner PRO</h1>
+        <p>Зчитуйте штрихкоди через камеру або завантажте фото — миттєве розпізнавання</p>
+    </div>
+
+    <div class="control-bar">
+        <button id="startCameraBtn" class="btn btn-primary"><i class="fas fa-camera"></i> Запустити камеру</button>
+        <button id="stopCameraBtn" class="btn btn-outline"><i class="fas fa-stop"></i> Зупинити камеру</button>
+        <label class="file-label" for="uploadImageInput">
+            <i class="fas fa-upload"></i> Завантажити зображення
+        </label>
+        <input type="file" id="uploadImageInput" accept="image/*, .jpg, .jpeg, .png, .bmp, .webp">
+        <button id="resetResultBtn" class="btn btn-outline"><i class="fas fa-trash-alt"></i> Очистити результат</button>
+    </div>
+
+    <div class="scan-area">
+        <!-- ліва зона: відео / завантажене зображення -->
+        <div class="camera-box">
+            <div class="video-container" id="videoWrapper">
+                <div id="interactive" class="viewport" style="width:100%; position:relative;"></div>
+            </div>
+            <div id="imagePreviewBlock" style="display: none; margin-top: 12px;">
+                <div class="canvas-wrapper">
+                    <img id="image-preview-img" alt="попередній перегляд завантаженого штрихкоду" style="width:100%; border-radius:24px;">
+                </div>
+                <div class="flex-between" style="margin-top: 12px;">
+                    <span class="status-badge"><i class="fas fa-image"></i> Режим: завантажене фото</span>
+                    <button id="scanUploadedBtn" class="btn btn-success" style="padding: 6px 18px;"><i class="fas fa-qrcode"></i> Розпізнати код</button>
+                </div>
+            </div>
+            <div id="cameraActiveHint" style="margin-top: 12px; text-align:center;">
+                <span class="status-badge"><i class="fas fa-video"></i> Камера очікує запуску</span>
+            </div>
+        </div>
+
+        <!-- права зона: результат -->
+        <div class="preview-box">
+            <h3><i class="fas fa-info-circle"></i> Розшифрований код</h3>
+            <div class="result-area">
+                <div class="result-label">Штрихкод (Barcode)</div>
+                <div class="result-value" id="decodedValue">—</div>
+                <div class="result-meta" id="decodedFormat"></div>
+            </div>
+            <hr>
+            <div class="info-text">
+                <i class="fas fa-lightbulb"></i> Підтримувані формати: EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39, Code 93, ITF, Codabar, RSS-14, QR-коди (базово) та інші.
+                <br>Для камери наведіть на чіткий штрихкод при хорошому освітленні.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---- Глобальні змінні ----
+    let scannerActive = false;         // чи запущена камера
+    let currentImageFile = null;       // збережене фото для розпізнавання
+    let lastDecodedText = "";          // уникнення дублювання спалаху
+
+    // DOM елементи
+    const startCameraBtn = document.getElementById('startCameraBtn');
+    const stopCameraBtn = document.getElementById('stopCameraBtn');
+    const uploadImageInput = document.getElementById('uploadImageInput');
+    const imagePreviewBlock = document.getElementById('imagePreviewBlock');
+    const imagePreviewImg = document.getElementById('image-preview-img');
+    const scanUploadedBtn = document.getElementById('scanUploadedBtn');
+    const resetResultBtn = document.getElementById('resetResultBtn');
+    const decodedValueSpan = document.getElementById('decodedValue');
+    const decodedFormatSpan = document.getElementById('decodedFormat');
+    const cameraActiveHint = document.getElementById('cameraActiveHint');
+    const videoWrapper = document.getElementById('videoWrapper');
+    const interactiveDiv = document.getElementById('interactive');
+
+    // Допоміжна функція для оновлення результату
+    function updateResult(code, format = "невідомий формат") {
+        if (!code) return;
+        decodedValueSpan.innerText = code;
+        let formatReadable = format.toUpperCase();
+        if (formatReadable.includes('ean')) formatReadable = formatReadable.replace('_', '-');
+        decodedFormatSpan.innerHTML = `<i class="fas fa-tag"></i> Формат: ${formatReadable}  |  <i class="far fa-clock"></i> ${new Date().toLocaleTimeString()}`;
+        // Додатковий візуальний ефект
+        const resultArea = document.querySelector('.result-area');
+        resultArea.style.transition = "0.1s";
+        resultArea.style.backgroundColor = "#e6f7e6";
+        setTimeout(() => { resultArea.style.backgroundColor = "#f8fafc"; }, 300);
+    }
+
+    function clearResult() {
+        decodedValueSpan.innerText = "—";
+        decodedFormatSpan.innerHTML = "";
+        lastDecodedText = "";
+    }
+
+    // Зупинка камери (Quagga)
+    function stopCamera() {
+        if (scannerActive) {
+            try {
+                Quagga.stop();
+            } catch(e) { console.warn(e); }
+            scannerActive = false;
+            // очистити вміст viewport
+            interactiveDiv.innerHTML = '';
+            cameraActiveHint.innerHTML = '<span class="status-badge"><i class="fas fa-video-slash"></i> Камера зупинена</span>';
+            // показати блок попереднього перегляду якщо треба, але не чіпаємо фото
+        } else {
+            // якщо камери не було активной, але треба скинути вид
+            if(interactiveDiv) interactiveDiv.innerHTML = '';
+            cameraActiveHint.innerHTML = '<span class="status-badge"><i class="fas fa-camera"></i> Камера не активна</span>';
+        }
+        // додатково прибрати можливе накладання
+    }
+
+    // Ініціалізація камери через Quagga (потужне розпізнавання штрихкодів)
+    function startCamera() {
+        // якщо вже активна — спочатку зупинимо
+        if (scannerActive) {
+            stopCamera();
+        }
+        // Очистимо попереднє відео
+        interactiveDiv.innerHTML = '';
+        // Приховати блок попереднього перегляду зображення під час роботи камери (краще)
+        imagePreviewBlock.style.display = 'none';
+        // Показуємо, що камера запускається
+        cameraActiveHint.innerHTML = '<span class="status-badge"><i class="fas fa-spinner fa-pulse"></i> Запуск камери...</span>';
+        
+        // Налаштування Quagga
+        Quagga.init({
+            inputStream: {
+                type: "LiveStream",
+                target: interactiveDiv,
+                constraints: {
+                    facingMode: "environment",   // задня камера на телефонах
+                    width: { min: 480, ideal: 720 },
+                    height: { min: 320, ideal: 560 }
+                },
+                area: { // зона пошуку майже все вікно
+                    top: "0%",
+                    right: "0%",
+                    left: "0%",
+                    bottom: "0%"
+                }
+            },
+            decoder: {
+                readers: [
+                    "ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader",
+                    "code_128_reader", "code_39_reader", "code_39_vin_reader",
+                    "codabar_reader", "code_93_reader", "i2of5_reader",
+                    "2of5_reader", "code_32_reader", "rss_14_reader"
+                ],
+                multiple: false,
+                debug: false
+            },
+            locate: true,
+            frequency: 10
+        }, function(err) {
+            if (err) {
+                console.error("Помилка ініціалізації камери:", err);
+                cameraActiveHint.innerHTML = '<span class="status-badge" style="background:#fee2e2;"><i class="fas fa-exclamation-triangle"></i> Не вдалося отримати доступ до камери. Перевірте дозволи.</span>';
+                scannerActive = false;
+                return;
+            }
+            Quagga.start();
+            scannerActive = true;
+            cameraActiveHint.innerHTML = '<span class="status-badge" style="background:#dcfce7;"><i class="fas fa-camera"></i> Камера активна. Наведіть на штрихкод!</span>';
+        });
+
+        // Обробка отриманого штрихкоду
+        Quagga.onDetected((result) => {
+            if (result && result.codeResult && result.codeResult.code) {
+                const detectedCode = result.codeResult.code;
+                const format = result.codeResult.format || "штрихкод";
+                // уникнення зайвого повтору
+                if (lastDecodedText !== detectedCode) {
+                    lastDecodedText = detectedCode;
+                    updateResult(detectedCode, format);
+                    // Можна додати звуковий сигнал чи вібрацію (опціонально)
+                    if (navigator.vibrate) navigator.vibrate(100);
+                }
+            }
+        });
+    }
+
+    // Обробка завантаження зображення (файл)
+    function handleImageUpload(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imagePreviewImg.src = e.target.result;
+            imagePreviewBlock.style.display = 'block';
+            // якщо камера активна — зупинити камеру, бо переходимо в режим фото
+            if (scannerActive) {
+                stopCamera();
+                // оновлюємо підказку, що камера зупинена
+                cameraActiveHint.innerHTML = '<span class="status-badge"><i class="fas fa-image"></i> Режим перегляду фото</span>';
+            }
+            currentImageFile = file; // зберігаємо для аналізу
+            // автоматично розпізнавати після завантаження? Зручно. Але дамо кнопку. Для зручності одразу зробимо розпізнавання:
+            decodeImageFromFile(file);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Безпосереднє розпізнавання зображення за допомогою Quagga (з файлу)
+    function decodeImageFromFile(file) {
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+            // використовуємо Quagga.decodeSingle для аналізу зображення
+            Quagga.decodeSingle({
+                src: url,
+                numOfWorkers: 0,   // краще для простоти
+                inputStream: {
+                    size: 800,
+                    type: "ImageStream"
+                },
+                decoder: {
+                    readers: [
+                        "ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader",
+                        "code_128_reader", "code_39_reader", "codabar_reader",
+                        "code_93_reader", "i2of5_reader", "2of5_reader", "rss_14_reader"
+                    ]
+                },
+                locate: true,
+            }, (result) => {
+                URL.revokeObjectURL(url);
+                if (result && result.codeResult) {
+                    const code = result.codeResult.code;
+                    const format = result.codeResult.format;
+                    if (code) {
+                        updateResult(code, format);
+                        if (navigator.vibrate) navigator.vibrate(100);
+                    } else {
+                        setNoCodeMessage();
+                    }
+                } else {
+                    setNoCodeMessage();
+                }
+            });
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            setNoCodeMessage("Не вдалося завантажити зображення для аналізу");
+        };
+        img.src = url;
+    }
+
+    function setNoCodeMessage(customMsg = "Штрихкод не знайдено. Спробуйте інше фото з чітким зображенням.") {
+        decodedValueSpan.innerText = "❌ не розпізнано";
+        decodedFormatSpan.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${customMsg}`;
+        lastDecodedText = "";
+    }
+
+    // Якщо кнопка "розпізнати код" для вже завантаженого зображення
+    function rescannUploadedImage() {
+        if (currentImageFile) {
+            decodeImageFromFile(currentImageFile);
+        } else {
+            // якщо немає файлу, але може показується зображення з dataURL? Дістанемо з img
+            const srcImg = imagePreviewImg.src;
+            if (srcImg && srcImg.startsWith('data:image')) {
+                // перетворимо dataURL на файл об'єкт
+                fetch(srcImg)
+                    .then(res => res.blob())
+                    .then(blob => {
+                        const fakeFile = new File([blob], "scan_image.png", { type: blob.type });
+                        currentImageFile = fakeFile;
+                        decodeImageFromFile(fakeFile);
+                    })
+                    .catch(() => setNoCodeMessage("Помилка повторного сканування"));
+            } else {
+                setNoCodeMessage("Спочатку завантажте зображення за допомогою кнопки вище.");
+            }
+        }
+    }
+
+    // Скидання результату та інтерфейсу
+    function resetEverything() {
+        clearResult();
+        // якщо камера активна, не чіпаємо її роботу, просто чистимо останній код
+        if (!scannerActive) {
+            // якщо показано блок фото, можна його приховати? краще залишити як є, але результат очистити
+        }
+        // додатково якщо є активне фото — не видаляємо, але код скинуто
+    }
+
+    // ---- обробники подій ----
+    startCameraBtn.addEventListener('click', () => {
+        // Якщо зараз відображено блок попереднього перегляду, сховаємо його, щоб не заважав
+        imagePreviewBlock.style.display = 'none';
+        currentImageFile = null; // скидаємо файл, бо переходимо на камеру
+        startCamera();
+    });
+    
+    stopCameraBtn.addEventListener('click', () => {
+        stopCamera();
+        // але не ховаємо попередній перегляд, якщо там було щось, лишаємо, але камера вимкнена
+    });
+
+    uploadImageInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            handleImageUpload(file);
+        }
+    });
+
+    scanUploadedBtn.addEventListener('click', () => {
+        if (currentImageFile) {
+            decodeImageFromFile(currentImageFile);
+        } else if (imagePreviewImg.src && imagePreviewImg.src !== "") {
+            // спроба взяти з існуючого прев'ю
+            fetch(imagePreviewImg.src)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], "uploaded_image.png", { type: blob.type });
+                    currentImageFile = file;
+                    decodeImageFromFile(file);
+                })
+                .catch(() => setNoCodeMessage("Не вдалось перечитати зображення"));
+        } else {
+            setNoCodeMessage("Немає завантаженого зображення. Спочатку завантажте фото.");
+        }
+    });
+
+    resetResultBtn.addEventListener('click', () => {
+        clearResult();
+    });
+
+    // Початкове прибирання: нічого не запускаємо автоматично, але очистимо результат
+    clearResult();
+    // Якщо користувач закриває сторінку, зупинити потоки
+    window.addEventListener('beforeunload', () => {
+        if (scannerActive) {
+            Quagga.stop();
+        }
+    });
+    
+    // Додаткова функція для адаптації розміру камери при зміні розміру вікна
+    window.addEventListener('resize', () => {
+        if (scannerActive) {
+            // невеликий трюк для перезапуску трекінгу, але не обов'язково
+            setTimeout(() => {
+                if (Quagga && typeof Quagga.canvas === "object") {
+                    try { Quagga.canvas.domImage.nextSibling && Quagga.canvas.domImage.nextSibling; } catch(e) {}
+                }
+            }, 100);
+        }
+    });
+</script>
+</body>
+</html>

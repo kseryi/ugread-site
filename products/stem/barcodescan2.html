@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Barcode Expert з базою даних | Open Food Facts</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <!-- Font Awesome 6 (безкоштовні іконки) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #eef2f7 0%, #d9e2ec 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .app-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Hero секція */
+        .hero-header {
+            background: linear-gradient(135deg, #0b2b3b, #1a4a6f);
+            border-radius: 32px;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            color: white;
+            box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+        }
+
+        .hero-header h1 {
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .badge-free {
+            background: #10b981;
+            padding: 5px 15px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .sub {
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+
+        /* Головна сітка */
+        .flex-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            margin-bottom: 28px;
+        }
+
+        .card-white {
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .card-white h2 {
+            font-size: 1.5rem;
+            margin-bottom: 18px;
+            border-left: 6px solid #1e4b6e;
+            padding-left: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Камера */
+        .cam-container {
+            background: #0f172a;
+            border-radius: 24px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        #reader {
+            width: 100%;
+            min-height: 320px;
+            background: #000;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 15px 0 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 60px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #1e4b6e;
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            background: #0f3450;
+            transform: scale(1.02);
+        }
+
+        .btn-danger {
+            background: #b91c1c;
+            color: white;
+        }
+
+        .btn-success {
+            background: #2b6e4f;
+            color: white;
+        }
+
+        .btn-outline {
+            background: #e9ecef;
+            color: #1e2a3a;
+            border: 1px solid #ced4da;
+        }
+
+        .status-chip {
+            background: #eef2ff;
+            padding: 8px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+
+        /* зона завантаження */
+        .upload-zone {
+            border: 2px dashed #9aaebf;
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            transition: 0.2s;
+            cursor: pointer;
+            background: #f9fbfd;
+        }
+
+        .upload-zone:hover {
+            border-color: #1e4b6e;
+            background: #eef3fc;
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 18px;
+            display: none;
+            margin-top: 15px;
+            object-fit: contain;
+        }
+
+        /* результат */
+        .result-card {
+            background: linear-gradient(125deg, #fef9e8, #fff8f0);
+            border-left: 8px solid #f5b042;
+        }
+
+        .barcode-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .barcode-number {
+            font-family: monospace;
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: #1e2a3a;
+            color: white;
+            padding: 6px 20px;
+            border-radius: 60px;
+            letter-spacing: 1px;
+        }
+
+        .valid-true {
+            background: #2b9348;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 40px;
+            font-weight: bold;
+        }
+
+        .valid-false {
+            background: #dc2626;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 40px;
+            font-weight: bold;
+        }
+
+        .product-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .info-block {
+            background: white;
+            border-radius: 20px;
+            padding: 14px 18px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .info-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #5b6e8c;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 5px;
+            color: #0f172a;
+        }
+
+        hr {
+            margin: 20px 0;
+            border-color: #e2e8f0;
+        }
+
+        .history-list {
+            max-height: 220px;
+            overflow-y: auto;
+            margin-top: 12px;
+        }
+
+        .history-item {
+            background: #f1f5f9;
+            border-radius: 18px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: 0.1s;
+            font-size: 0.85rem;
+        }
+
+        .history-item:hover {
+            background: #e2e8f0;
+            transform: translateX(5px);
+        }
+
+        @media (max-width: 800px) {
+            .flex-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-details {
+                grid-template-columns: 1fr;
+            }
+
+            .barcode-number {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-wrapper">
+    <div class="hero-header">
+        <h1>
+            <i class="fas fa-database"></i> Barcode Expert 
+            <span class="badge-free"><i class="fas fa-globe"></i> Open Food Facts</span>
+        </h1>
+        <p class="sub"><i class="fas fa-search"></i> Скануйте штрихкод — миттєво отримуйте реальну назву, бренд, вагу, склад та оригінальність товару з бази 3M+ продуктів</p>
+    </div>
+
+    <div class="flex-grid">
+        <!-- Ліва панель: камера -->
+        <div class="card-white">
+            <h2><i class="fas fa-camera"></i> Сканувати камерою</h2>
+            <div class="cam-container">
+                <div id="reader" style="width:100%; min-height: 320px;"></div>
+            </div>
+            <div class="btn-group">
+                <button id="startCamBtn" class="btn btn-primary"><i class="fas fa-play"></i> Запустити камеру</button>
+                <button id="stopCamBtn" class="btn btn-danger"><i class="fas fa-stop"></i> Зупинити</button>
+            </div>
+            <div id="camStatus" class="status-chip"><i class="fas fa-info-circle"></i> Камера не активна</div>
+        </div>
+
+        <!-- Права панель: завантаження фото -->
+        <div class="card-white">
+            <h2><i class="fas fa-image"></i> Завантажити фото</h2>
+            <div class="upload-zone" id="uploadZone">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 38px; color:#1e4b6e;"></i>
+                <p><strong>Натисніть або перетягніть знімок</strong><br><small>JPG, PNG, WebP</small></p>
+                <input type="file" id="fileInput" accept="image/*" style="display:none">
+            </div>
+            <img id="previewImg" class="preview-img" alt="preview">
+            <div class="btn-group" style="margin-top: 14px;">
+                <button id="scanUploadBtn" class="btn btn-success"><i class="fas fa-qrcode"></i> Розпізнати код</button>
+                <button id="clearUploadBtn" class="btn btn-outline"><i class="fas fa-eraser"></i> Очистити</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- РЕЗУЛЬТАТ: реальний продукт з Open Food Facts -->
+    <div class="card-white result-card" id="resultPanel">
+        <div class="barcode-head">
+            <div class="barcode-number" id="displayCode">—</div>
+            <div id="validityBadge"></div>
+        </div>
+
+        <div class="product-details" id="productDetails">
+            <div class="info-block"><div class="info-label"><i class="fas fa-box"></i> НАЗВА ТОВАРУ</div><div class="info-value" id="prodName">—</div></div>
+            <div class="info-block"><div class="info-label"><i class="fas fa-trademark"></i> БРЕНД / ВИРОБНИК</div><div class="info-value" id="prodBrand">—</div></div>
+            <div class="info-block"><div class="info-label"><i class="fas fa-map-pin"></i> КРАЇНА (з коду)</div><div class="info-value" id="prodCountry">—</div></div>
+            <div class="info-block"><div class="info-label"><i class="fas fa-weight-hanging"></i> КІЛЬКІСТЬ / ВАГА</div><div class="info-value" id="prodQuantity">—</div></div>
+            <div class="info-block"><div class="info-label"><i class="fas fa-leaf"></i> ІНГРЕДІЄНТИ / СКЛАД</div><div class="info-value" id="prodIngredients">—</div></div>
+            <div class="info-block"><div class="info-label"><i class="fas fa-clipboard-list"></i> ОПИС / КАТЕГОРІЯ</div><div class="info-value" id="prodCategories">—</div></div>
+        </div>
+        <hr>
+        <div><i class="fas fa-clock"></i> <strong>Історія перевірок</strong>
+            <button id="clearHistoryBtn" style="float:right; background:#e2e8f0; border:none; border-radius: 30px; padding: 4px 14px; cursor:pointer;">Очистити</button>
+        </div>
+        <div id="historyList" class="history-list"><div style="opacity:0.6; text-align:center;">— Ще немає сканувань —</div></div>
+    </div>
+</div>
+
+<script>
+    // ------------------- Глобальні змінні ------------------
+    let html5Scanner = null;
+    let isScanning = false;
+    let scanHistory = []; // { code, productName, brand, timestamp }
+
+    // ------------------- Допоміжні функції ------------------
+    // Функція визначення країни за першими цифрами EAN (префікс)
+    function getCountryFromPrefix(barcode) {
+        if (!barcode) return "Невідома";
+        const prefix = barcode.substring(0, 3);
+        const countryMap = {
+            "690": "🇨🇳 Китай", "691": "🇨🇳 Китай", "692": "🇨🇳 Китай", "693": "🇨🇳 Китай",
+            "460": "🇷🇺 Росія", "481": "🇧🇾 Білорусь", "482": "🇺🇦 Україна", "590": "🇵🇱 Польща",
+            "400": "🇩🇪 Німеччина", "440": "🇩🇪 Німеччина", "500": "🇬🇧 Велика Британія",
+            "300": "🇫🇷 Франція", "800": "🇮🇹 Італія", "840": "🇪🇸 Іспанія", "890": "🇮🇳 Індія"
+        };
+        if (countryMap[prefix]) return countryMap[prefix];
+        const prefix2 = barcode.substring(0, 2);
+        if (prefix2 === "00" || prefix2 === "01" || prefix2 === "03") return "🇺🇸 США / Канада";
+        return "🌍 ЄС або інша (GS1)";
+    }
+
+    // Валідація контрольної цифри (EAN-13)
+    function validateCheckDigit(barcode) {
+        if (!barcode || barcode.length !== 13) return { valid: null, message: "Лише для EAN-13" };
+        let sumOdd = 0, sumEven = 0;
+        for (let i = 0; i < 12; i++) {
+            let digit = parseInt(barcode[i]);
+            if (i % 2 === 0) sumOdd += digit;
+            else sumEven += digit;
+        }
+        let total = sumOdd + (sumEven * 3);
+        let calcCheck = (10 - (total % 10)) % 10;
+        let isValid = (calcCheck === parseInt(barcode[12]));
+        return { valid: isValid, message: isValid ? "✅ Контрольна цифра вірна — код оригінальний" : "❌ КОНТРОЛЬНА ЦИФРА НЕ ЗБІГАЄТЬСЯ! МОЖЛИВА ПІДРОБКА!" };
+    }
+
+    // ---- Запит до Open Food Facts (реальний продукт) ----
+    async function fetchProductFromOpenFoodFacts(barcode) {
+        try {
+            const url = `https://world.openfoodfacts.org/api/v2/product/${barcode}.json`;
+            const response = await fetch(url, {
+                headers: { "User-Agent": "BarcodeExpertApp/1.0 (contact@example.com)" }
+            });
+            const data = await response.json();
+            if (data.status === 1 && data.product) {
+                const p = data.product;
+                return {
+                    found: true,
+                    name: p.product_name || p.generic_name || "Назва не вказана",
+                    brand: p.brands || "Невідомий бренд",
+                    quantity: p.quantity || "Не вказано",
+                    ingredients: p.ingredients_text ? p.ingredients_text.substring(0, 120) + "..." : "Немає даних",
+                    categories: p.categories || "Без категорії",
+                    image: p.image_url || null
+                };
+            } else {
+                return { found: false };
+            }
+        } catch (err) {
+            console.warn("Помилка запиту до Open Food Facts", err);
+            return { found: false, error: true };
+        }
+    }
+
+    // ------------------- ГОЛОВНА ФУНКЦІЯ ОНОВЛЕННЯ UI ------------------
+    async function processBarcode(barcodeValue, source = "сканер") {
+        if (!barcodeValue || barcodeValue.trim() === "") return;
+        document.getElementById("displayCode").innerText = barcodeValue;
+
+        // 1. Перевірка контрольної цифри
+        const check = validateCheckDigit(barcodeValue);
+        const validityDiv = document.getElementById("validityBadge");
+        if (check.valid === null) validityDiv.innerHTML = `<div class="valid-false" style="background:#6c757d;"><i class="fas fa-barcode"></i> ${check.message}</div>`;
+        else if (check.valid) validityDiv.innerHTML = `<div class="valid-true"><i class="fas fa-shield-alt"></i> ${check.message}</div>`;
+        else validityDiv.innerHTML = `<div class="valid-false"><i class="fas fa-exclamation-triangle"></i> ${check.message}</div>`;
+
+        // 2. Країна за префіксом (завжди показуємо)
+        const countryInfo = getCountryFromPrefix(barcodeValue);
+        document.getElementById("prodCountry").innerHTML = countryInfo;
+
+        // 3. Спроба отримати реальний продукт з Open Food Facts
+        const productData = await fetchProductFromOpenFoodFacts(barcodeValue);
+        if (productData.found) {
+            document.getElementById("prodName").innerHTML = productData.name;
+            document.getElementById("prodBrand").innerHTML = productData.brand;
+            document.getElementById("prodQuantity").innerHTML = productData.quantity;
+            document.getElementById("prodIngredients").innerHTML = productData.ingredients;
+            document.getElementById("prodCategories").innerHTML = productData.categories;
+            // зберігаємо в історію з реальною назвою
+            addToHistory(barcodeValue, productData.name, productData.brand);
+        } else {
+            // Якщо товару немає в базі — показуємо заглушку
+            document.getElementById("prodName").innerHTML = "❌ Не знайдено в Open Food Facts";
+            document.getElementById("prodBrand").innerHTML = "Спробуйте інший код або перевірте правильність";
+            document.getElementById("prodQuantity").innerHTML = "—";
+            document.getElementById("prodIngredients").innerHTML = "Немає даних у відкритій базі";
+            document.getElementById("prodCategories").innerHTML = "Ви можете додати товар на openfoodfacts.org";
+            addToHistory(barcodeValue, "Невідомий товар", "—");
+        }
+
+        // Вібрація для мобільних
+        if (navigator.vibrate) navigator.vibrate(100);
+    }
+
+    // Історія
+    function addToHistory(code, name, brand) {
+        const newItem = {
+            code: code,
+            name: name,
+            brand: brand,
+            timestamp: new Date().toLocaleString()
+        };
+        scanHistory.unshift(newItem);
+        if (scanHistory.length > 12) scanHistory.pop();
+        localStorage.setItem("barcodeHistory", JSON.stringify(scanHistory));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const container = document.getElementById("historyList");
+        if (scanHistory.length === 0) {
+            container.innerHTML = "<div style='opacity:0.6; text-align:center;'>— Ще немає сканувань —</div>";
+            return;
+        }
+        container.innerHTML = scanHistory.map(item => `
+            <div class="history-item" onclick="recallHistory('${escapeHtml(item.code)}')">
+                <strong>${escapeHtml(item.code)}</strong> — ${escapeHtml(item.name)} <br>
+                <small>${item.brand} | ${item.timestamp}</small>
+            </div>
+        `).join("");
+    }
+
+    window.recallHistory = (code) => { processBarcode(code, "історія"); };
+    function escapeHtml(str) { if(!str) return ""; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+    function loadHistoryFromStorage() { const saved = localStorage.getItem("barcodeHistory"); if(saved) { try { scanHistory = JSON.parse(saved); renderHistory(); } catch(e){} } }
+
+    // ---- КАМЕРА (HTML5 QR CODE) ----
+    async function startCamera() {
+        if (isScanning) await stopCamera();
+        const statusDiv = document.getElementById("camStatus");
+        statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Доступ до камери...';
+        try {
+            const scanner = new Html5Qrcode("reader");
+            const devices = await Html5Qrcode.getCameras();
+            if (!devices.length) throw new Error("Немає камер");
+            let cameraId = devices[0].id;
+            for (let d of devices) if (d.label.toLowerCase().includes("back") || d.label.toLowerCase().includes("environment")) { cameraId = d.id; break; }
+            await scanner.start(cameraId, { fps: 18, qrbox: { width: 280, height: 200 } }, 
+                (decodedText) => { processBarcode(decodedText, "камера"); },
+                (errMsg) => { /* ігноруємо помилки пошуку коду */ }
+            );
+            html5Scanner = scanner;
+            isScanning = true;
+            statusDiv.innerHTML = '<i class="fas fa-video"></i> Камера активна ✅ Наведіть на штрихкод';
+        } catch (err) {
+            statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Помилка доступу до камери. Перевірте дозволи.';
+            console.error(err);
+        }
+    }
+
+    async function stopCamera() {
+        if (html5Scanner && isScanning) {
+            try { await html5Scanner.stop(); await html5Scanner.clear(); } catch(e) {}
+            html5Scanner = null;
+            isScanning = false;
+            document.getElementById("camStatus").innerHTML = '<i class="fas fa-stop-circle"></i> Камера зупинена';
+        }
+    }
+
+    // ---- Робота з файлами (завантаження фото) ----
+    let currentImageFile = null;
+    const uploadZone = document.getElementById("uploadZone");
+    const fileInput = document.getElementById("fileInput");
+    const previewImg = document.getElementById("previewImg");
+
+    uploadZone.addEventListener("click", () => fileInput.click());
+    uploadZone.addEventListener("dragover", (e) => { e.preventDefault(); uploadZone.style.borderColor = "#1e4b6e"; uploadZone.style.background = "#eef3fc"; });
+    uploadZone.addEventListener("dragleave", () => { uploadZone.style.borderColor = "#9aaebf"; uploadZone.style.background = "#f9fbfd"; });
+    uploadZone.addEventListener("drop", (e) => { e.preventDefault(); uploadZone.style.borderColor = "#9aaebf"; uploadZone.style.background = "#f9fbfd"; if(e.dataTransfer.files.length) handleImageFile(e.dataTransfer.files[0]); });
+    fileInput.addEventListener("change", (e) => { if(e.target.files.length) handleImageFile(e.target.files[0]); });
+
+    function handleImageFile(file) {
+        if (!file.type.startsWith("image/")) return alert("Лише зображення");
+        currentImageFile = file;
+        const reader = new FileReader();
+        reader.onload = (ev) => { previewImg.src = ev.target.result; previewImg.style.display = "block"; };
+        reader.readAsDataURL(file);
+    }
+
+    async function scanUploadedImage() {
+        if (!currentImageFile) { alert("Спочатку завантажте фото"); return; }
+        const btn = document.getElementById("scanUploadBtn");
+        btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Аналіз...';
+        btn.disabled = true;
+        try {
+            const tempScanner = new Html5Qrcode("tempImgScan");
+            const result = await tempScanner.scanFile(currentImageFile, false);
+            if (result && result.decodedText) processBarcode(result.decodedText, "фото");
+            else alert("Не вдалося знайти штрихкод на фото");
+            await tempScanner.clear();
+        } catch (err) { alert("Помилка розпізнавання: " + err.message); }
+        finally { btn.innerHTML = '<i class="fas fa-qrcode"></i> Розпізнати код'; btn.disabled = false; }
+    }
+    function clearUpload() { currentImageFile = null; previewImg.style.display = "none"; previewImg.src = ""; fileInput.value = ""; }
+
+    // ---- Ініціалізація сторінки ----
+    document.getElementById("startCamBtn").addEventListener("click", startCamera);
+    document.getElementById("stopCamBtn").addEventListener("click", stopCamera);
+    document.getElementById("scanUploadBtn").addEventListener("click", scanUploadedImage);
+    document.getElementById("clearUploadBtn").addEventListener("click", clearUpload);
+    document.getElementById("clearHistoryBtn").addEventListener("click", () => { scanHistory = []; localStorage.removeItem("barcodeHistory"); renderHistory(); });
+    loadHistoryFromStorage();
+    window.addEventListener("beforeunload", () => { if (isScanning) stopCamera(); });
+</script>
+</body>
+</html>

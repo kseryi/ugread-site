@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>3D Papercraft: Розгортка стін будинку</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script async defer src="https://docs.opencv.org/4.9.0/opencv.js" onload="onOpenCvReady()"></script>
+  <style>
+    .point-handle {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: #ff4444;
+      border: 2px solid white;
+      border-radius: 50%;
+      cursor: grab;
+      z-index: 20;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.3);
+    }
+    .point-handle:active { cursor: grabbing; }
+    .image-container { position: relative; display: inline-block; background: #f0f0f0; border-radius: 16px; overflow: hidden; }
+    @media print {
+      body { background: white; margin: 0; padding: 0; }
+      .no-print { display: none !important; }
+      .print-page { page-break-after: always; break-after: page; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+      .print-canvas { max-width: 100%; height: auto; box-shadow: none; border: 1px solid #ddd; }
+    }
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* Стиль для кастомної кнопки вибору файлів */
+    .custom-file-upload {
+      display: inline-block;
+      background-color: #3b82f6;
+      color: white;
+      font-weight: bold;
+      padding: 10px 24px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      text-align: center;
+      font-size: 16px;
+      border: none;
+    }
+    .custom-file-upload:hover {
+      background-color: #2563eb;
+    }
+    .custom-file-upload:active {
+      transform: scale(0.98);
+    }
+    input[type="file"] {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+  <div class="container mx-auto px-4 py-6 max-w-7xl">
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-gray-800">📐 Архітектурна розгортка стін</h1>
+      <p class="text-gray-600 mt-2">Завантажте фото стін, вкажіть 4 кути (кліками) та реальні розміри → автоматичний масштаб для А4 + зони для склеювання</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 no-print">
+      <label class="block text-lg font-semibold mb-3">📸 Завантажте фотографії стін (JPEG/PNG)</label>
+      <!-- Кастомна кнопка завантаження файлів -->
+      <label for="fileInput" class="custom-file-upload">
+        📁 Вибрати файли
+      </label>
+      <input type="file" id="fileInput" multiple accept="image/jpeg,image/png,image/jpg">
+      <p class="text-sm text-gray-500 mt-3">* Для кожної стіни кліками поставте 4 кути (за годинниковою стрілкою) та введіть реальні розміри.</p>
+    </div>
+
+    <div id="wallsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8"></div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-6 no-print sticky bottom-4 z-30">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex gap-6 items-center">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">📏 Оптимальний масштаб (1 : </label>
+            <div class="flex items-center gap-2">
+              <span id="autoScaleDisplay" class="text-2xl font-bold text-indigo-600">—</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">✏️ Власний масштаб (1 : </label>
+            <div class="flex gap-2">
+              <input type="number" id="customScaleInput" step="1" class="w-28 p-2 border border-gray-300 rounded-lg" placeholder="напр. 50" value="50">
+              <button id="applyScaleBtn" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition font-medium">Застосувати</button>
+            </div>
+          </div>
+        </div>
+        <button id="printBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition text-lg">🖨️ Підготувати до друку</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let walls = [];
+    let nextId = 0;
+    let openCvReady = false;
+    let cvInstance = null;
+    let currentScale = 50;
+    let isPrinting = false;
+
+    const fileInput = document.getElementById('fileInput');
+    const wallsGrid = document.getElementById('wallsGrid');
+    const autoScaleSpan = document.getElementById('autoScaleDisplay');
+    const customScaleInput = document.getElementById('customScaleInput');
+    const applyScaleBtn = document.getElementById('applyScaleBtn');
+    const printBtn = document.getElementById('printBtn');
+
+    function onOpenCvReady() {
+      if (typeof cv !== 'undefined') {
+        cvInstance = cv;
+        openCvReady = true;
+        console.log("OpenCV.js завантажено успішно");
+        walls.forEach(wall => regenerateTransformedWall(wall));
+      } else {
+        setTimeout(onOpenCvReady, 100);
+      }
+    }
+
+    fileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => addWallFromImage(img);
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+      fileInput.value = '';
+    });
+
+    function addWallFromImage(imgElement) {
+      const id = nextId++;
+      const wall = {
+        id: id,
+        originalImg: imgElement,
+        widthMeters: 3.0,
+        heightMeters: 2.5,
+        points: [
+          { x: imgElement.width * 0.15, y: imgElement.height * 0.15 },
+          { x: imgElement.width * 0.85, y: imgElement.height * 0.15 },
+          { x: imgElement.width * 0.85, y: imgElement.height * 0.85 },
+          { x: imgElement.width * 0.15, y: imgElement.height * 0.85 }
+        ],
+        transformedCanvas: null,
+        previewWithFlaps: null,
+        isTransforming: false
+      };
+      walls.push(wall);
+      renderWallCard(wall);
+      if (openCvReady) regenerateTransformedWall(wall);
+      else setTimeout(() => regenerateTransformedWall(wall), 200);
+    }
+
+    async function regenerateTransformedWall(wall) {
+      if (!openCvReady || !cvInstance) {
+        setTimeout(() => regenerateTransformedWall(wall), 200);
+        return;
+      }
+      if (!wall.originalImg || !wall.originalImg.complete || wall.originalImg.width === 0) return;
+      if (wall.isTransforming) return;
+      
+      wall.isTransforming = true;
+      
+      const card = document.getElementById(`wall-card-${wall.id}`);
+      if (card) {
+        const transformedImg = card.querySelector('.transformed-img');
+        if (transformedImg) {
+          transformedImg.style.opacity = '0.5';
+        }
+      }
+
+      const img = wall.originalImg;
+      const srcPoints = wall.points.map(p => [p.x, p.y]);
+      
+      const realW = parseFloat(wall.widthMeters);
+      const realH = parseFloat(wall.heightMeters);
+      if (isNaN(realW) || isNaN(realH) || realW <= 0 || realH <= 0) {
+        wall.isTransforming = false;
+        return;
+      }
+      
+      const aspect = realW / realH;
+      const targetHeight = 1000;
+      const targetWidth = targetHeight * aspect;
+      
+      const dstPoints = [
+        [0, 0],
+        [targetWidth, 0],
+        [targetWidth, targetHeight],
+        [0, targetHeight]
+      ];
+      
+      try {
+        const srcMat = cvInstance.matFromArray(4, 1, cvInstance.CV_32FC2, srcPoints.flat());
+        const dstMat = cvInstance.matFromArray(4, 1, cvInstance.CV_32FC2, dstPoints.flat());
+        const M = cvInstance.getPerspectiveTransform(srcMat, dstMat);
+        
+        const srcImage = cvInstance.imread(img);
+        const warped = new cvInstance.Mat();
+        cvInstance.warpPerspective(srcImage, warped, M, new cvInstance.Size(targetWidth, targetHeight));
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        cvInstance.imshow(canvas, warped);
+        
+        wall.transformedCanvas = canvas;
+        
+        srcMat.delete();
+        dstMat.delete();
+        M.delete();
+        srcImage.delete();
+        warped.delete();
+        
+        updateWallPreview(wall);
+        updateGlobalScaleAndRender();
+      } catch (err) {
+        console.error("Помилка трансформації:", err);
+      } finally {
+        wall.isTransforming = false;
+        if (card) {
+          const transformedImg = card.querySelector('.transformed-img');
+          if (transformedImg) {
+            transformedImg.style.opacity = '1';
+          }
+        }
+      }
+    }
+
+    function drawWallWithFlaps(wall, scaleDenominator) {
+      if (!wall.transformedCanvas) return null;
+      
+      const realWidthMM = wall.widthMeters * 1000;
+      const realHeightMM = wall.heightMeters * 1000;
+      const paperWidthMM = realWidthMM / scaleDenominator;
+      const paperHeightMM = realHeightMM / scaleDenominator;
+      
+      if (paperWidthMM <= 0 || paperHeightMM <= 0) return null;
+      
+      const mmToPx = 3.78;
+      const paperWidthPx = paperWidthMM * mmToPx;
+      const paperHeightPx = paperHeightMM * mmToPx;
+      const flapWidthMM = 9;
+      const flapPx = flapWidthMM * mmToPx;
+      
+      const totalWidth = paperWidthPx + flapPx * 2;
+      const totalHeight = paperHeightPx + flapPx * 2;
+      
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = totalWidth;
+      finalCanvas.height = totalHeight;
+      const ctx = finalCanvas.getContext('2d');
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, totalWidth, totalHeight);
+      
+      ctx.drawImage(wall.transformedCanvas, flapPx, flapPx, paperWidthPx, paperHeightPx);
+      
+      ctx.save();
+      ctx.strokeStyle = '#666666';
+      ctx.fillStyle = '#e2e8f0';
+      ctx.setLineDash([6, 6]);
+      ctx.lineWidth = 1.5;
+      
+      // Лівий клапан
+      ctx.beginPath();
+      ctx.moveTo(0, flapPx);
+      ctx.lineTo(flapPx, flapPx);
+      ctx.lineTo(flapPx, flapPx + paperHeightPx);
+      ctx.lineTo(0, flapPx + paperHeightPx);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      
+      // Правий клапан
+      ctx.beginPath();
+      ctx.moveTo(totalWidth, flapPx);
+      ctx.lineTo(totalWidth - flapPx, flapPx);
+      ctx.lineTo(totalWidth - flapPx, flapPx + paperHeightPx);
+      ctx.lineTo(totalWidth, flapPx + paperHeightPx);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      
+      // Верхній клапан
+      ctx.beginPath();
+      ctx.moveTo(flapPx, 0);
+      ctx.lineTo(flapPx, flapPx);
+      ctx.lineTo(flapPx + paperWidthPx, flapPx);
+      ctx.lineTo(flapPx + paperWidthPx, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      
+      // Нижній клапан
+      ctx.beginPath();
+      ctx.moveTo(flapPx, totalHeight);
+      ctx.lineTo(flapPx, totalHeight - flapPx);
+      ctx.lineTo(flapPx + paperWidthPx, totalHeight - flapPx);
+      ctx.lineTo(flapPx + paperWidthPx, totalHeight);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      
+      ctx.setLineDash([]);
+      ctx.font = "bold 11px Arial";
+      ctx.fillStyle = "#555555";
+      ctx.fillText("✂️", flapPx / 3, flapPx + 15);
+      ctx.fillText("✂️", totalWidth - flapPx + 5, flapPx + 15);
+      ctx.fillText("✂️", flapPx + paperWidthPx / 2 - 25, 8);
+      ctx.fillText("✂️", flapPx + paperWidthPx / 2 - 25, totalHeight - 18);
+      
+      ctx.restore();
+      
+      return finalCanvas;
+    }
+
+    function computeOptimalScale() {
+      if (walls.length === 0) return 50;
+      
+      let maxDenominator = 1;
+      const marginMM = 10;
+      const flapMM = 9;
+      
+      for (let wall of walls) {
+        const wMM = wall.widthMeters * 1000;
+        const hMM = wall.heightMeters * 1000;
+        const neededWidth = wMM + flapMM * 2;
+        const neededHeight = hMM + flapMM * 2;
+        
+        const portraitAvailW = 210 - marginMM * 2;
+        const portraitAvailH = 297 - marginMM * 2;
+        const landscapeAvailW = 297 - marginMM * 2;
+        const landscapeAvailH = 210 - marginMM * 2;
+        
+        let bestFit = Infinity;
+        
+        if (neededWidth <= portraitAvailW && neededHeight <= portraitAvailH) {
+          const scaleW = portraitAvailW / neededWidth;
+          const scaleH = portraitAvailH / neededHeight;
+          const scale = Math.min(scaleW, scaleH);
+          bestFit = Math.min(bestFit, 1 / scale);
+        }
+        
+        if (neededWidth <= landscapeAvailW && neededHeight <= landscapeAvailH) {
+          const scaleW = landscapeAvailW / neededWidth;
+          const scaleH = landscapeAvailH / neededHeight;
+          const scale = Math.min(scaleW, scaleH);
+          bestFit = Math.min(bestFit, 1 / scale);
+        }
+        
+        if (bestFit === Infinity) {
+          const maxW = Math.max(portraitAvailW, landscapeAvailW);
+          const maxH = Math.max(portraitAvailH, landscapeAvailH);
+          const scaleW = maxW / neededWidth;
+          const scaleH = maxH / neededHeight;
+          bestFit = 1 / Math.min(scaleW, scaleH);
+        }
+        
+        maxDenominator = Math.max(maxDenominator, Math.ceil(bestFit));
+      }
+      
+      const niceScales = [20, 25, 30, 40, 50, 60, 75, 80, 100, 125, 150, 200];
+      let nice = niceScales.find(s => s >= maxDenominator);
+      if (!nice) nice = maxDenominator;
+      
+      return nice;
+    }
+
+    function updateGlobalScaleAndRender() {
+      if (walls.length === 0) {
+        autoScaleSpan.innerText = '—';
+        return;
+      }
+      
+      const optimal = computeOptimalScale();
+      autoScaleSpan.innerText = optimal;
+      
+      let scaleToUse = currentScale;
+      if (!customScaleInput.value || parseInt(customScaleInput.value) === 0) {
+        scaleToUse = optimal;
+        currentScale = optimal;
+        customScaleInput.value = optimal;
+      } else {
+        scaleToUse = parseInt(customScaleInput.value);
+        currentScale = scaleToUse;
+      }
+      
+      walls.forEach(wall => {
+        if (wall.transformedCanvas) {
+          const flapCanvas = drawWallWithFlaps(wall, scaleToUse);
+          wall.previewWithFlaps = flapCanvas;
+          updateWallFlapPreview(wall);
+        }
+      });
+    }
+
+    function updateWallPreview(wall) {
+      const card = document.getElementById(`wall-card-${wall.id}`);
+      if (card && wall.transformedCanvas) {
+        const previewImg = card.querySelector('.transformed-img');
+        if (previewImg) {
+          previewImg.src = wall.transformedCanvas.toDataURL();
+        }
+      }
+      updateGlobalScaleAndRender();
+    }
+    
+    function updateWallFlapPreview(wall) {
+      const card = document.getElementById(`wall-card-${wall.id}`);
+      if (card && wall.previewWithFlaps) {
+        const container = card.querySelector('.flap-preview');
+        if (container) {
+          container.innerHTML = '';
+          const img = document.createElement('img');
+          img.src = wall.previewWithFlaps.toDataURL();
+          img.style.maxWidth = '100%';
+          img.style.border = '1px solid #ddd';
+          img.style.borderRadius = '8px';
+          img.style.marginTop = '10px';
+          container.appendChild(img);
+          
+          const scaleSpan = card.querySelector('.scale-value');
+          if (scaleSpan) scaleSpan.textContent = currentScale;
+        }
+      }
+    }
+
+    async function prepareAndPrint() {
+      if (isPrinting) return;
+      isPrinting = true;
+      
+      const originalBtnText = printBtn.innerHTML;
+      printBtn.innerHTML = '<span class="loading-spinner"></span> Підготовка...';
+      printBtn.disabled = true;
+      
+      try {
+        const transformingWalls = walls.filter(w => w.isTransforming);
+        if (transformingWalls.length > 0) {
+          await new Promise(resolve => {
+            const checkInterval = setInterval(() => {
+              const stillTransforming = walls.filter(w => w.isTransforming);
+              if (stillTransforming.length === 0) {
+                clearInterval(checkInterval);
+                resolve();
+              }
+            }, 200);
+            setTimeout(() => {
+              clearInterval(checkInterval);
+              resolve();
+            }, 10000);
+          });
+        }
+        
+        const optimal = computeOptimalScale();
+        let scaleToUse = currentScale;
+        if (!customScaleInput.value || parseInt(customScaleInput.value) === 0) {
+          scaleToUse = optimal;
+        }
+        
+        for (let wall of walls) {
+          if (wall.transformedCanvas) {
+            const flapCanvas = drawWallWithFlaps(wall, scaleToUse);
+            wall.previewWithFlaps = flapCanvas;
+          }
+        }
+        
+        const missingFlaps = walls.filter(w => !w.previewWithFlaps);
+        if (missingFlaps.length > 0) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          for (let wall of missingFlaps) {
+            if (wall.transformedCanvas) {
+              wall.previewWithFlaps = drawWallWithFlaps(wall, scaleToUse);
+            }
+          }
+        }
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Розгортки стін для склеювання</title>
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { background: white; padding: 20px; font-family: Arial, sans-serif; }
+              @media print {
+                .page { page-break-after: always; }
+                body { margin: 0; padding: 0; }
+              }
+              .page {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                page-break-after: always;
+              }
+              .page img {
+                max-width: 95%;
+                height: auto;
+                border: 1px solid #ccc;
+                box-shadow: none;
+              }
+              .page-title {
+                margin-bottom: 20px;
+                font-size: 14px;
+                color: #666;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+        `);
+        
+        let printedCount = 0;
+        for (let i = 0; i < walls.length; i++) {
+          const wall = walls[i];
+          if (wall.previewWithFlaps) {
+            const imgUrl = wall.previewWithFlaps.toDataURL();
+            printWindow.document.write(`
+              <div class="page">
+                <div class="page-title">Стіна #${i + 1} (масштаб 1:${scaleToUse})</div>
+                <img src="${imgUrl}" alt="Стіна ${i + 1}">
+              </div>
+            `);
+            printedCount++;
+          } else {
+            printWindow.document.write(`
+              <div class="page">
+                <div class="page-title">Стіна #${i + 1} - ПОМИЛКА ГЕНЕРАЦІЇ</div>
+                <p>Будь ласка, переконайтеся, що всі розміри введені правильно</p>
+              </div>
+            `);
+          }
+        }
+        
+        printWindow.document.write(`</body></html>`);
+        printWindow.document.close();
+        
+        if (printedCount > 0) {
+          printWindow.focus();
+          printWindow.print();
+        } else {
+          alert("Не вдалося згенерувати жодної стіни для друку. Перевірте, чи всі фото трансформовані та мають правильні розміри.");
+          printWindow.close();
+        }
+      } catch (err) {
+        console.error("Помилка підготовки до друку:", err);
+        alert("Помилка підготовки до друку: " + err.message);
+      } finally {
+        isPrinting = false;
+        printBtn.innerHTML = originalBtnText;
+        printBtn.disabled = false;
+      }
+    }
+
+    function renderWallCard(wall) {
+      const card = document.createElement('div');
+      card.className = 'wall-card bg-white rounded-2xl shadow-xl overflow-hidden';
+      card.id = `wall-card-${wall.id}`;
+      
+      card.innerHTML = `
+        <div class="p-4 border-b bg-gray-50 flex justify-between items-center flex-wrap gap-2">
+          <span class="font-bold text-lg">🧱 Стіна #${wall.id + 1}</span>
+          <div class="flex gap-3">
+            <label class="text-sm">Ширина (м): <input type="number" step="0.1" value="${wall.widthMeters}" class="wall-width border rounded w-24 p-1"></label>
+            <label class="text-sm">Висота (м): <input type="number" step="0.1" value="${wall.heightMeters}" class="wall-height border rounded w-24 p-1"></label>
+            <button class="remove-wall bg-red-500 text-white px-3 py-1 rounded-lg text-sm">🗑️</button>
+          </div>
+        </div>
+        <div class="p-4">
+          <p class="text-sm font-medium mb-2">📷 Оригінал з 4 кутами (клікніть для зміни позиції точок):</p>
+          <div class="relative image-container inline-block w-full">
+            <img src="${wall.originalImg.src}" class="wall-original-img rounded-lg shadow-md" style="width:100%; height:auto; cursor:crosshair;">
+            <div class="point-layer" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
+          </div>
+          <p class="text-sm font-medium mt-4">✅ Випрямлена стіна:</p>
+          <img class="transformed-img mt-2 rounded border max-w-full" style="max-height:200px; width:auto;">
+          <p class="text-sm font-medium mt-4">📄 Розгортка (масштаб 1: <span class="scale-value font-bold text-indigo-600">${currentScale}</span>):</p>
+          <div class="flap-preview mt-2"></div>
+        </div>
+      `;
+      
+      wallsGrid.appendChild(card);
+      
+      const widthInput = card.querySelector('.wall-width');
+      const heightInput = card.querySelector('.wall-height');
+      const removeBtn = card.querySelector('.remove-wall');
+      const imgElement = card.querySelector('.wall-original-img');
+      const pointLayer = card.querySelector('.point-layer');
+      
+      widthInput.addEventListener('change', (e) => {
+        wall.widthMeters = parseFloat(e.target.value);
+        if (openCvReady) regenerateTransformedWall(wall);
+        else setTimeout(() => regenerateTransformedWall(wall), 100);
+      });
+      
+      heightInput.addEventListener('change', (e) => {
+        wall.heightMeters = parseFloat(e.target.value);
+        if (openCvReady) regenerateTransformedWall(wall);
+        else setTimeout(() => regenerateTransformedWall(wall), 100);
+      });
+      
+      removeBtn.addEventListener('click', () => {
+        walls = walls.filter(w => w.id !== wall.id);
+        card.remove();
+        updateGlobalScaleAndRender();
+      });
+      
+      function updatePointsUI() {
+        pointLayer.innerHTML = '';
+        wall.points.forEach((point, idx) => {
+          const handle = document.createElement('div');
+          handle.className = 'point-handle';
+          handle.style.left = `${(point.x / wall.originalImg.width) * 100}%`;
+          handle.style.top = `${(point.y / wall.originalImg.height) * 100}%`;
+          
+          let isDragging = false;
+          handle.onmousedown = (e) => {
+            e.stopPropagation();
+            isDragging = true;
+            
+            const onMouseMove = (me) => {
+              if (!isDragging) return;
+              const rect = imgElement.getBoundingClientRect();
+              const scaleX = wall.originalImg.width / rect.width;
+              const scaleY = wall.originalImg.height / rect.height;
+              let newX = (me.clientX - rect.left) * scaleX;
+              let newY = (me.clientY - rect.top) * scaleY;
+              newX = Math.min(Math.max(0, newX), wall.originalImg.width);
+              newY = Math.min(Math.max(0, newY), wall.originalImg.height);
+              wall.points[idx] = { x: newX, y: newY };
+              updatePointsUI();
+              if (openCvReady) regenerateTransformedWall(wall);
+            };
+            
+            const onMouseUp = () => {
+              isDragging = false;
+              document.removeEventListener('mousemove', onMouseMove);
+              document.removeEventListener('mouseup', onMouseUp);
+            };
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+          };
+          
+          pointLayer.appendChild(handle);
+        });
+      }
+      
+      imgElement.addEventListener('click', (e) => {
+        const rect = imgElement.getBoundingClientRect();
+        const scaleX = wall.originalImg.width / rect.width;
+        const scaleY = wall.originalImg.height / rect.height;
+        let x = (e.clientX - rect.left) * scaleX;
+        let y = (e.clientY - rect.top) * scaleY;
+        x = Math.min(Math.max(0, x), wall.originalImg.width);
+        y = Math.min(Math.max(0, y), wall.originalImg.height);
+        
+        let minDist = Infinity;
+        let closestIdx = 0;
+        wall.points.forEach((p, i) => {
+          const dist = Math.hypot(p.x - x, p.y - y);
+          if (dist < minDist) {
+            minDist = dist;
+            closestIdx = i;
+          }
+        });
+        
+        if (minDist < 50) {
+          wall.points[closestIdx] = { x, y };
+        } else if (wall.points.length < 4) {
+          wall.points.push({ x, y });
+        } else {
+          wall.points[closestIdx] = { x, y };
+        }
+        
+        updatePointsUI();
+        if (openCvReady) regenerateTransformedWall(wall);
+      });
+      
+      updatePointsUI();
+    }
+    
+    printBtn.addEventListener('click', prepareAndPrint);
+    applyScaleBtn.addEventListener('click', () => {
+      let newScale = parseInt(customScaleInput.value);
+      if (isNaN(newScale) || newScale <= 0) newScale = 50;
+      currentScale = newScale;
+      updateGlobalScaleAndRender();
+    });
+    
+    window.onOpenCvReady = onOpenCvReady;
+    if (typeof cv !== 'undefined') onOpenCvReady();
+  </script>
+</body>
+</html>

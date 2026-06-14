@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AR-Креслення: Стіни, Вікна, Двері</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Контейнер для відео та canvas Three.js */
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        /* Відео з камери на всю ширину/висоту */
+        #video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            transform: scaleX(-1); /* Дзеркальне відображення для природного AR-ефекту */
+        }
+
+        /* Canvas для Three.js поверх відео */
+        #three-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: block;
+        }
+
+        /* Панель статусу та інструкцій */
+        #info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 16px;
+            backdrop-filter: blur(8px);
+            font-size: 14px;
+            z-index: 2;
+            text-align: center;
+            pointer-events: none;
+            font-weight: 500;
+            font-family: monospace;
+        }
+
+        #status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.6);
+            color: #0f0;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: monospace;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        button {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            z-index: 3;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            pointer-events: auto;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            #info { font-size: 12px; padding: 8px 12px; }
+            button { padding: 8px 14px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+<div id="container">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="three-canvas"></canvas>
+    <div id="status">🔍 Запуск камери та ШІ...</div>
+    <div id="info">
+        📄 Покажіть креслення на білому аркуші:<br>
+        ⬛ Чорні лінії → Стіни &nbsp;|&nbsp; 🟥 Червоні → Вікна &nbsp;|&nbsp; 🟩 Зелені → Двері &nbsp;|&nbsp; 🟦 Сині → Арка/проріз
+    </div>
+    <button id="resetBtn">🔄 Скинути 3D</button>
+</div>
+
+<!-- Підключення бібліотек -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- OpenCV.js (легка версія з офіційного CDN) -->
+<script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady()" type="text/javascript"></script>
+
+<script>
+    // Глобальні змінні
+    let video = document.getElementById('video');
+    let canvas3D = document.getElementById('three-canvas');
+    let scene, camera, renderer;
+    let wallsGroup = []; // масив об'єктів стін: { linePoints, mesh, type, elementData }
+    let cvReady = false;
+    let detectionInterval = null;
+    let isProcessing = false;
+    
+    // Налаштування розпізнавання ліній
+    let canvasWorker = document.createElement('canvas'); // прихований канвас для обробки кадрів
+    let ctxWorker = null;
+    
+    // Параметри детекції (на основі кольорів у HSV)
+    // Чорний: низька насиченість і яскравість < 80
+    // Червоний: два діапазони, спрощено: H в межах 0-10 або 160-180, S>50, V>80
+    // Зелений: H~40-80, S>50, V>80
+    // Синій: H~100-130, S>50, V>80
+    
+    // Функція для початку роботи після завантаження OpenCV
+    function onOpenCvReady() {
+        cvReady = true;
+        console.log("OpenCV.js готовий");
+        if (video.srcObject) {
+            startDetection();
+        } else {
+            document.getElementById('status').innerHTML = "⏳ Очікування дозволу камери...";
+        }
+    }
+    
+    // Запит доступу до задньої камери
+    async function initCamera() {
+        try {
+            const constraints = {
+                video: {
+                    facingMode: { exact: "environment" }, // задня камера
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            };
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = stream;
+            await video.play();
+            document.getElementById('status').innerHTML = "📷 Камера активна | ШІ аналізує...";
+            // Ініціалізуємо Three.js після старту відео
+            initThree();
+            // Якщо OpenCV вже готовий, запускаємо інтервал детекції
+            if (cvReady) {
+                startDetection();
+            }
+        } catch (err) {
+            console.error("Помилка доступу до камери:", err);
+            document.getElementById('status').innerHTML = "❌ Не вдалося отримати доступ до задньої камери. Перевірте дозволи.";
+            alert("Помилка камери: " + (err.message || "Невідома помилка"));
+        }
+    }
+    
+    // Ініціалізація Three.js (AR шар поверх відео)
+    function initThree() {
+        // Отримуємо розміри контейнера
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        renderer = new THREE.WebGLRenderer({ canvas: canvas3D, alpha: true }); // прозорий фон для відео
+        renderer.setSize(width, height);
+        renderer.setClearColor(0x000000, 0); // повністю прозорий
+        
+        scene = new THREE.Scene();
+        
+        // Камера: перспективна, відповідає відеопотоку (співвідношення сторін)
+        const aspect = width / height;
+        camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+        // Камера дивиться вздовж Z, "висота" над площиною креслення
+        camera.position.set(0, 0, 8);
+        camera.lookAt(0, 0, 0);
+        
+        // Додаткове освітлення для стін та об'єктів
+        const ambientLight = new THREE.AmbientLight(0x404060);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(1, 2, 1);
+        scene.add(dirLight);
+        const backLight = new THREE.DirectionalLight(0x88aaff, 0.5);
+        backLight.position.set(-1, 1, -2);
+        scene.add(backLight);
+        
+        // Невелика допоміжна сітка для орієнтації (за бажанням)
+        const gridHelper = new THREE.GridHelper(20, 20, 0x888888, 0x444444);
+        gridHelper.position.y = -1.5;
+        scene.add(gridHelper);
+        
+        window.addEventListener('resize', onWindowResize, false);
+        
+        function onWindowResize() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        }
+        
+        animateThree();
+    }
+    
+    function animateThree() {
+        requestAnimationFrame(animateThree);
+        if (renderer && scene && camera) {
+            renderer.render(scene, camera);
+        }
+    }
+    
+    // Видалення всіх 3D об'єктів (стіни, двері, вікна)
+    function clear3DWalls() {
+        wallsGroup.forEach(item => {
+            if (item.mesh) scene.remove(item.mesh);
+            if (item.elements && item.elements.length) {
+                item.elements.forEach(el => scene.remove(el));
+            }
+        });
+        wallsGroup = [];
+        console.log("3D сцену очищено");
+    }
+    
+    // Створення стіни на основі відрізка [x1,z1] -> [x2,z2] в локальних координатах (площина XZ)
+    // Висота стіни = 2.5 умовних одиниць, товщина невелика
+    function addWallSegment(p1, p2, colorHex = 0xcdb38c, height = 2.5) {
+        const start = new THREE.Vector3(p1.x, 0, p1.z);
+        const end = new THREE.Vector3(p2.x, 0, p2.z);
+        const direction = new THREE.Vector3().subVectors(end, start);
+        const length = direction.length();
+        if (length < 0.05) return null;
+        
+        const center = start.clone().add(end).multiplyScalar(0.5);
+        const boxGeometry = new THREE.BoxGeometry(length, height, 0.2);
+        const material = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.6, metalness: 0.1 });
+        const wall = new THREE.Mesh(boxGeometry, material);
+        wall.position.copy(center);
+        wall.position.y = height / 2;
+        
+        // Орієнтація уздовж напрямку
+        const quaternion = new THREE.Quaternion().setFromUnitVectors(
+            new THREE.Vector3(1, 0, 0),
+            direction.clone().normalize()
+        );
+        wall.quaternion.copy(quaternion);
+        scene.add(wall);
+        return wall;
+    }
+    
+    // Додати модель вікна (прямокутна рама всередині прорізу стіни)
+    function addWindowAtSegment(p1, p2, wallMesh, segmentId) {
+        // Для спрощення створимо окремий об'єкт - рама вікна на місці відрізка
+        const start = new THREE.Vector3(p1.x, 0.8, p1.z);
+        const end = new THREE.Vector3(p2.x, 0.8, p2.z);
+        const direction = new THREE.Vector3().subVectors(end, start);
+        const length = direction.length();
+        if (length < 0.1) return null;
+        const center = start.clone().add(end).multiplyScalar(0.5);
+        const frameMat = new THREE.MeshStandardMaterial({ color: 0x88aaff, emissive: 0x224466 });
+        const frame = new THREE.Mesh(new THREE.BoxGeometry(length, 1.0, 0.15), frameMat);
+        frame.position.copy(center);
+        frame.position.y = 1.2;
+        scene.add(frame);
+        // Додаткове скло
+        const glassMat = new THREE.MeshStandardMaterial({ color: 0xaaddff, transparent: true, opacity: 0.5 });
+        const glass = new THREE.Mesh(new THREE.BoxGeometry(length - 0.1, 0.7, 0.05), glassMat);
+        glass.position.copy(center);
+        glass.position.y = 1.2;
+        scene.add(glass);
+        return [frame, glass];
+    }
+    
+    // Додати двері (зелені) - вертикальне полотно
+    function addDoorAtSegment(p1, p2, wallMesh) {
+        const start = new THREE.Vector3(p1.x, 0, p1.z);
+        const end = new THREE.Vector3(p2.x, 0, p2.z);
+        const direction = new THREE.Vector3().subVectors(end, start);
+        const length = direction.length();
+        const center = start.clone().add(end).multiplyScalar(0.5);
+        const doorMat = new THREE.MeshStandardMaterial({ color: 0xbc9a6c, roughness: 0.3, metalness: 0.1 });
+        const door = new THREE.Mesh(new THREE.BoxGeometry(length, 2.0, 0.1), doorMat);
+        door.position.copy(center);
+        door.position.y = 1.0;
+        scene.add(door);
+        // Ручка
+        const knobMat = new THREE.MeshStandardMaterial({ color: 0xffaa44, metalness: 0.7 });
+        const knob = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 16), knobMat);
+        knob.position.copy(center);
+        knob.position.x += (direction.x / length) * 0.25;
+        knob.position.z += (direction.z / length) * 0.25;
+        knob.position.y = 1.1;
+        scene.add(knob);
+        return [door, knob];
+    }
+    
+    // Додати арку/проріз (сині лінії) - просто нічого не додаємо, але візуально можна позначити аркою
+    function addArchAtSegment(p1, p2) {
+        const start = new THREE.Vector3(p1.x, 0, p1.z);
+        const end = new THREE.Vector3(p2.x, 0, p2.z);
+        const center = start.clone().add(end).multiplyScalar(0.5);
+        const direction = new THREE.Vector3().subVectors(end, start);
+        const length = direction.length();
+        const archMat = new THREE.MeshStandardMaterial({ color: 0x66ccff, emissive: 0x2266aa });
+        const archMarker = new THREE.Mesh(new THREE.BoxGeometry(length, 0.1, 0.1), archMat);
+        archMarker.position.copy(center);
+        archMarker.position.y = 0.05;
+        scene.add(archMarker);
+        return [archMarker];
+    }
+    
+    // Головна функція обробки кадру з відео (Computer Vision)
+    async function processFrame() {
+        if (!cvReady || !video.videoWidth || isProcessing) return;
+        isProcessing = true;
+        
+        try {
+            const vw = video.videoWidth;
+            const vh = video.videoHeight;
+            if (!canvasWorker || canvasWorker.width !== vw) {
+                canvasWorker.width = vw;
+                canvasWorker.height = vh;
+                ctxWorker = canvasWorker.getContext('2d');
+            }
+            // Малюємо поточний кадр відео на канвас (з урахуванням дзеркального відображення)
+            ctxWorker.save();
+            ctxWorker.scale(-1, 1);
+            ctxWorker.drawImage(video, -vw, 0, vw, vh);
+            ctxWorker.restore();
+            
+            // Отримуємо ImageData для OpenCV
+            let imgData = ctxWorker.getImageData(0, 0, vw, vh);
+            let src = cv.matFromImageData(imgData);
+            let hsv = new cv.Mat();
+            cv.cvtColor(src, hsv, cv.COLOR_RGBA2RGB);
+            cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
+            
+            // Функція виділення кольору та пошуку ліній (через морфологію та HoughLinesP)
+            // Для спрощення та продуктивності: створюємо маски для кожного кольору, знаходимо контури та апроксимуємо відрізки
+            // Використовуємо ерозію/дилатацію для зменшення шуму
+            
+            function detectLinesByColor(lower, upper, minLineLength = 30, maxGap = 10) {
+                let mask = new cv.Mat();
+                let lowerMat = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), lower);
+                let upperMat = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), upper);
+                cv.inRange(hsv, lowerMat, upperMat, mask);
+                // Морфологічне замикання
+                let kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(5, 5));
+                cv.morphologyEx(mask, mask, cv.MORPH_CLOSE, kernel);
+                cv.erode(mask, mask, kernel, new cv.Point(-1, -1), 1);
+                cv.dilate(mask, mask, kernel, new cv.Point(-1, -1), 1);
+                
+                let edges = new cv.Mat();
+                cv.Canny(mask, edges, 50, 150);
+                let lines = new cv.Mat();
+                cv.HoughLinesP(edges, lines, 1, Math.PI/180, 50, minLineLength, maxGap);
+                
+                let segments = [];
+                for (let i = 0; i < lines.rows; i++) {
+                    let x1 = lines.data32S[i*4];
+                    let y1 = lines.data32S[i*4+1];
+                    let x2 = lines.data32S[i*4+2];
+                    let y2 = lines.data32S[i*4+3];
+                    // Нормалізуємо координати до діапазону -3..3 по X та -2..2 по Z (приблизний розмір аркуша)
+                    let normX = (x / vw) * 6 - 3;
+                    let normZ = (y / vh) * 4 - 2;
+                    let normX2 = (x2 / vw) * 6 - 3;
+                    let normZ2 = (y2 / vh) * 4 - 2;
+                    segments.push({ p1: { x: normX, z: normZ }, p2: { x: normX2, z: normZ2 } });
+                }
+                lines.delete(); mask.delete(); edges.delete(); kernel.delete(); lowerMat.delete(); upperMat.delete();
+                return segments;
+            }
+            
+            // Визначення діапазонів HSV (наближені)
+            // Чорний: V<80, S<100
+            let blackMask = new cv.Mat();
+            let lowerBlack = [0, 0, 0];
+            let upperBlack = [180, 255, 80];
+            let blackSegments = detectLinesByColor(lowerBlack, upperBlack, 25, 8);
+            
+            // Червоний: два діапазони об'єднаємо
+            let redSegments1 = detectLinesByColor([0, 70, 80], [10, 255, 255], 25, 8);
+            let redSegments2 = detectLinesByColor([160, 70, 80], [180, 255, 255], 25, 8);
+            let redSegments = redSegments1.concat(redSegments2);
+            
+            // Зелений
+            let greenSegments = detectLinesByColor([40, 50, 70], [80, 255, 255], 25, 8);
+            // Синій
+            let blueSegments = detectLinesByColor([100, 70, 70], [130, 255, 255], 25, 8);
+            
+            hsv.delete(); src.delete();
+            
+            // Оновлення 3D сцени на основі знайдених ліній
+            // Логіка: Спочатку створюємо стіни (чорні лінії), потім додаємо до відповідних стін отвори/об'єкти
+            // Для спрощення: очищаємо попередні об'єкти та будуємо заново на основі поточних ліній
+            clear3DWalls();
+            
+            // Групуємо стіни за близькістю? Просто кожен відрізок чорної лінії стає окремою стіною
+            // Для реалістичності об'єднуємо суміжні відрізки? Але для демо - кожен сегмент окрема стіна
+            let wallItems = [];
+            blackSegments.forEach(seg => {
+                const wallMesh = addWallSegment(seg.p1, seg.p2, 0xc7b198, 2.6);
+                if (wallMesh) {
+                    wallItems.push({ linePoints: seg, mesh: wallMesh, elements: [], type: 'wall' });
+                }
+            });
+            
+            // Тепер обробляємо червоні (вікна): співставляємо з найближчими стінами
+            redSegments.forEach(seg => {
+                // Знайти найближчу стіну (за відстанню до середини)
+                let bestDist = 0.5;
+                let bestWall = null;
+                for (let wall of wallItems) {
+                    let midWall = { x: (wall.linePoints.p1.x + wall.linePoints.p2.x)/2, z: (wall.linePoints.p1.z + wall.linePoints.p2.z)/2 };
+                    let midSeg = { x: (seg.p1.x + seg.p2.x)/2, z: (seg.p1.z + seg.p2.z)/2 };
+                    let dist = Math.hypot(midWall.x - midSeg.x, midWall.z - midSeg.z);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        bestWall = wall;
+                    }
+                }
+                if (bestWall && bestDist < 0.4) {
+                    const windowObjects = addWindowAtSegment(seg.p1, seg.p2, bestWall.mesh, 'win');
+                    if (windowObjects) bestWall.elements.push(...windowObjects);
+                } else {
+                    // Якщо стіни поруч нема, створюємо вікно як окремий об'єкт (менш реалістично)
+                    let winMark = addWindowAtSegment(seg.p1, seg.p2, null, 'standalone');
+                    if(winMark) winMark.forEach(w => scene.add(w));
+                }
+            });
+            
+            // Двері (зелені)
+            greenSegments.forEach(seg => {
+                let bestDist = 0.5;
+                let bestWall = null;
+                for (let wall of wallItems) {
+                    let midWall = { x: (wall.linePoints.p1.x + wall.linePoints.p2.x)/2, z: (wall.linePoints.p1.z + wall.linePoints.p2.z)/2 };
+                    let midSeg = { x: (seg.p1.x + seg.p2.x)/2, z: (seg.p1.z + seg.p2.z)/2 };
+                    let dist = Math.hypot(midWall.x - midSeg.x, midWall.z - midSeg.z);
+                    if (dist < bestDist) { bestDist = dist; bestWall = wall; }
+                }
+                if (bestWall && bestDist < 0.4) {
+                    const doorObjects = addDoorAtSegment(seg.p1, seg.p2, bestWall.mesh);
+                    bestWall.elements.push(...doorObjects);
+                } else {
+                    let doorStand = addDoorAtSegment(seg.p1, seg.p2, null);
+                    if(doorStand) doorStand.forEach(d => scene.add(d));
+                }
+            });
+            
+            // Сині лінії (арки/прорізи)
+            blueSegments.forEach(seg => {
+                let bestDist = 0.5;
+                let bestWall = null;
+                for (let wall of wallItems) {
+                    let midWall = { x: (wall.linePoints.p1.x + wall.linePoints.p2.x)/2, z: (wall.linePoints.p1.z + wall.linePoints.p2.z)/2 };
+                    let midSeg = { x: (seg.p1.x + seg.p2.x)/2, z: (seg.p1.z + seg.p2.z)/2 };
+                    let dist = Math.hypot(midWall.x - midSeg.x, midWall.z - midSeg.z);
+                    if (dist < bestDist) { bestDist = dist; bestWall = wall; }
+                }
+                if (bestWall && bestDist < 0.4) {
+                    // Проріз: просто не створюємо стіну в цьому місці, але оскільки стіна вже побудована, додаємо маркер арки
+                    const archMarks = addArchAtSegment(seg.p1, seg.p2);
+                    bestWall.elements.push(...archMarks);
+                } else {
+                    addArchAtSegment(seg.p1, seg.p2);
+                }
+            });
+            
+            wallsGroup = wallItems;
+            
+            // Оновлення статусу
+            document.getElementById('status').innerHTML = `🎨 Знайдено: стін ${blackSegments.length}, вікон ${redSegments.length}, дверей ${greenSegments.length}, арок ${blueSegments.length}`;
+            
+        } catch(err) {
+            console.warn("Помилка обробки кадру:", err);
+        } finally {
+            isProcessing = false;
+        }
+    }
+    
+    function startDetection() {
+        if (detectionInterval) clearInterval(detectionInterval);
+        detectionInterval = setInterval(() => {
+            if (video.readyState === video.HAVE_ENOUGH_DATA && !isProcessing) {
+                processFrame();
+            }
+        }, 300); // 3-4 рази на секунду для стабільності
+    }
+    
+    // Скидання вручну
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        clear3DWalls();
+        document.getElementById('status').innerHTML = "🔄 3D сцену скинуто. ШІ продовжує роботу.";
+    });
+    
+    // Запуск камери
+    initCamera();
+    
+    // Якщо opencv завантажиться пізніше, повторно запускаємо детекцію
+    window.onOpenCvReady = onOpenCvReady;
+</script>
+</body>
+</html>

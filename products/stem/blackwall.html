@@ -1,471 +1,617 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-
-<title>AR Blueprint Scanner</title>
-
-<style>
-html,body{
-    margin:0;
-    padding:0;
-    overflow:hidden;
-    background:#000;
-    width:100%;
-    height:100%;
-}
-
-#video{
-    position:fixed;
-    inset:0;
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    z-index:1;
-}
-
-#overlay{
-    position:fixed;
-    inset:0;
-    z-index:2;
-    pointer-events:none;
-}
-
-#threeContainer{
-    position:fixed;
-    inset:0;
-    z-index:3;
-    pointer-events:none;
-}
-
-#status{
-    position:fixed;
-    top:10px;
-    left:10px;
-    z-index:10;
-    background:rgba(0,0,0,.7);
-    color:white;
-    padding:8px;
-    font-family:Arial;
-    border-radius:8px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AR Візуалізація стін - SmartDraw AR</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        /* UI-контейнер поверх всього */
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 20;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .status-card {
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 12px 24px;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(255,255,255,0.25);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            pointer-events: auto;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .led {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #f44336;
+            box-shadow: 0 0 6px #f44336;
+            transition: all 0.2s ease;
+        }
+        .led.active {
+            background-color: #4caf50;
+            box-shadow: 0 0 12px #4caf50;
+        }
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            z-index: 20;
+            pointer-events: auto;
+        }
+        button {
+            background: #1e2a3e;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 12px 28px;
+            border-radius: 40px;
+            backdrop-filter: blur(8px);
+            background-color: rgba(30,42,62,0.9);
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: transform 0.1s ease, background 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        button:active {
+            transform: scale(0.96);
+            background-color: rgba(20,30,45,0.95);
+        }
+        .info-tip {
+            position: absolute;
+            bottom: 100px;
+            left: 16px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 10px;
+            color: #ccc;
+            pointer-events: none;
+            font-family: monospace;
+        }
+        @media (max-width: 600px) {
+            .status-card { font-size: 0.85rem; padding: 8px 18px; }
+            button { padding: 10px 22px; font-size: 0.9rem; }
+        }
+    </style>
 </head>
 <body>
+    <div id="ui">
+        <div class="status-card" id="statusCard">
+            <div class="status-indicator">
+                <div class="led" id="ledIndicator"></div>
+                <span id="statusText">Запуск камери...</span>
+            </div>
+        </div>
+    </div>
+    <div class="controls">
+        <button id="generateBtn">🔁 Згенерувати 3D стіни</button>
+    </div>
+    <div class="info-tip">📐 QR-код = якір (0,0,0) | 🖤 чорна лінія → стіна | 🔴 червона → вікно | 🟢 зелена → двері | 🔵 синя → арка</div>
 
-<div id="status">Запуск...</div>
+    <!-- Підключення бібліотек через CDN -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://docs.opencv.org/4.8.0/opencv.js"></script>
+    
+    <script type="module">
+        import * as THREE from 'three';
 
-<video id="video" autoplay playsinline muted></video>
-<canvas id="overlay"></canvas>
-<div id="threeContainer"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script async src="https://docs.opencv.org/4.x/opencv.js"></script>
-
-<script>
-
-const video = document.getElementById("video");
-const canvas = document.getElementById("overlay");
-const ctx = canvas.getContext("2d");
-const statusDiv = document.getElementById("status");
-
-let renderer;
-let scene;
-let camera3d;
-
-let wallsGroup = new THREE.Group();
-
-async function startCamera(){
-
-    try{
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video:{
-                facingMode:{
-                    ideal:"environment"
+        // ---------- Глобальні змінні ----------
+        let videoElement = null;
+        let canvas2d = null;
+        let ctx2d = null;
+        let animationId = null;
+        let scanRequest = true;         // безперервне сканування
+        let currentQRData = null;       // { corners, size, transformMatrix } орієнтир
+        let lastLinesData = [];          // масив ліній: { points3D, type, lengthWorld }
+        
+        // Three.js сцена
+        let scene, camera, renderer, arGroup;
+        let wallsGroup = null;           // група для всіх стін/отворів
+        
+        // Параметри камери
+        let videoWidth = 640, videoHeight = 480;
+        let isOpencvReady = false;
+        
+        // Налаштування реальних розмірів (прив'язка до QR-коду)
+        const QR_REAL_SIZE_CM = 10;      // припустимо QR-код 10x10 см
+        const WALL_HEIGHT_M = 2.8;       // висота стіни 2.8 м
+        const WALL_THICK_M = 0.2;
+        const WINDOW_HEIGHT_M = 1.5;
+        const WINDOW_SILL_M = 0.9;
+        const DOOR_HEIGHT_M = 2.1;
+        const DOOR_WIDTH_M = 0.9;        // стандартна ширина дверей
+        
+        // Ініціалізація Three.js
+        function initThree() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x111122);
+            scene.fog = new THREE.FogExp2(0x111122, 0.008);
+            
+            // Камера, яка буде оновлюватись через матрицю з QR (симуляція AR)
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 100);
+            camera.position.set(0, 1.6, -3);
+            camera.lookAt(0, 1.4, 0);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true; // тіні для реалізму
+            document.body.appendChild(renderer.domElement);
+            
+            // Освітлення
+            const ambientLight = new THREE.AmbientLight(0x404060);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+            dirLight.position.set(2, 5, 3);
+            dirLight.castShadow = true;
+            dirLight.receiveShadow = true;
+            scene.add(dirLight);
+            const fillLight = new THREE.PointLight(0x4466cc, 0.3);
+            fillLight.position.set(1, 2, 2);
+            scene.add(fillLight);
+            
+            // допоміжна сітка підлоги (підкреслює AR площину)
+            const gridHelper = new THREE.GridHelper(6, 20, 0x88aaff, 0x335588);
+            gridHelper.position.y = -0.05;
+            gridHelper.material.transparent = true;
+            gridHelper.material.opacity = 0.35;
+            scene.add(gridHelper);
+            
+            arGroup = new THREE.Group();
+            scene.add(arGroup);
+            wallsGroup = new THREE.Group();
+            arGroup.add(wallsGroup);
+        }
+        
+        // Створення стіни (глуха)
+        function createWall(width, height, depth, color, posX, posZ, rotationY) {
+            const geometry = new THREE.BoxGeometry(width, height, depth);
+            const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6, metalness: 0.1 });
+            const wall = new THREE.Mesh(geometry, material);
+            wall.position.set(posX, height/2, posZ);
+            wall.rotation.y = rotationY;
+            wall.castShadow = true;
+            wall.receiveShadow = true;
+            return wall;
+        }
+        
+        // Вікно (проріз у стіні умовно показано як рама зі склом)
+        function createWindow(width, height, depth, posX, posY, posZ, rotationY) {
+            const group = new THREE.Group();
+            // рама
+            const frameMat = new THREE.MeshStandardMaterial({ color: 0xddbb99 });
+            const glassMat = new THREE.MeshStandardMaterial({ color: 0x88aaff, emissive: 0x224466, transparent: true, opacity: 0.7 });
+            const frameThick = 0.05;
+            const innerW = width - 0.1;
+            const innerH = height - 0.1;
+            // скло
+            const glass = new THREE.Mesh(new THREE.BoxGeometry(innerW, innerH, 0.03), glassMat);
+            glass.position.set(0, 0, 0.01);
+            group.add(glass);
+            // рамка
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(width, frameThick, 0.08), frameMat);
+            frame.position.set(0, height/2 - 0.05, 0.02);
+            group.add(frame);
+            const frameBottom = new THREE.Mesh(new THREE.BoxGeometry(width, frameThick, 0.08), frameMat);
+            frameBottom.position.set(0, -height/2 + 0.05, 0.02);
+            group.add(frameBottom);
+            const frameLeft = new THREE.Mesh(new THREE.BoxGeometry(frameThick, height, 0.08), frameMat);
+            frameLeft.position.set(-width/2 + 0.05, 0, 0.02);
+            group.add(frameLeft);
+            const frameRight = new THREE.Mesh(new THREE.BoxGeometry(frameThick, height, 0.08), frameMat);
+            frameRight.position.set(width/2 - 0.05, 0, 0.02);
+            group.add(frameRight);
+            
+            group.position.set(posX, posY, posZ);
+            group.rotation.y = rotationY;
+            return group;
+        }
+        
+        // Двері з текстурою
+        function createDoor(width, height, depth, posX, posY, posZ, rotationY) {
+            const doorMat = new THREE.MeshStandardMaterial({ color: 0xbc9a6c, roughness: 0.3, metalness: 0.05 });
+            const door = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), doorMat);
+            door.position.set(posX, posY, posZ);
+            door.rotation.y = rotationY;
+            door.castShadow = true;
+            // додаємо ручку
+            const knobMat = new THREE.MeshStandardMaterial({ color: 0xffaa55, metalness: 0.8 });
+            const knob = new THREE.Mesh(new THREE.SphereGeometry(0.04, 16, 16), knobMat);
+            knob.position.set(0.35, -0.25, 0.06);
+            door.add(knob);
+            return door;
+        }
+        
+        // Арка (пустий проріз) — просто показати контур
+        function createArch(width, height, depth, posX, posY, posZ, rotationY) {
+            const group = new THREE.Group();
+            const edgeMat = new THREE.MeshStandardMaterial({ color: 0xccaa88 });
+            // створимо рамку арки (U-подібна)
+            const pillarW = 0.08;
+            const leftPillar = new THREE.Mesh(new THREE.BoxGeometry(pillarW, height, pillarW), edgeMat);
+            leftPillar.position.set(-width/2 + 0.05, height/2, 0);
+            const rightPillar = new THREE.Mesh(new THREE.BoxGeometry(pillarW, height, pillarW), edgeMat);
+            rightPillar.position.set(width/2 - 0.05, height/2, 0);
+            const topArch = new THREE.Mesh(new THREE.BoxGeometry(width - 0.1, pillarW, pillarW), edgeMat);
+            topArch.position.set(0, height - 0.05, 0);
+            group.add(leftPillar);
+            group.add(rightPillar);
+            group.add(topArch);
+            group.position.set(posX, posY, posZ);
+            group.rotation.y = rotationY;
+            return group;
+        }
+        
+        // Головна функція генерації 3D на основі ліній
+        function generate3DFromLines(lines, qrTransformMatrix) {
+            if (!wallsGroup) return;
+            // очистити старі моделі
+            while(wallsGroup.children.length > 0) {
+                wallsGroup.remove(wallsGroup.children[0]);
+            }
+            if (!lines || lines.length === 0) {
+                // порожньо
+                return;
+            }
+            
+            // Для кожної лінії будуємо стіну та можливі отвори
+            lines.forEach(line => {
+                const start = line.points3D[0];
+                const end = line.points3D[1];
+                const dx = end.x - start.x;
+                const dz = end.z - start.z;
+                const length = Math.hypot(dx, dz);
+                if (length < 0.1) return;
+                const angle = Math.atan2(dz, dx);
+                const centerX = (start.x + end.x) / 2;
+                const centerZ = (start.z + end.z) / 2;
+                
+                // Стіна-основа (глуха за замовчуванням)
+                const wallColor = 0xc0b9aa;
+                const wallDepth = WALL_THICK_M;
+                let wallMesh = createWall(length, WALL_HEIGHT_M, wallDepth, wallColor, centerX, WALL_HEIGHT_M/2, centerZ, angle);
+                wallsGroup.add(wallMesh);
+                
+                // Якщо є тип отвору та довжина
+                if (line.type !== 'solid' && line.typeSpanMeters > 0.3) {
+                    // Вирізаємо умовно: додаємо спеціальний об'єкт зверху, або замінюємо частину стіни. Спрощено: додаємо поверх стіни об'єкт
+                    // Але щоб не ускладнювати boolean, ми додаємо об'єкт, що імітує отвір/двері перед стіною,
+                    // і стіну робимо напівпрозорою? Краще: видалити частину стіни не легко, тому замінимо на додатковий меш на місці отвору.
+                    // Для реалістичності створимо проріз, просто накладаючи елемент.
+                    const openingLength = Math.min(line.typeSpanMeters, length);
+                    const tStart = line.typeOffsetStart / length;
+                    const tEnd = (line.typeOffsetStart + openingLength) / length;
+                    const opCenterX = start.x + (dx * (tStart + tEnd)/2);
+                    const opCenterZ = start.z + (dz * (tStart + tEnd)/2);
+                    const opWidth = openingLength;
+                    
+                    if (line.type === 'window') {
+                        const winGroup = createWindow(opWidth - 0.1, WINDOW_HEIGHT_M, 0.1, opCenterX, WINDOW_SILL_M + WINDOW_HEIGHT_M/2, opCenterZ, angle);
+                        wallsGroup.add(winGroup);
+                    } else if (line.type === 'door') {
+                        const doorW = Math.min(DOOR_WIDTH_M, opWidth);
+                        const doorGroup = createDoor(doorW, DOOR_HEIGHT_M, 0.08, opCenterX, DOOR_HEIGHT_M/2, opCenterZ + 0.02, angle);
+                        wallsGroup.add(doorGroup);
+                    } else if (line.type === 'arch') {
+                        const archGroup = createArch(opWidth - 0.1, 2.3, 0.1, opCenterX, 1.15, opCenterZ, angle);
+                        wallsGroup.add(archGroup);
+                    }
                 }
-            },
-            audio:false
+            });
+        }
+        
+        // ---- Аналіз ліній зображення (OpenCV + аналіз кольорів) ----
+        async function analyzeDrawingLines(videoFrameCanvas, qrCorners) {
+            if (!isOpencvReady || !cv || !qrCorners) return [];
+            // Отримуємо зону інтересу (область навколо QR та ліній)
+            const imgMat = cv.imread(videoFrameCanvas);
+            let gray = new cv.Mat();
+            cv.cvtColor(imgMat, gray, cv.COLOR_RGBA2GRAY, 0);
+            // Бінаризація для виявлення чорних ліній
+            let binary = new cv.Mat();
+            cv.threshold(gray, binary, 80, 255, cv.THRESH_BINARY_INV);
+            
+            // Знаходимо контури чорних ліній
+            let contours = new cv.MatVector();
+            let hierarchy = new cv.Mat();
+            cv.findContours(binary, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+            
+            // Масив ліній (апроксимовані відрізки)
+            const linesCandidates = [];
+            for (let i = 0; i < contours.size(); i++) {
+                let cnt = contours.get(i);
+                let area = cv.contourArea(cnt);
+                if (area < 50) continue;
+                let peri = cv.arcLength(cnt, true);
+                let approx = new cv.Mat();
+                cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
+                if (approx.rows === 2) { // відрізок
+                    let p1 = approx.data32S;
+                    let p2 = approx.data32S.slice(2);
+                    linesCandidates.push({
+                        p1: {x: p1[0], y: p1[1]},
+                        p2: {x: p2[0], y: p2[1]},
+                    });
+                }
+                approx.delete();
+            }
+            
+            // Для кожної лінії аналізуємо кольори вздовж неї
+            const results = [];
+            const rgbMat = imgMat.clone();
+            for (let line of linesCandidates) {
+                // Визначаємо довжину у пікселях
+                const distPx = Math.hypot(line.p1.x - line.p2.x, line.p1.y - line.p2.y);
+                if (distPx < 20) continue;
+                // Семплінг вздовж лінії для пошуку червоних/зелених/синіх поруч
+                let segments = [];
+                const steps = 20;
+                for (let s = 0; s <= steps; s++) {
+                    const t = s / steps;
+                    const cx = line.p1.x + (line.p2.x - line.p1.x) * t;
+                    const cy = line.p1.y + (line.p2.y - line.p1.y) * t;
+                    // шукаємо колір в радіусі 5 пікселів
+                    let rSum=0,gSum=0,bSum=0,count=0;
+                    for (let dy = -4; dy <=4; dy++) {
+                        for (let dx = -4; dx <=4; dx++) {
+                            const px = Math.floor(cx+dx), py = Math.floor(cy+dy);
+                            if (px>=0 && px<rgbMat.cols && py>=0 && py<rgbMat.rows) {
+                                const pixel = rgbMat.ucharPtr(py, px);
+                                rSum += pixel[0]; gSum += pixel[1]; bSum += pixel[2];
+                                count++;
+                            }
+                        }
+                    }
+                    if(count===0) continue;
+                    const avgR = rSum/count, avgG = gSum/count, avgB = bSum/count;
+                    let type = 'solid';
+                    if (avgR > 120 && avgG < 80 && avgB < 80) type = 'window';
+                    else if (avgG > 100 && avgR < 100 && avgB < 100) type = 'door';
+                    else if (avgB > 100 && avgR < 80 && avgG < 80) type = 'arch';
+                    segments.push({t, type});
+                }
+                // Об'єднання сегментів
+                let merged = [];
+                let currentType = segments[0]?.type || 'solid';
+                let startT = 0;
+                for (let i=1; i<segments.length; i++) {
+                    if(segments[i].type !== currentType) {
+                        merged.push({type: currentType, t0: startT, t1: segments[i-1].t});
+                        currentType = segments[i].type;
+                        startT = segments[i].t;
+                    }
+                }
+                merged.push({type: currentType, t0: startT, t1: 1});
+                // Фільтр: тільки not solid
+                for (let seg of merged) {
+                    if(seg.type !== 'solid' && (seg.t1 - seg.t0) > 0.1) {
+                        // конвертуємо у 3D координати з використанням QR-якоря
+                        // Трансформуємо зображення -> реальна площина
+                        const p1_3d = imageToWorldPlane(line.p1, qrCorners);
+                        const p2_3d = imageToWorldPlane(line.p2, qrCorners);
+                        if(p1_3d && p2_3d) {
+                            const vec = {x: p2_3d.x - p1_3d.x, z: p2_3d.z - p1_3d.z};
+                            const fullLen = Math.hypot(vec.x, vec.z);
+                            const offsetM = seg.t0 * fullLen;
+                            const spanM = (seg.t1 - seg.t0) * fullLen;
+                            results.push({
+                                points3D: [p1_3d, p2_3d],
+                                type: seg.type,
+                                typeOffsetStart: offsetM,
+                                typeSpanMeters: spanM,
+                                fullLength: fullLen
+                            });
+                        }
+                        break; // щоб не дублювати багато на одну лінію (для простоти берем перший значущий)
+                    }
+                }
+            }
+            
+            imgMat.delete(); gray.delete(); binary.delete(); contours.delete(); hierarchy.delete(); rgbMat.delete();
+            return results;
+        }
+        
+        // Функція перетворення піксельних координат у площину світу на основі чотирикутника QR
+        function imageToWorldPlane(pixel, qrCorners) {
+            if(!qrCorners) return null;
+            // qrCorners - масив точок {x,y} (top-left, top-right, bottom-right, bottom-left)
+            // визначаємо гомографію або лінійну апроксимацію. Спрощено: білінійне відображення
+            const widthWorld = QR_REAL_SIZE_CM / 100; // 0.1 м
+            // площина світу: QR займає квадрат від (0,0) до (widthWorld,0) і тд. Центр QR = (0,0) для AR
+            // Обираємо систему: лівий верхній кут QR = (-w/2, -w/2), правий нижній (w/2, w/2)
+            const w2 = widthWorld/2;
+            const worldCorners = [
+                {x: -w2, z: -w2}, // top-left
+                {x:  w2, z: -w2}, // top-right
+                {x:  w2, z:  w2}, // bottom-right
+                {x: -w2, z:  w2}  // bottom-left
+            ];
+            // знаходимо барицентричні координати (спрощена білінійна інтерполяція)
+            // використовуючи перетин ліній
+            const det = (a,b) => a.x*b.z - a.z*b.x;
+            // функція перетворення за допомогою розв'язку системи
+            // відображення з пікселів -> світ: шукаємо u,v
+            const p00 = qrCorners[0], p10 = qrCorners[1], p11 = qrCorners[2], p01 = qrCorners[3];
+            // розв'язуємо для u,v
+            const A = p10.x - p00.x;
+            const B = p01.x - p00.x;
+            const C = p00.x + p11.x - p10.x - p01.x;
+            const D = p10.y - p00.y;
+            const E = p01.y - p00.y;
+            const F = p00.y + p11.y - p10.y - p01.y;
+            const Px = pixel.x - p00.x;
+            const Py = pixel.y - p00.y;
+            // квадратичне рівняння: C*F*u*v + ...
+            // спростимо: припустимо малі спотворення, знайдемо наближено u,v через ітерацію
+            let u = 0.5, v = 0.5;
+            for(let iter=0; iter<10; iter++) {
+                const denom = 1 + C*u + F*v;
+                const u_num = Px - B*v - (C*u*v);
+                const v_num = Py - E*v - (F*u*v);
+                const u_new = u_num / (A + C*v);
+                const v_new = v_num / (D + F*u);
+                u = u_new; v = v_new;
+                if(isNaN(u) || isNaN(v)) break;
+            }
+            u = Math.min(Math.max(u,0),1);
+            v = Math.min(Math.max(v,0),1);
+            // інтерполяція світових координат
+            const wx = (1-u)*(1-v)*worldCorners[0].x + u*(1-v)*worldCorners[1].x + u*v*worldCorners[2].x + (1-u)*v*worldCorners[3].x;
+            const wz = (1-u)*(1-v)*worldCorners[0].z + u*(1-v)*worldCorners[1].z + u*v*worldCorners[2].z + (1-u)*v*worldCorners[3].z;
+            return {x: wx, z: wz};
+        }
+        
+        // ---- Розпізнавання QR-коду через jsQR ----
+        function scanQRFromVideo(video, canvas, ctx) {
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                videoWidth = video.videoWidth;
+                videoHeight = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
+                if (code) {
+                    const corners = code.corners; // [{x,y}]
+                    if (corners && corners.length === 4) {
+                        return { data: code.data, corners };
+                    }
+                }
+            }
+            return null;
+        }
+        
+        // Головний цикл обробки
+        async function startAR() {
+            initThree();
+            canvas2d = document.createElement('canvas');
+            ctx2d = canvas2d.getContext('2d');
+            videoElement = document.createElement('video');
+            videoElement.setAttribute('autoplay', '');
+            videoElement.setAttribute('playsinline', '');
+            videoElement.style.display = 'none';
+            document.body.appendChild(videoElement);
+            
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } });
+            videoElement.srcObject = stream;
+            await videoElement.play();
+            
+            document.getElementById('statusText').innerText = '🔍 Шукаю QR-код...';
+            document.getElementById('ledIndicator').classList.add('active');
+            
+            // Зачекаємо OpenCV
+            function waitForOpenCV() {
+                if (typeof cv !== 'undefined' && cv.Mat) {
+                    isOpencvReady = true;
+                } else {
+                    setTimeout(waitForOpenCV, 100);
+                }
+            }
+            waitForOpenCV();
+            
+            let lastProcessTime = 0;
+            let qrFound = false;
+            
+            function frameLoop() {
+                if (!videoElement || videoElement.paused) return;
+                const now = performance.now();
+                const qrResult = scanQRFromVideo(videoElement, canvas2d, ctx2d);
+                if (qrResult && qrResult.corners) {
+                    if (!qrFound) {
+                        document.getElementById('statusText').innerHTML = '✅ QR-код знайдено! Аналіз ліній...';
+                        qrFound = true;
+                    }
+                    currentQRData = { corners: qrResult.corners, data: qrResult.data };
+                    // Якщо минуло більше 0.5 секунди з останньої генерації або за кнопкою, але для демонстрації генеруємо за кнопкою.
+                    // Але можна авто-оновлення рідше. Використовуємо кнопку.
+                } else {
+                    if (qrFound) {
+                        document.getElementById('statusText').innerHTML = '⚠️ QR-код втрачено';
+                        qrFound = false;
+                        currentQRData = null;
+                        if(wallsGroup) while(wallsGroup.children.length) wallsGroup.remove(wallsGroup.children[0]);
+                    } else {
+                        document.getElementById('statusText').innerHTML = '🔍 Шукаю QR-код...';
+                    }
+                }
+                requestAnimationFrame(frameLoop);
+            }
+            
+            // Кнопка генерації
+            document.getElementById('generateBtn').addEventListener('click', async () => {
+                if (!currentQRData) {
+                    document.getElementById('statusText').innerHTML = '❌ Немає QR-коду, неможливо згенерувати';
+                    setTimeout(()=>{ if(!qrFound) document.getElementById('statusText').innerHTML = '🔍 Шукаю QR-код...'; }, 1500);
+                    return;
+                }
+                document.getElementById('statusText').innerHTML = '📐 Генерація 3D стін...';
+                // захоплюємо кадр для OpenCV
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = videoWidth;
+                tempCanvas.height = videoHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(videoElement, 0, 0, videoWidth, videoHeight);
+                const lines = await analyzeDrawingLines(tempCanvas, currentQRData.corners);
+                if(lines && lines.length) {
+                    generate3DFromLines(lines, currentQRData.corners);
+                    document.getElementById('statusText').innerHTML = '🏠 Креслення розпізнано! 3D модель створено';
+                } else {
+                    document.getElementById('statusText').innerHTML = '⚠️ Лінії не знайдено, намалюйте чорні лінії';
+                }
+                setTimeout(()=>{ if(qrFound) document.getElementById('statusText').innerHTML = '✅ QR-код знайдено! Готово'; }, 2000);
+            });
+            
+            // рендер Three.js
+            function animateRender() {
+                requestAnimationFrame(animateRender);
+                if (camera && renderer) {
+                    // невеликий панорамний рух камери для краси (можна прибрати)
+                    renderer.render(scene, camera);
+                }
+            }
+            animateRender();
+            frameLoop();
+        }
+        
+        startAR().catch(err => {
+            console.error(err);
+            document.getElementById('statusText').innerHTML = '❌ Помилка доступу до камери';
         });
-
-        video.srcObject = stream;
-
-        await video.play();
-
-        resize();
-
-        initThree();
-
-        requestAnimationFrame(processFrame);
-
-        statusDiv.innerText="AR активний";
-
-    }catch(err){
-
-        console.error(err);
-        alert("Не вдалося отримати доступ до камери");
-
-    }
-}
-
-function resize(){
-
-    canvas.width=window.innerWidth;
-    canvas.height=window.innerHeight;
-
-    if(renderer){
-        renderer.setSize(window.innerWidth,window.innerHeight);
-    }
-}
-
-window.addEventListener("resize",resize);
-
-function initThree(){
-
-    scene = new THREE.Scene();
-
-    camera3d = new THREE.PerspectiveCamera(
-        60,
-        window.innerWidth/window.innerHeight,
-        0.1,
-        1000
-    );
-
-    camera3d.position.set(0,5,15);
-
-    renderer = new THREE.WebGLRenderer({
-        alpha:true,
-        antialias:true
-    });
-
-    renderer.setSize(window.innerWidth,window.innerHeight);
-
-    document
-        .getElementById("threeContainer")
-        .appendChild(renderer.domElement);
-
-    const light = new THREE.DirectionalLight(0xffffff,2);
-
-    light.position.set(10,20,10);
-
-    scene.add(light);
-
-    scene.add(new THREE.AmbientLight(0xffffff,1));
-
-    scene.add(wallsGroup);
-}
-
-function clear3D(){
-
-    while(wallsGroup.children.length){
-
-        wallsGroup.remove(wallsGroup.children[0]);
-
-    }
-}
-
-function addWall(x,y,w,h){
-
-    const geo = new THREE.BoxGeometry(
-        w/20,
-        3,
-        0.2
-    );
-
-    const mat = new THREE.MeshStandardMaterial({
-        color:0xdddddd
-    });
-
-    const wall = new THREE.Mesh(geo,mat);
-
-    wall.position.set(
-        (x-canvas.width/2)/40,
-        1.5,
-        -(y-canvas.height/2)/40
-    );
-
-    wallsGroup.add(wall);
-}
-
-function addWindow(x,y){
-
-    const geo = new THREE.BoxGeometry(
-        1,
-        1,
-        0.1
-    );
-
-    const mat = new THREE.MeshStandardMaterial({
-        color:0x55aaff
-    });
-
-    const obj = new THREE.Mesh(geo,mat);
-
-    obj.position.set(
-        (x-canvas.width/2)/40,
-        1.2,
-        -(y-canvas.height/2)/40
-    );
-
-    wallsGroup.add(obj);
-}
-
-function addDoor(x,y){
-
-    const geo = new THREE.BoxGeometry(
-        0.9,
-        2.1,
-        0.1
-    );
-
-    const mat = new THREE.MeshStandardMaterial({
-        color:0x884400
-    });
-
-    const obj = new THREE.Mesh(geo,mat);
-
-    obj.position.set(
-        (x-canvas.width/2)/40,
-        1,
-        -(y-canvas.height/2)/40
-    );
-
-    wallsGroup.add(obj);
-}
-
-function addOpening(x,y){
-
-    const geo = new THREE.BoxGeometry(
-        1,
-        2.3,
-        0.1
-    );
-
-    const mat = new THREE.MeshStandardMaterial({
-        color:0x4444ff,
-        transparent:true,
-        opacity:0.35
-    });
-
-    const obj = new THREE.Mesh(geo,mat);
-
-    obj.position.set(
-        (x-canvas.width/2)/40,
-        1.1,
-        -(y-canvas.height/2)/40
-    );
-
-    wallsGroup.add(obj);
-}
-
-function processFrame(){
-
-    if(typeof cv==="undefined"){
-
-        requestAnimationFrame(processFrame);
-        return;
-    }
-
-    canvas.width=video.videoWidth;
-    canvas.height=video.videoHeight;
-
-    ctx.drawImage(
-        video,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-    let src = cv.imread(canvas);
-
-    let hsv = new cv.Mat();
-
-    cv.cvtColor(
-        src,
-        hsv,
-        cv.COLOR_RGBA2RGB
-    );
-
-    cv.cvtColor(
-        hsv,
-        hsv,
-        cv.COLOR_RGB2HSV
-    );
-
-    clear3D();
-
-    detectBlack(src);
-    detectRed(hsv);
-    detectGreen(hsv);
-    detectBlue(hsv);
-
-    renderer.render(scene,camera3d);
-
-    src.delete();
-    hsv.delete();
-
-    requestAnimationFrame(processFrame);
-}
-
-function detectBlack(src){
-
-    let gray = new cv.Mat();
-
-    cv.cvtColor(
-        src,
-        gray,
-        cv.COLOR_RGBA2GRAY
-    );
-
-    let edges = new cv.Mat();
-
-    cv.Canny(
-        gray,
-        edges,
-        50,
-        150
-    );
-
-    let lines = new cv.Mat();
-
-    cv.HoughLinesP(
-        edges,
-        lines,
-        1,
-        Math.PI/180,
-        50,
-        50,
-        10
-    );
-
-    for(let i=0;i<lines.rows;i++){
-
-        const l=lines.data32S;
-
-        const x1=l[i*4];
-        const y1=l[i*4+1];
-        const x2=l[i*4+2];
-        const y2=l[i*4+3];
-
-        addWall(
-            (x1+x2)/2,
-            (y1+y2)/2,
-            Math.hypot(x2-x1,y2-y1),
-            3
-        );
-    }
-
-    gray.delete();
-    edges.delete();
-    lines.delete();
-}
-
-function detectColor(hsv,low,high,callback){
-
-    let mask = new cv.Mat();
-
-    let lowMat =
-        new cv.Mat(
-            hsv.rows,
-            hsv.cols,
-            hsv.type(),
-            low
-        );
-
-    let highMat =
-        new cv.Mat(
-            hsv.rows,
-            hsv.cols,
-            hsv.type(),
-            high
-        );
-
-    cv.inRange(
-        hsv,
-        lowMat,
-        highMat,
-        mask
-    );
-
-    let contours =
-        new cv.MatVector();
-
-    let hierarchy =
-        new cv.Mat();
-
-    cv.findContours(
-        mask,
-        contours,
-        hierarchy,
-        cv.RETR_EXTERNAL,
-        cv.CHAIN_APPROX_SIMPLE
-    );
-
-    for(let i=0;i<contours.size();i++){
-
-        let rect =
-            cv.boundingRect(
-                contours.get(i)
-            );
-
-        callback(
-            rect.x+rect.width/2,
-            rect.y+rect.height/2
-        );
-    }
-
-    lowMat.delete();
-    highMat.delete();
-    mask.delete();
-    contours.delete();
-    hierarchy.delete();
-}
-
-function detectRed(hsv){
-
-    detectColor(
-        hsv,
-        [0,120,70,0],
-        [10,255,255,255],
-        addWindow
-    );
-}
-
-function detectGreen(hsv){
-
-    detectColor(
-        hsv,
-        [40,50,50,0],
-        [90,255,255,255],
-        addDoor
-    );
-}
-
-function detectBlue(hsv){
-
-    detectColor(
-        hsv,
-        [90,50,50,0],
-        [140,255,255,255],
-        addOpening
-    );
-}
-
-if(navigator.xr){
-
-    console.log("WebXR підтримується");
-
-}else{
-
-    console.warn("WebXR не підтримується");
-
-}
-
-startCamera();
-
-</script>
-
+    </script>
 </body>
 </html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Внутрішня будова Землі — 3D модель</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Імпорт Three.js та його модулів (OrbitControls) через CDN за допомогою importmap -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Контейнер для canvas Three.js -->
+  <div id="scene-container"></div>
+
+  <!-- Індикатор завантаження текстур -->
+  <div id="loading-overlay">
+    <div class="loading-text">Завантаження планети…</div>
+  </div>
+
+  <!-- UI-панель керування поверх 3D-сцени -->
+  <div id="ui-panel">
+    <button id="toggle-btn">
+      <span class="btn-icon">🌍</span>
+      <span class="btn-text">Розкрити Землю</span>
+    </button>
+    <div id="hint-text">Обертайте — мишкою, наближайте — колесиком</div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

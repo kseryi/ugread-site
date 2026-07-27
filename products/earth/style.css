@@ -1,0 +1,117 @@
+/* ===== Скидання відступів та базові налаштування ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* забороняємо прокрутку - сцена займає весь екран */
+  background: #000000; /* повністю чорний космічний фон */
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* Контейнер, куди Three.js вставляє свій <canvas> */
+#scene-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#scene-container canvas {
+  display: block;
+}
+
+/* ===== Екран завантаження ===== */
+#loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+#loading-overlay.hidden {
+  opacity: 0;
+}
+
+.loading-text {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ===== Панель керування ===== */
+#ui-panel {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Стилізована напівпрозора кнопка з ефектом розмиття фону */
+#toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+  box-shadow: 0 0 24px rgba(255, 140, 60, 0.0);
+}
+
+#toggle-btn:hover {
+  background: rgba(255, 140, 60, 0.12);
+  border-color: rgba(255, 140, 60, 0.6);
+  box-shadow: 0 0 24px rgba(255, 140, 60, 0.35);
+}
+
+#toggle-btn:active {
+  transform: scale(0.96);
+}
+
+.btn-icon {
+  font-size: 18px;
+}
+
+#hint-text {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+}
+
+/* ===== Адаптивність для мобільних екранів ===== */
+@media (max-width: 600px) {
+  #toggle-btn {
+    padding: 12px 20px;
+    font-size: 13px;
+  }
+
+  #ui-panel {
+    bottom: 24px;
+  }
+}

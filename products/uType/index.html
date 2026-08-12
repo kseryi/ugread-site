@@ -49,9 +49,6 @@
         <h1 id="lessonTitle">Оберіть урок</h1>
         <div class="lesson-list" id="lessonList"></div>
         <div id="lessonActions" style="display:none;flex-direction:column;gap:12px;align-items:center;width:100%;max-width:540px;">
-            <!-- ═══════════════════════════════════════════════════════════ -->
-            <!-- ПОВЗУНОК СКЛАДНОСТІ БОСА -->
-            <!-- ═══════════════════════════════════════════════════════════ -->
             <div class="difficulty-control">
                 <label>🐛 Складність боса: <span id="diffLabel">5</span></label>
                 <input type="range" id="difficultySlider" min="1" max="10" value="5" step="1">
@@ -80,9 +77,47 @@
         <div class="badge" id="studentBadge">Урок</div>
         <h1 id="studentTitle">—</h1>
         <h2 id="studentSub"></h2>
+        
+        <!-- ВИБІР ГЕРОЯ -->
+        <div class="hero-selector">
+            <label class="hero-label">🦸 Оберіть героя:</label>
+            <div class="hero-grid" id="heroGrid">
+                <div class="hero-opt active" data-hero="panda">
+                    <span class="hero-icon">🐼</span>
+                    <span class="hero-name">Панда</span>
+                </div>
+                <div class="hero-opt" data-hero="knight">
+                    <span class="hero-icon">⚔️</span>
+                    <span class="hero-name">Лицар</span>
+                </div>
+                <div class="hero-opt" data-hero="elf">
+                    <span class="hero-icon">🧝</span>
+                    <span class="hero-name">Ельф</span>
+                </div>
+                <div class="hero-opt" data-hero="viking">
+                    <span class="hero-icon">⚔️</span>
+                    <span class="hero-name">Вікінг</span>
+                </div>
+                <div class="hero-opt" data-hero="princess">
+                    <span class="hero-icon">👸</span>
+                    <span class="hero-name">Принцеса</span>
+                </div>
+            </div>
+        </div>
+        
         <div class="difficulty-display">
             🐛 Складність: <span id="studentDiff">5</span>/10
         </div>
+        
+        <!-- ШКАЛА ПРОГРЕСУ -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <span>📊 Прогрес уроків</span>
+                <span class="progress-stats" id="progressStats">0/0</span>
+            </div>
+            <div class="progress-grid" id="progressGrid"></div>
+        </div>
+        
         <button class="btn primary" id="studentPlay">▶ Почати гру</button>
         <label class="file-label">
             <input type="file" id="fileStudent" accept=".xml">
@@ -116,9 +151,6 @@
             <div class="ground"></div>
             <div class="prompt" id="promptEl"><span>Натисніть:</span><span class="pkey" id="pkeyEl">—</span></div>
             
-            <!-- ═══════════════════════════════════════════════════════════ -->
-            <!-- ПАНЕЛЬ БОСА - З СЛОВОМ ДЛЯ ВВЕДЕННЯ -->
-            <!-- ═══════════════════════════════════════════════════════════ -->
             <div class="bpanel" id="bpanel">
                 <div class="bptitle">⚔️ БОС!</div>
                 <div class="boss-word-display" id="bossWordDisplay">
@@ -134,31 +166,7 @@
             <div class="track" id="track"></div>
             <div class="pwrap" id="pwrap">
                 <div class="player" id="player">
-                    <!-- SVG персонажа - Панда -->
-                    <svg class="psvg" viewBox="0 0 80 100">
-                        <ellipse class="pb" cx="40" cy="55" rx="30" ry="35"/>
-                        <ellipse class="pbelly" cx="40" cy="60" rx="20" ry="22"/>
-                        <circle class="phead" cx="40" cy="20" r="25"/>
-                        <circle class="pear" cx="22" cy="4" r="12"/>
-                        <circle class="pear" cx="58" cy="4" r="12"/>
-                        <circle class="pear-inner" cx="22" cy="4" r="6"/>
-                        <circle class="pear-inner" cx="58" cy="4" r="6"/>
-                        <ellipse class="peye" cx="32" cy="18" rx="6" ry="7"/>
-                        <ellipse class="peye" cx="48" cy="18" rx="6" ry="7"/>
-                        <circle class="peye-pupil" cx="34" cy="17" r="3"/>
-                        <circle class="peye-pupil" cx="50" cy="17" r="3"/>
-                        <circle class="peye-shine" cx="35" cy="15" r="1.5"/>
-                        <circle class="peye-shine" cx="51" cy="15" r="1.5"/>
-                        <ellipse class="pnose" cx="40" cy="26" rx="5" ry="3.5"/>
-                        <path class="pmouth" d="M35 29 Q40 33 45 29"/>
-                        <ellipse class="pcheek" cx="26" cy="26" rx="6" ry="4"/>
-                        <ellipse class="pcheek" cx="54" cy="26" rx="6" ry="4"/>
-                        <g class="al"><ellipse class="parm" cx="10" cy="48" rx="8" ry="16"/></g>
-                        <g class="ar"><ellipse class="parm" cx="70" cy="48" rx="8" ry="16"/></g>
-                        <g class="ll"><ellipse class="pleg" cx="25" cy="88" rx="12" ry="10"/></g>
-                        <g class="lr"><ellipse class="pleg" cx="55" cy="88" rx="12" ry="10"/></g>
-                        <circle class="ptail" cx="40" cy="92" r="6"/>
-                    </svg>
+                    <svg class="psvg" id="playerSvg" viewBox="0 0 80 100"></svg>
                 </div>
             </div>
         </div>

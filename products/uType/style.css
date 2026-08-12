@@ -90,7 +90,6 @@ h2 { font-size: 17px; color: var(--dim); }
 .difficulty-control input[type="range"] { width: 100%; height: 6px; -webkit-appearance: none; background: linear-gradient(to right, #4CAF50, #ff9800, #f44336); border-radius: 3px; outline: none; }
 .difficulty-control input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--boss); cursor: pointer; border: 2px solid var(--txt); }
 .diff-hint { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); margin-top: 4px; }
-
 .difficulty-display { padding: 8px 16px; background: var(--idle); border-radius: 8px; border: 1px solid var(--edge); font-size: 14px; color: var(--dim); }
 .difficulty-display span { color: var(--boss); font-weight: bold; }
 
@@ -117,6 +116,40 @@ h2 { font-size: 17px; color: var(--dim); }
 .file-label input { display: none; }
 
 /* ════════════════════════════════════════════════════════════════════
+   ВИБІР ГЕРОЯ
+   ════════════════════════════════════════════════════════════════════ */
+.hero-selector { width: 100%; max-width: 500px; background: var(--panel); border-radius: 12px; border: 1px solid var(--edge); padding: 12px 16px; }
+.hero-label { display: block; font-size: 14px; color: var(--dim); margin-bottom: 10px; text-align: center; }
+.hero-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.hero-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border-radius: 10px; border: 2px solid var(--edge); background: var(--idle); cursor: pointer; transition: all .3s; }
+.hero-opt:hover { border-color: var(--step); transform: scale(1.05); }
+.hero-opt.active { border-color: var(--boss); background: rgba(201, 79, 255, 0.15); box-shadow: 0 0 20px rgba(201, 79, 255, 0.2); }
+.hero-icon { font-size: 28px; }
+.hero-name { font-size: 11px; color: var(--dim); text-align: center; }
+.hero-opt.active .hero-name { color: var(--txt); }
+
+/* ════════════════════════════════════════════════════════════════════
+   ШКАЛА ПРОГРЕСУ
+   ════════════════════════════════════════════════════════════════════ */
+.progress-section { width: 100%; max-width: 500px; background: var(--panel); border-radius: 12px; border: 1px solid var(--edge); padding: 12px 16px; }
+.progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; color: var(--dim); }
+.progress-stats { color: var(--txt); font-weight: bold; }
+.progress-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+.progress-item { aspect-ratio: 1; border-radius: 6px; border: 2px solid var(--edge); background: var(--idle); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all .3s; position: relative; }
+.progress-item.completed { border-color: var(--run); background: rgba(95, 208, 164, 0.2); }
+.progress-item.current { border-color: var(--step); background: rgba(255, 180, 84, 0.2); animation: pulse-item 1.5s ease-in-out infinite; }
+@keyframes pulse-item { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+.progress-item.locked { opacity: 0.3; cursor: not-allowed; }
+.progress-item .tooltip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--edge); border-radius: 8px; padding: 10px 14px; min-width: 180px; font-size: 12px; color: var(--txt); z-index: 50; box-shadow: 0 8px 24px rgba(0,0,0,0.4); white-space: nowrap; }
+.progress-item .tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--edge); }
+.progress-item:hover .tooltip { display: block; }
+.progress-item .tooltip .tip-row { display: flex; justify-content: space-between; gap: 16px; padding: 2px 0; }
+.progress-item .tooltip .tip-label { color: var(--dim); }
+.progress-item .tooltip .tip-value { color: var(--txt); font-weight: bold; }
+.progress-item .tooltip .tip-value.good { color: var(--run); }
+.progress-item .tooltip .tip-value.bad { color: var(--hit); }
+
+/* ════════════════════════════════════════════════════════════════════
    HUD
    ════════════════════════════════════════════════════════════════════ */
 #sg { justify-content: flex-start; padding: 0; }
@@ -134,14 +167,11 @@ h2 { font-size: 17px; color: var(--dim); }
    ════════════════════════════════════════════════════════════════════ */
 .stage { position: relative; width: 100%; flex: 1 1 auto; overflow: hidden; transition: background .8s; }
 .bg-layer { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
-
-/* Паралакс шари */
 .parallax-layer { position: absolute; inset: 0; transition: transform .3s ease-out; }
 #parallax1 { transform: translateX(0); }
 #parallax2 { transform: translateX(0); }
 #parallax3 { transform: translateX(0); }
 
-/* Фони з паралаксом */
 .bg-space .bg-layer { background: linear-gradient(180deg, #0a0a3e 0%, #1a1a5e 30%, #2a1a6e 60%, #0a0a2e 100%); }
 .bg-space .parallax1 { background: radial-gradient(2px 2px at 20px 30px, #fff, transparent), radial-gradient(2px 2px at 60px 70px, #fff, transparent), radial-gradient(3px 3px at 100px 160px, #ffddff, transparent), radial-gradient(2px 2px at 150px 40px, #fff, transparent), radial-gradient(2px 2px at 200px 120px, #ddddff, transparent); background-size: 200px 200px; opacity: 0.8; animation: twinkle 3s ease-in-out infinite; }
 .bg-space .parallax2 { background: radial-gradient(1px 1px at 30px 50px, #ffddff, transparent), radial-gradient(1px 1px at 80px 90px, #ddddff, transparent), radial-gradient(2px 2px at 130px 30px, #ffffff, transparent); background-size: 150px 150px; opacity: 0.5; animation: twinkle 5s ease-in-out infinite reverse; }
@@ -167,16 +197,13 @@ h2 { font-size: 17px; color: var(--dim); }
 .bg-castle .parallax1 { background: radial-gradient(3px 3px at 20px 30px, #ffdd88, transparent), radial-gradient(2px 2px at 60px 70px, #ffcc66, transparent); background-size: 200px 200px; opacity: 0.4; animation: sparkle 4s ease-in-out infinite; }
 .bg-castle .parallax2 { background: radial-gradient(4px 4px at 40px 80px, #ffdd99, transparent); background-size: 150px 150px; opacity: 0.3; animation: sparkle 6s ease-in-out infinite reverse; }
 @keyframes sparkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.6; } }
-
 @keyframes twinkle { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
 .sun { position: absolute; top: 14%; right: 12%; width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle, var(--sun) 0%, rgba(255, 215, 106, .25) 60%, transparent 75%); box-shadow: 0 0 60px 10px rgba(255, 215, 106, .35); animation: sunf 6s ease-in-out infinite; z-index: 1; }
 @keyframes sunf { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-
 .clouds { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
 .cloud { position: absolute; background: rgba(255,255,255,0.15); border-radius: 50px; }
 @keyframes cdrift { 0% { transform: translateX(0); } 100% { transform: translateX(-140px); } }
-
 .ridge { position: absolute; left: 0; bottom: 90px; width: 5000px; transition: transform .18s linear; z-index: 1; }
 .rfar { height: 150px; opacity: .85; }
 .rnear { height: 110px; }
@@ -205,30 +232,29 @@ h2 { font-size: 17px; color: var(--dim); }
 @keyframes cs { 0%, 100% { transform: translateX(-50%) scaleX(1); } 50% { transform: translateX(-50%) scaleX(0.1); } }
 
 /* ════════════════════════════════════════════════════════════════════
-   ПЕРСОНАЖ - ПАНДА
+   ПЕРСОНАЖІ
    ════════════════════════════════════════════════════════════════════ */
 .pwrap { position: absolute; left: 50%; bottom: 118px; transform: translate(-50%, 0); width: 80px; height: 100px; z-index: 8; transition: transform .26s ease; }
 .player { width: 100%; height: 100%; transition: transform .16s ease; transform-origin: bottom center; }
 .psvg { width: 100%; height: 100%; display: block; overflow: visible; }
-.pb { fill: var(--panda-white); stroke: var(--panda-black); stroke-width: 2; }
-.pbelly { fill: #e8e8e8; stroke: none; }
+
+/* Спільні класи для всіх героїв */
+.pbody { fill: var(--panda-white); stroke: var(--panda-black); stroke-width: 2; }
 .phead { fill: var(--panda-white); stroke: var(--panda-black); stroke-width: 2; }
-.pear { fill: var(--panda-black); stroke: var(--panda-black); stroke-width: 2; }
-.pear-inner { fill: var(--panda-white); stroke: none; }
-.peye { fill: var(--panda-white); stroke: var(--panda-black); stroke-width: 1.5; }
+.parm { fill: var(--panda-black); stroke: var(--panda-black); stroke-width: 2; }
+.pleg { fill: var(--panda-black); stroke: var(--panda-black); stroke-width: 2; }
+.peye { fill: white; stroke: var(--panda-black); stroke-width: 1.5; }
 .peye-pupil { fill: var(--panda-black); }
 .peye-shine { fill: white; }
 .pnose { fill: var(--panda-black); }
 .pmouth { stroke: var(--panda-black); stroke-width: 1.5; fill: none; stroke-linecap: round; }
 .pcheek { fill: rgba(255, 150, 150, 0.3); stroke: none; }
-.parm { fill: var(--panda-black); stroke: var(--panda-black); stroke-width: 2; }
-.pleg { fill: var(--panda-black); stroke: var(--panda-black); stroke-width: 2; }
-.ptail { fill: var(--panda-white); stroke: var(--panda-black); stroke-width: 1.5; }
 
-.ll { transform-origin: 30px 88px; }
-.lr { transform-origin: 50px 88px; }
-.al { transform-origin: 10px 48px; }
-.ar { transform-origin: 70px 48px; }
+/* Анімації руху */
+.ll { transform-origin: 25px 88px; }
+.lr { transform-origin: 55px 88px; }
+.al { transform-origin: 12px 48px; }
+.ar { transform-origin: 68px 48px; }
 
 .player.run .ll { animation: legL .42s linear infinite; }
 .player.run .lr { animation: legR .42s linear infinite; }
@@ -253,25 +279,21 @@ h2 { font-size: 17px; color: var(--dim); }
 .boss-e { position: absolute; z-index: 7; bottom: 90px; transition: left .9s ease; cursor: pointer; }
 .boss-e svg { filter: drop-shadow(0 0 10px rgba(201, 79, 255, 0.3)); animation: wormWiggle 1.2s ease-in-out infinite; }
 @keyframes wormWiggle { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
-
 .bhpbar { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); width: 90px; height: 10px; background: #2a313d; border-radius: 5px; border: 2px solid var(--boss); overflow: hidden; }
 .bhpfill { height: 100%; background: linear-gradient(90deg, #ff1744, #ff6d00, #ffea00); border-radius: 5px; transition: width .3s; }
 
 /* ════════════════════════════════════════════════════════════════════
-   ПАНЕЛЬ БОСА ЗВЕРХУ
+   ПАНЕЛЬ БОСА
    ════════════════════════════════════════════════════════════════════ */
 .bpanel { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); background: rgba(18, 10, 30, .95); border: 2px solid var(--boss); border-radius: 14px; padding: 14px 24px; z-index: 30; display: none; flex-direction: column; align-items: center; gap: 10px; min-width: 280px; animation: bossPanelIn 0.4s ease; }
 @keyframes bossPanelIn { 0% { transform: translateX(-50%) scale(0.8) translateY(-20px); opacity: 0; } 100% { transform: translateX(-50%) scale(1) translateY(0); opacity: 1; } }
 .bpanel.on { display: flex; }
 .bptitle { font-size: 15px; color: var(--boss); font-weight: bold; letter-spacing: .5px; }
-
-/* Відображення слова для введення - ЛІТЕРИ ВИДИМІ З ПОЧАТКУ */
 .boss-word-display { text-align: center; width: 100%; }
 .boss-word-label { font-size: 12px; color: var(--dim); display: block; margin-bottom: 4px; }
 .boss-word { font-family: var(--mono); font-size: 32px; font-weight: bold; letter-spacing: 6px; display: inline-block; padding: 8px 16px; background: var(--idle); border-radius: 8px; border: 1px solid var(--edge); min-width: 100px; text-align: center; }
 .boss-word .letter-wait { color: var(--dim); transition: color 0.3s; }
 .boss-word .letter-ok { color: #4CAF50; text-shadow: 0 0 20px rgba(76, 175, 80, 0.5); transition: color 0.3s; }
-
 .boss-hp-bar { width: 100%; height: 8px; background: #2a313d; border-radius: 4px; overflow: hidden; margin-top: 4px; }
 .boss-hp-fill { height: 100%; background: linear-gradient(90deg, #ff1744, #ff6d00, #ffea00); border-radius: 4px; transition: width .3s; }
 
@@ -282,7 +304,6 @@ h2 { font-size: 17px; color: var(--dim); }
 .pkey { font-family: var(--mono); background: var(--idle); border: 1px solid var(--edge); border-radius: 6px; padding: 3px 10px; font-size: 16px; min-width: 40px; text-align: center; }
 .prompt.warn { border-color: var(--hit); color: var(--hit); animation: shake 0.3s; }
 @keyframes shake { 0%, 100% { transform: translateX(-50%); } 25% { transform: translateX(calc(-50% - 8px)); } 75% { transform: translateX(calc(-50% + 8px)); } }
-
 .toast { position: absolute; bottom: 118px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--gap); padding: 7px 14px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 10; white-space: nowrap; }
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(-10px); }
 
@@ -301,7 +322,6 @@ h2 { font-size: 17px; color: var(--dim); }
 .kk.kg { background: var(--gap); color: var(--bg); border-color: var(--gap); }
 .kk.kh { background: var(--hit); color: var(--bg); border-color: var(--hit); }
 .kk.kb { background: var(--boss); color: #fff; border-color: var(--boss); }
-
 .hand { width: 56px; flex: 0 0 auto; }
 .hright { transform: scaleX(-1); }
 .hand svg { width: 100%; height: auto; display: block; overflow: visible; }
@@ -337,5 +357,33 @@ body { transition: background .5s, color .5s; }
 /* ════════════════════════════════════════════════════════════════════
    АДАПТИВНІСТЬ
    ════════════════════════════════════════════════════════════════════ */
-@media (max-width: 768px) { .grade-grid { grid-template-columns: repeat(4, 1fr); } .flag-btn { width: 100px; height: 70px; font-size: 11px; } .flag-btn span { font-size: 32px; } .resbox { min-width: 220px; padding: 16px 20px; } .hud { padding: 8px 12px; flex-wrap: wrap; gap: 8px; } .stats { font-size: 11px; gap: 10px; } .prompt { font-size: 12px; padding: 6px 12px; } .kk { min-width: 22px; height: 22px; font-size: 10px; } .kk.wide { min-width: 36px; font-size: 9px; } .hand { width: 40px; } .pwrap { width: 60px; height: 76px; } .theme-toggle { padding: 6px 12px; font-size: 12px; top: 8px; right: 8px; } .bg-options { gap: 4px; } .bg-opt { padding: 6px 10px; font-size: 11px; } .bpanel { min-width: 200px; padding: 10px 16px; } .boss-word { font-size: 22px; letter-spacing: 2px; } }
-@media (max-width: 480px) { .grade-grid { grid-template-columns: repeat(3, 1fr); } .lesson-list { max-height: 40vh; } .link-box { font-size: 10px; padding: 8px 12px; } .hud { flex-direction: column; align-items: stretch; gap: 4px; } .hud > div:first-child { justify-content: center; } .stats { justify-content: center; } }
+@media (max-width: 768px) { 
+    .grade-grid { grid-template-columns: repeat(4, 1fr); } 
+    .flag-btn { width: 100px; height: 70px; font-size: 11px; } 
+    .flag-btn span { font-size: 32px; } 
+    .resbox { min-width: 220px; padding: 16px 20px; } 
+    .hud { padding: 8px 12px; flex-wrap: wrap; gap: 8px; } 
+    .stats { font-size: 11px; gap: 10px; } 
+    .prompt { font-size: 12px; padding: 6px 12px; } 
+    .kk { min-width: 22px; height: 22px; font-size: 10px; } 
+    .kk.wide { min-width: 36px; font-size: 9px; } 
+    .hand { width: 40px; } 
+    .pwrap { width: 60px; height: 76px; } 
+    .theme-toggle { padding: 6px 12px; font-size: 12px; top: 8px; right: 8px; } 
+    .bg-options { gap: 4px; } 
+    .bg-opt { padding: 6px 10px; font-size: 11px; } 
+    .bpanel { min-width: 200px; padding: 10px 16px; } 
+    .boss-word { font-size: 22px; letter-spacing: 2px; }
+    .hero-grid { grid-template-columns: repeat(3, 1fr); }
+    .progress-grid { grid-template-columns: repeat(5, 1fr); }
+}
+@media (max-width: 480px) { 
+    .grade-grid { grid-template-columns: repeat(3, 1fr); } 
+    .lesson-list { max-height: 40vh; } 
+    .link-box { font-size: 10px; padding: 8px 12px; } 
+    .hud { flex-direction: column; align-items: stretch; gap: 4px; } 
+    .hud > div:first-child { justify-content: center; } 
+    .stats { justify-content: center; }
+    .hero-grid { grid-template-columns: repeat(2, 1fr); }
+    .progress-grid { grid-template-columns: repeat(4, 1fr); }
+}

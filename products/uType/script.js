@@ -24,10 +24,220 @@ const MF = 4;
 const $ = id => document.getElementById(id);
 const mk = (t, c) => { const e = document.createElement(t); if (c) e.className = c; return e; };
 
-let G = { lang: null, grade: null, lessonFile: null, lessonTitle: '', data: null, index: null, bg: 'space', difficulty: 5 };
+let G = { 
+    lang: null, 
+    grade: null, 
+    lessonFile: null, 
+    lessonTitle: '', 
+    data: null, 
+    index: null, 
+    bg: 'space', 
+    difficulty: 5,
+    hero: 'panda',
+    studentId: 'default'
+};
 let eng = null, inp = null, rnd = null, bossTmrs = [];
 let soundCtx = null;
-let parallaxOffset = 0;
+let studentProgress = null;
+
+/* ════════════════════════════════════════════════════════════════════
+   ГЕРОЇ - SVG ПЕРСОНАЖІВ
+   ════════════════════════════════════════════════════════════════════ */
+const HEROES = {
+    panda: {
+        name: 'Панда',
+        icon: '🐼',
+        svg: `<svg viewBox="0 0 80 100">
+            <ellipse class="pb" cx="40" cy="55" rx="30" ry="35"/>
+            <ellipse class="pbelly" cx="40" cy="60" rx="20" ry="22"/>
+            <circle class="phead" cx="40" cy="20" r="25"/>
+            <circle class="pear" cx="22" cy="4" r="12"/>
+            <circle class="pear" cx="58" cy="4" r="12"/>
+            <circle class="pear-inner" cx="22" cy="4" r="6"/>
+            <circle class="pear-inner" cx="58" cy="4" r="6"/>
+            <ellipse class="peye" cx="32" cy="18" rx="6" ry="7"/>
+            <ellipse class="peye" cx="48" cy="18" rx="6" ry="7"/>
+            <circle class="peye-pupil" cx="34" cy="17" r="3"/>
+            <circle class="peye-pupil" cx="50" cy="17" r="3"/>
+            <circle class="peye-shine" cx="35" cy="15" r="1.5"/>
+            <circle class="peye-shine" cx="51" cy="15" r="1.5"/>
+            <ellipse class="pnose" cx="40" cy="26" rx="5" ry="3.5"/>
+            <path class="pmouth" d="M35 29 Q40 33 45 29"/>
+            <ellipse class="pcheek" cx="26" cy="26" rx="6" ry="4"/>
+            <ellipse class="pcheek" cx="54" cy="26" rx="6" ry="4"/>
+            <g class="al"><ellipse class="parm" cx="10" cy="48" rx="8" ry="16"/></g>
+            <g class="ar"><ellipse class="parm" cx="70" cy="48" rx="8" ry="16"/></g>
+            <g class="ll"><ellipse class="pleg" cx="25" cy="88" rx="12" ry="10"/></g>
+            <g class="lr"><ellipse class="pleg" cx="55" cy="88" rx="12" ry="10"/></g>
+            <circle class="ptail" cx="40" cy="92" r="6"/>
+        </svg>`
+    },
+    knight: {
+        name: 'Лицар',
+        icon: '⚔️',
+        svg: `<svg viewBox="0 0 80 100">
+            <rect class="pbody" x="18" y="40" width="44" height="40" rx="6"/>
+            <rect class="parmor" x="14" y="42" width="52" height="32" rx="4" fill="#888" stroke="#555" stroke-width="2"/>
+            <rect class="parmor" x="20" y="46" width="8" height="16" rx="2" fill="#aaa"/>
+            <rect class="parmor" x="52" y="46" width="8" height="16" rx="2" fill="#aaa"/>
+            <circle class="phead" cx="40" cy="24" r="20" fill="#f5d0b0"/>
+            <rect class="phelmet" x="18" y="8" width="44" height="22" rx="8" fill="#888" stroke="#555" stroke-width="2"/>
+            <rect class="pvisor" x="24" y="14" width="32" height="12" rx="2" fill="#444" stroke="#333" stroke-width="1.5"/>
+            <rect class="pvisor" x="28" y="16" width="6" height="8" rx="1" fill="#222"/>
+            <rect class="pvisor" x="46" y="16" width="6" height="8" rx="1" fill="#222"/>
+            <rect class="pvisor" x="37" y="16" width="6" height="8" rx="1" fill="#222"/>
+            <circle class="peye" cx="30" cy="18" r="2" fill="#ffd700"/>
+            <circle class="peye" cx="50" cy="18" r="2" fill="#ffd700"/>
+            <rect class="psword" x="68" y="34" width="4" height="40" rx="1" fill="#ccc" stroke="#999" stroke-width="1"/>
+            <rect class="psword" x="66" y="30" width="8" height="8" rx="2" fill="#ffd700"/>
+            <polygon class="psword" points="70,68 66,74 74,74" fill="#ccc" stroke="#999" stroke-width="1"/>
+            <g class="al"><ellipse class="parm" cx="12" cy="50" rx="8" ry="16"/></g>
+            <g class="ar"><ellipse class="parm" cx="68" cy="50" rx="8" ry="16"/></g>
+            <g class="ll"><ellipse class="pleg" cx="24" cy="88" rx="12" ry="10"/></g>
+            <g class="lr"><ellipse class="pleg" cx="56" cy="88" rx="12" ry="10"/></g>
+        </svg>`
+    },
+    elf: {
+        name: 'Ельф',
+        icon: '🧝',
+        svg: `<svg viewBox="0 0 80 100">
+            <ellipse class="pbody" cx="40" cy="56" rx="26" ry="32" fill="#6ba36b"/>
+            <circle class="phead" cx="40" cy="24" r="22" fill="#f5d0b0"/>
+            <ellipse class="pear" cx="18" cy="6" rx="10" ry="16" fill="#6ba36b"/>
+            <ellipse class="pear" cx="62" cy="6" rx="10" ry="16" fill="#6ba36b"/>
+            <ellipse class="pear-inner" cx="18" cy="10" rx="6" ry="10" fill="#8bc88b"/>
+            <ellipse class="pear-inner" cx="62" cy="10" rx="6" ry="10" fill="#8bc88b"/>
+            <ellipse class="peye" cx="32" cy="22" rx="5" ry="6" fill="white"/>
+            <ellipse class="peye" cx="48" cy="22" rx="5" ry="6" fill="white"/>
+            <circle class="peye-pupil" cx="34" cy="21" r="3" fill="#2d5a2d"/>
+            <circle class="peye-pupil" cx="50" cy="21" r="3" fill="#2d5a2d"/>
+            <circle class="peye-shine" cx="35" cy="19" r="1.5" fill="white"/>
+            <circle class="peye-shine" cx="51" cy="19" r="1.5" fill="white"/>
+            <ellipse class="pnose" cx="40" cy="30" rx="4" ry="3" fill="#d4a080"/>
+            <path class="pmouth" d="M35 34 Q40 38 45 34" stroke="#d4a080" stroke-width="1.5" fill="none"/>
+            <ellipse class="pcheek" cx="26" cy="30" rx="5" ry="3" fill="rgba(255,150,150,0.3)"/>
+            <ellipse class="pcheek" cx="54" cy="30" rx="5" ry="3" fill="rgba(255,150,150,0.3)"/>
+            <ellipse class="pcape" cx="40" cy="50" rx="34" ry="30" fill="#4a7a4a" opacity="0.6"/>
+            <g class="al"><ellipse class="parm" cx="12" cy="50" rx="7" ry="14" fill="#f5d0b0"/></g>
+            <g class="ar"><ellipse class="parm" cx="68" cy="50" rx="7" ry="14" fill="#f5d0b0"/></g>
+            <g class="ll"><ellipse class="pleg" cx="26" cy="88" rx="10" ry="10"/></g>
+            <g class="lr"><ellipse class="pleg" cx="54" cy="88" rx="10" ry="10"/></g>
+        </svg>`
+    },
+    viking: {
+        name: 'Вікінг',
+        icon: '⚔️',
+        svg: `<svg viewBox="0 0 80 100">
+            <ellipse class="pbody" cx="40" cy="56" rx="28" ry="34" fill="#c0392b"/>
+            <rect class="parmor" x="14" y="44" width="52" height="28" rx="4" fill="#8B7355" stroke="#6B5335" stroke-width="2"/>
+            <rect class="parmor" x="18" y="48" width="8" height="16" rx="2" fill="#a08060"/>
+            <rect class="parmor" x="54" y="48" width="8" height="16" rx="2" fill="#a08060"/>
+            <circle class="phead" cx="40" cy="22" r="20" fill="#f5d0b0"/>
+            <rect class="phelmet" x="14" y="2" width="52" height="18" rx="8" fill="#888" stroke="#555" stroke-width="2"/>
+            <rect class="phelmet" x="30" y="0" width="20" height="12" rx="4" fill="#888" stroke="#555" stroke-width="2"/>
+            <circle class="peye" cx="32" cy="20" r="3" fill="#2d5a2d"/>
+            <circle class="peye" cx="48" cy="20" r="3" fill="#2d5a2d"/>
+            <ellipse class="pnose" cx="40" cy="26" rx="4" ry="3" fill="#d4a080"/>
+            <path class="pmouth" d="M34 31 Q40 36 46 31" stroke="#d4a080" stroke-width="1.5" fill="none"/>
+            <rect class="paxe" x="62" y="30" width="6" height="44" rx="2" fill="#8B7355"/>
+            <path class="paxe" d="M58 30 L72 30 L72 22 L58 22 Z" fill="#ccc" stroke="#999" stroke-width="1.5"/>
+            <g class="al"><ellipse class="parm" cx="12" cy="50" rx="8" ry="16"/></g>
+            <g class="ar"><ellipse class="parm" cx="68" cy="50" rx="8" ry="16"/></g>
+            <g class="ll"><ellipse class="pleg" cx="24" cy="88" rx="12" ry="10"/></g>
+            <g class="lr"><ellipse class="pleg" cx="56" cy="88" rx="12" ry="10"/></g>
+        </svg>`
+    },
+    princess: {
+        name: 'Принцеса',
+        icon: '👸',
+        svg: `<svg viewBox="0 0 80 100">
+            <ellipse class="pbody" cx="40" cy="56" rx="26" ry="32" fill="#ff6b9d"/>
+            <circle class="phead" cx="40" cy="24" r="20" fill="#f5d0b0"/>
+            <ellipse class="pcheek" cx="26" cy="28" rx="6" ry="4" fill="rgba(255,100,150,0.3)"/>
+            <ellipse class="pcheek" cx="54" cy="28" rx="6" ry="4" fill="rgba(255,100,150,0.3)"/>
+            <ellipse class="peye" cx="32" cy="22" rx="5" ry="6" fill="white"/>
+            <ellipse class="peye" cx="48" cy="22" rx="5" ry="6" fill="white"/>
+            <circle class="peye-pupil" cx="34" cy="21" r="3" fill="#4a1a6a"/>
+            <circle class="peye-pupil" cx="50" cy="21" r="3" fill="#4a1a6a"/>
+            <circle class="peye-shine" cx="35" cy="19" r="1.5" fill="white"/>
+            <circle class="peye-shine" cx="51" cy="19" r="1.5" fill="white"/>
+            <ellipse class="pnose" cx="40" cy="28" rx="4" ry="2.5" fill="#d4a080"/>
+            <path class="pmouth" d="M35 32 Q40 37 45 32" stroke="#d4a080" stroke-width="1.5" fill="none"/>
+            <ellipse class="pcrown" cx="40" cy="6" rx="24" ry="10" fill="#ffd700" stroke="#daa520" stroke-width="1.5"/>
+            <ellipse class="pcrown" cx="40" cy="6" rx="18" ry="6" fill="#ffed4a"/>
+            <circle class="pcrown" cx="28" cy="2" r="3" fill="#ff6b6b"/>
+            <circle class="pcrown" cx="40" cy="0" r="4" fill="#4d96ff"/>
+            <circle class="pcrown" cx="52" cy="2" r="3" fill="#ff6b6b"/>
+            <g class="al"><ellipse class="parm" cx="12" cy="50" rx="7" ry="14" fill="#f5d0b0"/></g>
+            <g class="ar"><ellipse class="parm" cx="68" cy="50" rx="7" ry="14" fill="#f5d0b0"/></g>
+            <g class="ll"><ellipse class="pleg" cx="26" cy="88" rx="10" ry="10"/></g>
+            <g class="lr"><ellipse class="pleg" cx="54" cy="88" rx="10" ry="10"/></g>
+        </svg>`
+    }
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   ЗБЕРІГАННЯ ПРОГРЕСУ УЧНЯ
+   ════════════════════════════════════════════════════════════════════ */
+class StudentProgress {
+    constructor(studentId) {
+        this.studentId = studentId || 'default';
+        this.storageKey = `keyboard_progress_${this.studentId}`;
+        this.data = this.load();
+    }
+    
+    load() {
+        try {
+            const raw = localStorage.getItem(this.storageKey);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    return parsed;
+                }
+            }
+        } catch (e) {
+            console.warn('Помилка завантаження прогресу:', e);
+        }
+        return {
+            lessons: {},
+            lastLesson: null,
+            totalCompleted: 0
+        };
+    }
+    
+    save() {
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(this.data));
+        } catch (e) {
+            console.warn('Помилка збереження прогресу:', e);
+        }
+    }
+    
+    completeLesson(lessonId, stats) {
+        if (!this.data.lessons[lessonId]) {
+            this.data.lessons[lessonId] = { completed: false, stats: {} };
+        }
+        this.data.lessons[lessonId].completed = true;
+        this.data.lessons[lessonId].stats = stats;
+        this.data.lastLesson = lessonId;
+        this.data.totalCompleted = Object.values(this.data.lessons).filter(l => l.completed).length;
+        this.save();
+    }
+    
+    getLesson(lessonId) {
+        return this.data.lessons[lessonId] || null;
+    }
+    
+    isCompleted(lessonId) {
+        return this.data.lessons[lessonId]?.completed || false;
+    }
+    
+    getStats() {
+        const total = Object.keys(this.data.lessons).length;
+        const completed = this.data.totalCompleted;
+        return { total, completed, percent: total > 0 ? Math.round(completed / total * 100) : 0 };
+    }
+}
 
 /* ════════════════════════════════════════════════════════════════════
    🎵 ЗВУКОВІ ЕФЕКТИ
@@ -91,20 +301,34 @@ function parseXML(str) { const doc = new DOMParser().parseFromString(str,'text/x
    ════════════════════════════════════════════════════════════════════ */
 class LP {
     static parse(text) {
-        const o = []; let fl = 0;
+        const o = [];
+        let fl = 0;
         for (const ch of text) {
-            if (ch === '\n' || ch === '\r') { const old=fl; fl=Math.max(0,fl-1); o.push({char:ch,type:'checkpoint',req:false,floor:old,nf:fl}); }
-            else if (ch === ' ') { o.push({char:ch,type:'gap',req:false,floor:fl}); o.push({char:'',type:'rest',req:false,floor:fl}); }
-            else if (/[.,!?]/.test(ch)) { const old=fl; fl=Math.min(MF,fl+1); o.push({char:ch,type:'hit',req:false,floor:old,rise:fl}); }
-            else if (/[A-ZА-ЯЇІЄҐ]/.test(ch)) { const land=Math.min(MF,fl+1); o.push({char:ch,type:'step',req:true,base:fl,floor:land}); }
-            else { o.push({char:ch,type:'run',req:false,floor:fl}); }
+            if (ch === '\n' || ch === '\r') {
+                const old = fl;
+                fl = Math.max(0, fl - 1);
+                o.push({ char: ch, type: 'checkpoint', req: false, floor: old, nf: fl });
+            } else if (ch === ' ') {
+                o.push({ char: ch, type: 'gap', req: false, floor: fl });
+                o.push({ char: '', type: 'rest', req: false, floor: fl });
+            } else if (/[.,!?]/.test(ch)) {
+                const old = fl;
+                fl = Math.min(MF, fl + 1);
+                o.push({ char: ch, type: 'hit', req: false, floor: old, rise: fl });
+            } else if (/[A-ZА-ЯЇІЄҐ]/.test(ch)) {
+                const land = Math.min(MF, fl + 1);
+                o.push({ char: ch, type: 'step', req: true, base: fl, floor: land });
+                fl = land;
+            } else {
+                o.push({ char: ch, type: 'run', req: false, floor: fl });
+            }
         }
         return o;
     }
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   КЛАС БОСА - ХРОБАК 🐛
+   КЛАС БОСА
    ════════════════════════════════════════════════════════════════════ */
 class Boss {
     constructor(word, ti) {
@@ -240,6 +464,15 @@ class Rnd {
         $('hL').innerHTML = handSVG();
         $('hR').innerHTML = handSVG();
         this._initParallax();
+        this._setHero(G.hero || 'panda');
+    }
+    
+    _setHero(heroId) {
+        const hero = HEROES[heroId] || HEROES.panda;
+        const svgEl = document.getElementById('playerSvg');
+        if (svgEl) {
+            svgEl.innerHTML = hero.svg;
+        }
     }
     
     _applyBg() {
@@ -552,31 +785,89 @@ function _getBgStyle(bgId) {
     return styles[bgId] || styles.space;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const bgOptions = $('bgOptions');
-    if (bgOptions) {
-        bgOptions.innerHTML = '';
-        BGS.forEach(bg => {
-            const btn = mk('button', 'bg-opt' + (bg === G.bg ? ' active' : ''));
-            btn.dataset.bg = bg;
-            btn.textContent = BG_NAMES[bg];
-            btn.onclick = () => selectBg(bg);
-            bgOptions.appendChild(btn);
+/* ════════════════════════════════════════════════════════════════════
+   ІНІЦІАЛІЗАЦІЯ СТОРІНКИ УЧНЯ
+   ════════════════════════════════════════════════════════════════════ */
+function initStudentPage() {
+    const heroGrid = document.getElementById('heroGrid');
+    if (heroGrid) {
+        heroGrid.querySelectorAll('.hero-opt').forEach(el => {
+            el.addEventListener('click', () => {
+                heroGrid.querySelectorAll('.hero-opt').forEach(h => h.classList.remove('active'));
+                el.classList.add('active');
+                G.hero = el.dataset.hero;
+                localStorage.setItem('selected_hero', G.hero);
+            });
         });
-        const savedBg = localStorage.getItem('keyboard-bg');
-        if (savedBg && BGS.includes(savedBg)) {
-            G.bg = savedBg;
-            selectBg(savedBg);
+        const savedHero = localStorage.getItem('selected_hero') || 'panda';
+        const heroOpt = heroGrid.querySelector(`[data-hero="${savedHero}"]`);
+        if (heroOpt) {
+            heroOpt.classList.add('active');
+            G.hero = savedHero;
         } else {
-            selectBg(G.bg);
+            heroGrid.querySelector('[data-hero="panda"]').classList.add('active');
+            G.hero = 'panda';
         }
     }
-});
+    
+    const studentId = G.studentId || 'default';
+    studentProgress = new StudentProgress(studentId);
+    updateProgressDisplay();
+}
+
+function updateProgressDisplay() {
+    const grid = document.getElementById('progressGrid');
+    if (!grid) return;
+    
+    const stats = studentProgress.getStats();
+    document.getElementById('progressStats').textContent = `${stats.completed}/${stats.total || 0}`;
+    
+    const lessons = G.index?.[G.lang]?.[G.grade] || [];
+    const totalLessons = lessons.length;
+    
+    if (totalLessons === 0) {
+        grid.innerHTML = '<span style="color:var(--dim);font-size:12px;grid-column:span 10;">Немає уроків для відображення</span>';
+        return;
+    }
+    
+    grid.innerHTML = '';
+    lessons.forEach((lesson, index) => {
+        const item = document.createElement('div');
+        item.className = 'progress-item';
+        const completed = studentProgress.isCompleted(lesson.id);
+        const isCurrent = lesson.id === studentProgress.data.lastLesson;
+        
+        if (completed) item.classList.add('completed');
+        if (isCurrent) item.classList.add('current');
+        if (!completed) item.classList.add('locked');
+        
+        item.textContent = index + 1;
+        
+        if (completed) {
+            const lessonData = studentProgress.getLesson(lesson.id);
+            if (lessonData && lessonData.stats) {
+                const tip = document.createElement('div');
+                tip.className = 'tooltip';
+                const s = lessonData.stats;
+                tip.innerHTML = `
+                    <div class="tip-row"><span class="tip-label">📚 Урок</span><span class="tip-value">${lesson.title}</span></div>
+                    <div class="tip-row"><span class="tip-label">✅ Правильних</span><span class="tip-value good">${s.ok || 0}</span></div>
+                    <div class="tip-row"><span class="tip-label">❌ Помилок</span><span class="tip-value ${s.err > 5 ? 'bad' : 'good'}">${s.err || 0}</span></div>
+                    <div class="tip-row"><span class="tip-label">⚡ CPM</span><span class="tip-value">${s.cpm || 0}</span></div>
+                    <div class="tip-row"><span class="tip-label">🪙 Монет</span><span class="tip-value">${s.coins || 0}</span></div>
+                    <div class="tip-row"><span class="tip-label">⚔️ Босів</span><span class="tip-value">${s.bosses || 0}</span></div>
+                    <div class="tip-row"><span class="tip-label">❤️ Життів</span><span class="tip-value">${s.lives || 0}</span></div>
+                `;
+                item.appendChild(tip);
+            }
+        }
+        grid.appendChild(item);
+    });
+}
 
 /* ════════════════════════════════════════════════════════════════════
    UI ПОТІК
    ════════════════════════════════════════════════════════════════════ */
-
 window.addEventListener('DOMContentLoaded', async () => {
     try { const r = await fetch('index.json'); G.index = await r.json(); } catch { G.index = null; }
     const p = new URLSearchParams(window.location.search);
@@ -592,6 +883,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         $('studentTitle').textContent = G.lessonTitle;
         $('studentSub').textContent = lesson ? `Урок: ${lesson.title}` : 'Оберіть XML файл';
         $('studentDiff').textContent = G.difficulty;
+        initStudentPage();
         show('s-student');
     } else {
         show('s-lang');
@@ -713,6 +1005,9 @@ async function loadFromFile(f) {
     launchLevel(G.data);
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   ЗАПУСК РІВНЯ ТА ІГРОВІ ПОДІЇ
+   ════════════════════════════════════════════════════════════════════ */
 function launchLevel(data) {
     bossTmrs.forEach(clearInterval);
     bossTmrs = [];
@@ -804,8 +1099,10 @@ function startBossTimer(b) {
     bossTmrs.forEach(clearInterval);
     bossTmrs = [];
     const diff = G.difficulty || 5;
-    const speedFactor = 1 - (diff - 1) / 9;
-    const interval = Math.max(500, BOSS_TICK * (0.1 + speedFactor * 0.9));
+    const minInterval = 300;
+    const maxInterval = BOSS_TICK;
+    const normalizedDiff = (diff - 1) / 9;
+    const interval = maxInterval - normalizedDiff * (maxInterval - minInterval);
     
     const t = setInterval(() => {
         if (!b.alive) { clearInterval(t); return; }
@@ -826,6 +1123,21 @@ function endGame(ok, bossKill) {
     rnd.running(false);
     bossTmrs.forEach(clearInterval);
     bossTmrs = [];
+    
+    if (ok && G.lessonFile && studentProgress) {
+        const lessonId = G.lessonFile.replace(/\.xml$/, '').replace(/^.*[\\\/]/, '');
+        studentProgress.completeLesson(lessonId, {
+            ok: eng.ok,
+            err: eng.err,
+            cpm: eng.cpm,
+            coins: eng.ctotal,
+            bosses: eng.bk,
+            lives: Math.max(eng.lives, 0),
+            date: new Date().toISOString()
+        });
+        updateProgressDisplay();
+    }
+    
     const ua = G.lang === 'ua';
     $('resTitle').textContent = bossKill ?
         (ua ? '🐛 Бос дістав тебе! 💀' : '🐛 Boss got you! 💀') :

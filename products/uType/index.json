@@ -4,95 +4,95 @@
       {
         "id": "lesson1",
         "title": "Осінь у лісі",
-        "file": "classes/ua/2/lesson1.xml"
+        "file": "classes/ua/2/lesson1.json"
       },
       {
         "id": "lesson2",
         "title": "Моя родина",
-        "file": "classes/ua/2/lesson2.xml"
+        "file": "classes/ua/2/lesson2.json"
       }
     ],
     "3": [
       {
         "id": "lesson1",
         "title": "Рідний край",
-        "file": "classes/ua/3/lesson1.xml"
+        "file": "classes/ua/3/lesson1.json"
       },
       {
         "id": "lesson2",
         "title": "Пташиний світ",
-        "file": "classes/ua/3/lesson2.xml"
+        "file": "classes/ua/3/lesson2.json"
       }
     ],
     "4": [
       {
         "id": "lesson1",
         "title": "Пори року",
-        "file": "classes/ua/4/lesson1.xml"
+        "file": "classes/ua/4/lesson1.json"
       },
       {
         "id": "lesson2",
         "title": "Тварини лісу",
-        "file": "classes/ua/4/lesson2.xml"
+        "file": "classes/ua/4/lesson2.json"
       }
     ],
     "5": [
       {
         "id": "lesson1",
         "title": "Природа України",
-        "file": "classes/ua/5/lesson1.xml"
+        "file": "classes/ua/5/lesson1.json"
       },
       {
         "id": "lesson2",
         "title": "Водойми України",
-        "file": "classes/ua/5/lesson2.xml"
+        "file": "classes/ua/5/lesson2.json"
       }
     ],
     "6": [
       {
         "id": "lesson1",
         "title": "Україна — моя Батьківщина",
-        "file": "classes/ua/6/lesson1.xml"
+        "file": "classes/ua/6/lesson1.json"
       },
       {
         "id": "lesson2",
         "title": "Символи України",
-        "file": "classes/ua/6/lesson2.xml"
+        "file": "classes/ua/6/lesson2.json"
       }
     ],
     "7": [
       {
         "id": "lesson1",
         "title": "Козацька слава",
-        "file": "classes/ua/7/lesson1.xml"
+        "file": "classes/ua/7/lesson1.json"
       }
     ],
     "8": [
       {
         "id": "lesson1",
         "title": "Видатні українці",
-        "file": "classes/ua/8/lesson1.xml"
+        "file": "classes/ua/8/lesson1.json"
       }
     ],
     "9": [
       {
         "id": "lesson1",
         "title": "Культура і мистецтво",
-        "file": "classes/ua/9/lesson1.xml"
+        "file": "classes/ua/9/lesson1.json"
       }
     ],
     "10": [
       {
         "id": "lesson1",
         "title": "Наука і технології",
-        "file": "classes/ua/10/lesson1.xml"
+        "file": "classes/ua/10/lesson1.json"
       }
     ],
     "11": [
       {
         "id": "lesson1",
         "title": "Майбутнє України",
-        "file": "classes/ua/11/lesson1.xml"
+        "file": "classes/ua/11/lesson1.json"
       }
     ]
   },
@@ -101,95 +101,95 @@
       {
         "id": "lesson1",
         "title": "My Family",
-        "file": "classes/en/2/lesson1.xml"
+        "file": "classes/en/2/lesson1.json"
       },
       {
         "id": "lesson2",
         "title": "Animals Around Us",
-        "file": "classes/en/2/lesson2.xml"
+        "file": "classes/en/2/lesson2.json"
       }
     ],
     "3": [
       {
         "id": "lesson1",
         "title": "My School",
-        "file": "classes/en/3/lesson1.xml"
+        "file": "classes/en/3/lesson1.json"
       },
       {
         "id": "lesson2",
         "title": "Seasons",
-        "file": "classes/en/3/lesson2.xml"
+        "file": "classes/en/3/lesson2.json"
       }
     ],
     "4": [
       {
         "id": "lesson1",
         "title": "Nature Around Us",
-        "file": "classes/en/4/lesson1.xml"
+        "file": "classes/en/4/lesson1.json"
       },
       {
         "id": "lesson2",
         "title": "Food and Health",
-        "file": "classes/en/4/lesson2.xml"
+        "file": "classes/en/4/lesson2.json"
       }
     ],
     "5": [
       {
         "id": "lesson1",
         "title": "Ukraine and Its Nature",
-        "file": "classes/en/5/lesson1.xml"
+        "file": "classes/en/5/lesson1.json"
       },
       {
         "id": "lesson2",
         "title": "Cities and Countries",
-        "file": "classes/en/5/lesson2.xml"
+        "file": "classes/en/5/lesson2.json"
       }
     ],
     "6": [
       {
         "id": "lesson1",
         "title": "History of Ukraine",
-        "file": "classes/en/6/lesson1.xml"
+        "file": "classes/en/6/lesson1.json"
       },
       {
         "id": "lesson2",
         "title": "Science and Discovery",
-        "file": "classes/en/6/lesson2.xml"
+        "file": "classes/en/6/lesson2.json"
       }
     ],
     "7": [
       {
         "id": "lesson1",
         "title": "World Geography",
-        "file": "classes/en/7/lesson1.xml"
+        "file": "classes/en/7/lesson1.json"
       }
     ],
     "8": [
       {
         "id": "lesson1",
         "title": "Literature and Arts",
-        "file": "classes/en/8/lesson1.xml"
+        "file": "classes/en/8/lesson1.json"
       }
     ],
     "9": [
       {
         "id": "lesson1",
         "title": "Technology Today",
-        "file": "classes/en/9/lesson1.xml"
+        "file": "classes/en/9/lesson1.json"
       }
     ],
     "10": [
       {
         "id": "lesson1",
         "title": "Economics and Society",
-        "file": "classes/en/10/lesson1.xml"
+        "file": "classes/en/10/lesson1.json"
       }
     ],
     "11": [
       {
         "id": "lesson1",
         "title": "Future and Progress",
-        "file": "classes/en/11/lesson1.xml"
+        "file": "classes/en/11/lesson1.json"
       }
     ]
   }

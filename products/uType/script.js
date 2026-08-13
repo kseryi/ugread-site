@@ -16,7 +16,7 @@ const COIN_EVERY = CONFIG.COIN_INTERVAL;
 const BOSS_DIST = CONFIG.BOSS_DISTANCE;
 const LH = 64;
 const TW = CONFIG.TILE_SIZE;
-const MF = 4;
+const MF = 4; // Максимальна висота підйому
 
 /* ════════════════════════════════════════════════════════════════════
    ЗМІННІ ТА СТАН
@@ -177,6 +177,75 @@ const HEROES = {
 };
 
 /* ════════════════════════════════════════════════════════════════════
+   ТИПИ ХРОБАКІВ ЗАЛЕЖНО ВІД СКЛАДНОСТІ
+   ════════════════════════════════════════════════════════════════════
+   difficulty: 0-10
+   0-2: Нерухомий - стоїть на місці, тільки хитається
+   3-4: Повільний - рухається дуже повільно
+   5-7: Середній - рухається з середньою швидкістю
+   8-10: Швидкий - рухається швидко
+   ════════════════════════════════════════════════════════════════════ */
+function getWormType(difficulty) {
+    if (difficulty <= 2) {
+        return { 
+            type: 0, 
+            name: 'Нерухомий', 
+            color: '#6b6b6b',
+            speed: 0,
+            interval: 999999,
+            emoji: '🐛'
+        };
+    } else if (difficulty <= 4) {
+        return { 
+            type: 1, 
+            name: 'Повільний', 
+            color: '#4CAF50',
+            speed: 0.3,
+            interval: 8000,
+            emoji: '🐛'
+        };
+    } else if (difficulty <= 7) {
+        return { 
+            type: 2, 
+            name: 'Середній', 
+            color: '#FF9800',
+            speed: 0.6,
+            interval: 4000,
+            emoji: '🐛'
+        };
+    } else {
+        return { 
+            type: 3, 
+            name: 'Швидкий', 
+            color: '#f44336',
+            speed: 1.0,
+            interval: 2000,
+            emoji: '🐛'
+        };
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   ВСТАНОВЛЕННЯ ГЕРОЯ
+   ════════════════════════════════════════════════════════════════════ */
+function setHero(heroId) {
+    const hero = HEROES[heroId] || HEROES.panda;
+    const svgEl = document.getElementById('playerSvg');
+    if (svgEl) {
+        svgEl.innerHTML = hero.svg;
+    }
+    G.hero = heroId;
+    localStorage.setItem('selected_hero', heroId);
+    
+    const heroGrid = document.getElementById('heroGrid');
+    if (heroGrid) {
+        heroGrid.querySelectorAll('.hero-opt').forEach(el => {
+            el.classList.toggle('active', el.dataset.hero === heroId);
+        });
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════
    ЗБЕРІГАННЯ ПРОГРЕСУ УЧНЯ
    ════════════════════════════════════════════════════════════════════ */
 class StudentProgress {
@@ -268,9 +337,9 @@ class SoundFX {
     wrong() { this.play(200, 0.3, 'sawtooth'); }
     coin() { this.play(880, 0.08, 'sine'); setTimeout(() => this.play(1100, 0.08, 'sine'), 100); }
     loseLife() { this.play(300, 0.4, 'square'); }
-    bossDefeat() { this.play(523, 0.12, 'sine'); setTimeout(() => this.play(659, 0.12, 'sine'), 120); setTimeout(() => this.play(784, 0.15, 'sine'), 240); }
-    bossAppear() { this.play(400, 0.3, 'sawtooth'); setTimeout(() => this.play(600, 0.3, 'sawtooth'), 200); }
-    bossMiss() { this.play(150, 0.3, 'square'); }
+    wormDefeat() { this.play(523, 0.12, 'sine'); setTimeout(() => this.play(659, 0.12, 'sine'), 120); setTimeout(() => this.play(784, 0.15, 'sine'), 240); }
+    wormAppear() { this.play(400, 0.3, 'sawtooth'); setTimeout(() => this.play(600, 0.3, 'sawtooth'), 200); }
+    wormMiss() { this.play(150, 0.3, 'square'); }
     levelComplete() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => this.play(f, 0.15, 'sine'), i * 150)); }
     gameOver() { [400, 300, 200].forEach((f, i) => setTimeout(() => this.play(f, 0.4, 'sawtooth'), i * 250)); }
 }
@@ -294,33 +363,82 @@ const FM = {
    ════════════════════════════════════════════════════════════════════ */
 function show(id) { document.querySelectorAll('.scr').forEach(s => s.classList.remove('on')); $(id).classList.add('on'); }
 function toast(msg) { const t = $('toastEl'); t.textContent = msg; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 1200); }
-function parseXML(str) { const doc = new DOMParser().parseFromString(str,'text/xml'); return { title: doc.querySelector('title')?.textContent?.trim() || 'Урок', text: doc.querySelector('text')?.textContent || '', words: [...doc.querySelectorAll('word')].map(w => w.textContent.trim().toLowerCase()).filter(Boolean) }; }
+function parseLesson(data) {
+    // data — вже розпарсований об'єкт (з index.json або завантаженого .json файлу)
+    if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch(e) { toast('⚠️ Помилка читання файлу!'); return null; }
+    }
+    return {
+        title: data.title || 'Урок',
+        text:  data.text  || '',
+        words: (data.words || []).map(w => String(w).trim().toLowerCase()).filter(Boolean)
+    };
+}
 
 /* ════════════════════════════════════════════════════════════════════
    ПАРСЕР РІВНЯ
+   ════════════════════════════════════════════════════════════════════
+   ЛОГІКА РІВНІВ:
+   ⬆️ Великі літери (A-Z, А-Я) -> підйом на 1 рівень
+   ⬆️ Розділові знаки (.,!?) -> підйом на 1 рівень
+   ⬇️ Перехід на новий рядок (\\n, \\r) -> спуск на 1 рівень
+   ➡️ Малі літери -> залишаються на поточному рівні
    ════════════════════════════════════════════════════════════════════ */
 class LP {
     static parse(text) {
         const o = [];
-        let fl = 0;
+        let fl = 0; // поточний рівень (floor)
+        
         for (const ch of text) {
+            // ⬇️ ПЕРЕХІД НА НОВИЙ РЯДОК - СПУСК (Enter = ігровий елемент!)
             if (ch === '\n' || ch === '\r') {
                 const old = fl;
                 fl = Math.max(0, fl - 1);
-                o.push({ char: ch, type: 'checkpoint', req: false, floor: old, nf: fl });
-            } else if (ch === ' ') {
+                o.push({ 
+                    char: '\n',
+                    type: 'checkpoint',
+                    req: true,       // ← гравець МУСИТЬ натиснути Enter
+                    floor: old, 
+                    nf: fl 
+                });
+            } 
+            // ПРОБІЛ - РОЗРИВ
+            else if (ch === ' ') {
                 o.push({ char: ch, type: 'gap', req: false, floor: fl });
                 o.push({ char: '', type: 'rest', req: false, floor: fl });
-            } else if (/[.,!?]/.test(ch)) {
+            } 
+            // ⬆️ РОЗДІЛОВІ ЗНАКИ - ПІДЙОМ
+            else if (/[.,!?]/.test(ch)) {
                 const old = fl;
-                fl = Math.min(MF, fl + 1);
-                o.push({ char: ch, type: 'hit', req: false, floor: old, rise: fl });
-            } else if (/[A-ZА-ЯЇІЄҐ]/.test(ch)) {
-                const land = Math.min(MF, fl + 1);
-                o.push({ char: ch, type: 'step', req: true, base: fl, floor: land });
-                fl = land;
-            } else {
-                o.push({ char: ch, type: 'run', req: false, floor: fl });
+                fl = Math.min(MF, fl + 1); // Підйом на 1 рівень (не вище MF)
+                o.push({ 
+                    char: ch, 
+                    type: 'hit', 
+                    req: false, 
+                    floor: old, 
+                    rise: fl 
+                });
+            } 
+            // ⬆️ ВЕЛИКІ ЛІТЕРИ - ПІДЙОМ
+            else if (/[A-ZА-ЯЇІЄҐ]/.test(ch)) {
+                const land = Math.min(MF, fl + 1); // Підйом на 1 рівень
+                o.push({ 
+                    char: ch, 
+                    type: 'step', 
+                    req: true, 
+                    base: fl, 
+                    floor: land 
+                });
+                fl = land; // Оновлюємо поточний рівень
+            } 
+            // МАЛІ ЛІТЕРИ - ЗАЛИШАЮТЬСЯ НА МІСЦІ
+            else {
+                o.push({ 
+                    char: ch, 
+                    type: 'run', 
+                    req: false, 
+                    floor: fl 
+                });
             }
         }
         return o;
@@ -328,31 +446,34 @@ class LP {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   КЛАС БОСА
+   КЛАС ХРОБАКА
    ════════════════════════════════════════════════════════════════════ */
-class Boss {
-    constructor(word, ti) {
+class Worm {
+    constructor(word, ti, difficulty) {
         this.word = word;
         this.ti = ti;
         this.typed = 0;
         this.alive = true;
         this.fighting = false;
         this.el = null;
-        this.color = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff6bff','#ff9f43'][Math.floor(Math.random()*6)];
+        this.difficulty = difficulty;
+        this.wormType = getWormType(difficulty);
     }
     get cur() { return this.word[this.typed]; }
     get pct() { return this.typed / this.word.length; }
     hit() { this.typed++; if (this.typed >= this.word.length) this.alive = false; }
     miss() { this.typed = 0; }
+    getSpeed() { return this.wormType.speed; }
+    getInterval() { return this.wormType.interval; }
 }
 
 /* ════════════════════════════════════════════════════════════════════
    ІГРОВИЙ РУШІЙ
    ════════════════════════════════════════════════════════════════════ */
 class GE {
-    constructor(obs, bosses, coins, cb) {
+    constructor(obs, worms, coins, cb) {
         this.obs = [{char:'',type:'start',req:false,floor:0}, ...obs];
-        this.bosses = bosses;
+        this.worms = worms;
         this.coins = coins;
         this.cb = cb;
         this.i = 1;
@@ -366,37 +487,38 @@ class GE {
         this.tEnd = null;
         this.done = false;
         this.dead = false;
-        this.aboss = null;
-        while (this.cur && ['checkpoint','rest'].includes(this.cur.type)) this.i++;
+        this.aw = null;
+        while (this.cur && this.cur.type === 'rest') this.i++;
     }
     get cur() { return this.obs[this.i]; }
     get elapsed() { return Math.max(((this.tEnd||Date.now())-this.t0)/60000,1/3600); }
     get cpm() { return Math.round(this.ok/this.elapsed); }
     
-    key(ch, shift, space) {
+    key(ch, shift, space, isEnter=false) {
         if (this.done || this.dead) return;
-        if (this.aboss) {
-            const b = this.aboss;
-            if (ch === b.cur) { b.hit(); this.cb('bh',{b}); if(!b.alive){ this.bk++; this.aboss=null; sounds.bossDefeat(); this.cb('bd',{b}); } }
-            else { b.miss(); sounds.bossMiss(); this.cb('bm',{b}); }
+        if (this.aw) {
+            const w = this.aw;
+            if (ch === w.cur) { w.hit(); this.cb('wh',{w}); if(!w.alive){ this.bk++; this.aw=null; sounds.wormDefeat(); this.cb('wd',{w}); } }
+            else { w.miss(); sounds.wormMiss(); this.cb('wm',{w}); }
             return;
         }
         const t = this.cur;
-        if (!t || ['checkpoint','rest'].includes(t.type)) return;
-        const nb = this.bosses.find(b => b.alive && !b.fighting && b.ti > this.i && b.ti - this.i <= BOSS_DIST);
-        if (nb) { nb.fighting=true; this.aboss=nb; sounds.bossAppear(); this.cb('bs',{b:nb}); return; }
-        const good = this.validate(t,ch,shift,space);
+        if (!t || t.type === 'rest') return;  // checkpoint тепер інтерактивний
+        const nw = this.worms.find(w => w.alive && !w.fighting && w.ti > this.i && w.ti - this.i <= BOSS_DIST);
+        if (nw) { nw.fighting=true; this.aw=nw; sounds.wormAppear(); this.cb('ws',{w:nw}); return; }
+        const good = this.validate(t,ch,shift,space,isEnter);
         if (good) { this.ok++; sounds.correct(); this.cb('cor',{t}); this.chkCoin(this.i); this.adv(); }
         else { this.err++; this.lives--; sounds.wrong(); this.cb('wrg',{t}); if(this.lives<=0){ this.dead=true; this.tEnd=Date.now(); sounds.gameOver(); this.cb('over',{}); } }
     }
     
-    validate(t,ch,shift,space) {
+    validate(t,ch,sh,sp,isEnter=false) {
         switch(t.type) {
-            case 'gap': return space;
-            case 'step': return shift && ch === t.char;
-            case 'run': return !shift && ch === t.char;
-            case 'hit': return ch === t.char;
-            default: return ch === t.char;
+            case 'gap':        return sp;
+            case 'step':       return sh && ch === t.char;
+            case 'run':        return !sh && ch === t.char;
+            case 'hit':        return ch === t.char;
+            case 'checkpoint': return isEnter;   // Enter = спуск
+            default:           return ch === t.char;
         }
     }
     
@@ -412,12 +534,12 @@ class GE {
     
     adv() {
         this.i++;
-        while (this.cur && ['checkpoint','rest'].includes(this.cur.type)) { if (this.cur.type === 'checkpoint') this.cb('nl',{}); this.i++; }
+        while (this.cur && this.cur.type === 'rest') { this.i++; }
         if (this.i >= this.obs.length) { this.done=true; this.tEnd=Date.now(); sounds.levelComplete(); this.cb('fin',{}); }
         else this.cb('adv',{t:this.cur});
     }
     
-    bossTouch() { this.dead=true; this.tEnd=Date.now(); sounds.gameOver(); this.cb('over',{boss:true}); }
+    wormTouch() { this.dead=true; this.tEnd=Date.now(); sounds.gameOver(); this.cb('over',{worm:true}); }
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -429,8 +551,10 @@ class IC {
         this.fn = ev => {
             if (['Shift','Control','Alt','Meta','CapsLock','Tab'].includes(ev.key)) return;
             ev.preventDefault();
-            const sp = ev.code === 'Space';
-            this.e.key(sp ? ' ' : ev.key, ev.shiftKey, sp);
+            const sp      = ev.code === 'Space';
+            const isEnter = ev.key === 'Enter';
+            const ch      = sp ? ' ' : isEnter ? '\n' : ev.key;
+            this.e.key(ch, ev.shiftKey, sp, isEnter);
         };
     }
     on() { document.addEventListener('keydown', this.fn); }
@@ -444,10 +568,6 @@ function handSVG() {
     return `<svg viewBox="0 0 90 112"><rect class="fg" data-f="pinky" x="16" y="30" width="11" height="38" rx="5.5"/><rect class="fg" data-f="ring" x="29" y="14" width="12" height="54" rx="6"/><rect class="fg" data-f="mid" x="43" y="6" width="12" height="62" rx="6"/><rect class="fg" data-f="idx" x="57" y="16" width="12" height="52" rx="6"/><g transform="rotate(48 22 78)"><rect class="fg" data-f="thumb" x="2" y="71" width="34" height="15" rx="7.5"/></g><rect class="palm" x="14" y="58" width="62" height="46" rx="18"/></svg>`;
 }
 
-function bossSVG(color) {
-    return `<svg width="60" height="80" viewBox="0 0 60 80"><ellipse cx="30" cy="44" rx="22" ry="28" fill="${color}" stroke="#2a1a1a" stroke-width="2"/><ellipse cx="30" cy="34" rx="18" ry="6" fill="rgba(255,255,255,0.2)" stroke="rgba(0,0,0,0.1)" stroke-width="1"/><ellipse cx="30" cy="44" rx="18" ry="6" fill="rgba(255,255,255,0.15)" stroke="rgba(0,0,0,0.1)" stroke-width="1"/><ellipse cx="30" cy="54" rx="16" ry="5" fill="rgba(255,255,255,0.1)" stroke="rgba(0,0,0,0.1)" stroke-width="1"/><circle cx="30" cy="20" r="18" fill="${color}" stroke="#2a1a1a" stroke-width="2"/><ellipse cx="24" cy="17" rx="5" ry="6" fill="white" stroke="#2a1a1a" stroke-width="1.5"/><ellipse cx="36" cy="17" rx="5" ry="6" fill="white" stroke="#2a1a1a" stroke-width="1.5"/><circle cx="25" cy="16" r="3" fill="#2a1a1a"/><circle cx="37" cy="16" r="3" fill="#2a1a1a"/><circle cx="26" cy="15" r="1.5" fill="white"/><circle cx="38" cy="15" r="1.5" fill="white"/><path d="M24 24 Q30 28 36 24" stroke="#2a1a1a" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M18 20 L8 16" stroke="#2a1a1a" stroke-width="1.5" stroke-linecap="round"/><path d="M18 22 L6 22" stroke="#2a1a1a" stroke-width="1.5" stroke-linecap="round"/><path d="M42 20 L52 16" stroke="#2a1a1a" stroke-width="1.5" stroke-linecap="round"/><path d="M42 22 L54 22" stroke="#2a1a1a" stroke-width="1.5" stroke-linecap="round"/><rect x="12" y="62" width="4" height="10" rx="2" fill="${color}" stroke="#2a1a1a" stroke-width="1"/><rect x="22" y="66" width="4" height="8" rx="2" fill="${color}" stroke="#2a1a1a" stroke-width="1"/><rect x="34" y="66" width="4" height="8" rx="2" fill="${color}" stroke="#2a1a1a" stroke-width="1"/><rect x="44" y="62" width="4" height="10" rx="2" fill="${color}" stroke="#2a1a1a" stroke-width="1"/></svg>`;
-}
-
 /* ════════════════════════════════════════════════════════════════════
    РЕНДЕРИНГ
    ════════════════════════════════════════════════════════════════════ */
@@ -455,6 +575,7 @@ class Rnd {
     constructor(lang, bg) {
         this.lang = lang;
         this.bg = bg || 'space';
+        this.difficulty = G.difficulty || 5;
         this._applyBg();
         this._clouds();
         this._ridge($('rfar'), 150, 14);
@@ -464,7 +585,8 @@ class Rnd {
         $('hL').innerHTML = handSVG();
         $('hR').innerHTML = handSVG();
         this._initParallax();
-        this._setHero(G.hero || 'panda');
+        const heroId = G.hero || localStorage.getItem('selected_hero') || 'panda';
+        this._setHero(heroId);
     }
     
     _setHero(heroId) {
@@ -473,6 +595,7 @@ class Rnd {
         if (svgEl) {
             svgEl.innerHTML = hero.svg;
         }
+        G.hero = heroId;
     }
     
     _applyBg() {
@@ -553,7 +676,8 @@ class Rnd {
         const sl = mk('div','kk wide'); sl.dataset.sh='1'; sl.textContent='Shift';
         const sp = mk('div','kk sp'); sp.dataset.c=' '; sp.textContent='SPACE';
         const sr = mk('div','kk wide'); sr.dataset.sh='1'; sr.textContent='Shift';
-        bot.append(sl,sp,sr); p.appendChild(bot);
+        const en = mk('div','kk wide'); en.dataset.enter='1'; en.textContent='\u21b5 Enter';
+        bot.append(sl,sp,sr,en); p.appendChild(bot);
     }
     
     buildTrack(obs, coins) {
@@ -566,10 +690,10 @@ class Rnd {
             if (o.type === 'step') { w = TW * 0.5; bot = o.base * LH; h = (o.floor - o.base) * LH + 32; }
             else if (o.type === 'gap') { w = TW * 0.4; h = 12; bot = o.floor * LH; }
             else if (o.type === 'hit') { w = TW * 0.65; bot = o.floor * LH; h = o.rise > o.floor ? (o.rise - o.floor) * LH + 36 : 32; }
-            else if (o.type === 'checkpoint') { w = 18; bot = o.nf * LH; h = o.nf < o.floor ? (o.floor - o.nf) * LH + 14 : 14; }
+            else if (o.type === 'checkpoint') { w = TW * 0.75; bot = o.floor * LH; h = 32; }
             else { w = o.type === 'rest' ? TW * 0.6 : TW * 0.75; h = o.type === 'rest' ? 30 : 32; bot = (o.floor||0) * LH; }
             Object.assign(t.style, { left: i * TW + 'px', bottom: bot + 'px', width: w + 'px', height: h + 'px' });
-            if (o.type === 'checkpoint') t.textContent = '↓';
+            if (o.type === 'checkpoint') { t.textContent = '↵'; t.title = 'Enter'; }
             else if (!['gap','start','rest'].includes(o.type)) t.textContent = o.char;
             const lbl = mk('span','tlbl');
             lbl.textContent = { run:'', step:'Shift↑', gap:'Space', hit:'↑', checkpoint:'', start:'', rest:'' } [o.type] || '';
@@ -579,67 +703,82 @@ class Rnd {
         });
     }
     
-    spawnBoss(b, obs) {
-        const o = obs[b.ti], fl = o ? o.floor||0 : 0;
-        const w = mk('div','boss-e');
-        w.id = 'bw'+b.ti;
-        w.style.bottom = (90 + 32 + fl * LH) + 'px';
-        w.innerHTML = `
-            <div class="bhpbar"><div class="bhpfill" id="bhp${b.ti}" style="width:100%"></div></div>
-            ${bossSVG(b.color)}
-        `;
-        b.el = w;
-        $('stage').appendChild(w);
-        this.moveBoss(b, 1);
+    spawnWorm(worm, obs) {
+        const o = obs[worm.ti], fl = o ? o.floor||0 : 0;
+        const wrap = mk('div','worm-wrap');
+        wrap.id = 'ww'+worm.ti;
+        wrap.classList.add('worm-type-' + worm.wormType.type);
+        
+        const hp = mk('div','worm-hp'), hpf = mk('div','worm-hp-fill');
+        hpf.id = 'whp'+worm.ti;
+        hp.appendChild(hpf);
+        wrap.appendChild(hp);
+        
+        this._buildWormBody(wrap, worm);
+        wrap.style.bottom = (90 + 28 + fl * LH) + 'px';
+        worm.el = wrap;
+        $('stage').appendChild(wrap);
+        this.moveWorm(worm, 1);
     }
     
-    moveBoss(b, si) {
-        if (!b.el) return;
-        const sw = $('stage').offsetWidth;
-        b.el.style.left = (sw/2 - 32 + (b.ti - si) * TW) + 'px';
+    _buildWormBody(wrap, worm) {
+        [...wrap.children].forEach(c => { if(!c.classList.contains('worm-hp')) c.remove(); });
+        
+        const head = mk('div','w-head');
+        const el = mk('div','w-eye el'), er = mk('div','w-eye er');
+        el.innerHTML = '<div class="w-pupil"></div>';
+        er.innerHTML = '<div class="w-pupil"></div>';
+        head.append(el, er, mk('div','w-mouth'));
+        wrap.appendChild(head);
+        
+        worm.word.split('').forEach((ch, i) => {
+            const seg = mk('div', 'w-seg' + (i < worm.typed ? ' eaten' : ''));
+            seg.textContent = ch.toUpperCase();
+            seg.style.animationDelay = (i * 0.07) + 's';
+            wrap.appendChild(seg);
+        });
+        wrap.appendChild(mk('div','w-tail'));
     }
     
-    updBossHP(b) {
-        const f = $('bhp'+b.ti);
-        if (f) f.style.width = (b.pct * 100) + '%';
-        this.bossPanel(b);
-        const hpFill = $('bossHpFill');
-        if (hpFill) hpFill.style.width = (b.pct * 100) + '%';
+    refreshWorm(worm) {
+        if (!worm.el) return;
+        worm.el.querySelectorAll('.w-seg').forEach((s, i) => {
+            i < worm.typed ? s.classList.add('eaten') : s.classList.remove('eaten');
+        });
+        const f = $('whp'+worm.ti);
+        if (f) f.style.width = (worm.pct * 100) + '%';
+        this.bossPanel(worm);
     }
     
-    bossPanel(b) {
-        const pan = $('bpanel');
-        if (!b || !b.alive) { pan.classList.remove('on'); return; }
-        pan.classList.add('on');
-        const wordEl = $('bossWord');
-        if (wordEl) {
-            let displayWord = '';
-            for (let i = 0; i < b.word.length; i++) {
-                const letter = b.word[i].toUpperCase();
-                if (i < b.typed) {
-                    displayWord += `<span class="letter-ok">${letter}</span>`;
-                } else {
-                    displayWord += `<span class="letter-wait">${letter}</span>`;
-                }
-            }
-            wordEl.innerHTML = displayWord;
-        }
+    moveWorm(worm, si) {
+        if (!worm.el) return;
+        const stageWidth = $('stage').offsetWidth;
+        const pos = (stageWidth/2 - 32 + (worm.ti - si) * TW);
+        worm.el.style.left = pos + 'px';
     }
     
-    flashMiss() { 
-        const wordEl = $('bossWord');
-        if (wordEl) {
-            wordEl.style.animation = 'none';
-            setTimeout(() => wordEl.style.animation = 'shake 0.3s', 10);
-        }
-    }
-    
-    removeBoss(b) { 
-        b.el?.remove(); 
-        $('bpanel').classList.remove('on'); 
-    }
+    removeWorm(worm) { worm.el?.remove(); $('bpanel').classList.remove('on'); }
     
     lock(from, n, on) { for (let i=from; i<from+n; i++) { $('track').querySelector(`[data-i="${i}"]`)?.classList.toggle('locked', on); } }
+    
+    bossPanel(worm) {
+        const pan = $('bpanel'), lts = $('blets');
+        if (!worm || !worm.alive) { pan.classList.remove('on'); return; }
+        pan.classList.add('on');
+        lts.innerHTML = '';
+        for (let i = 0; i < worm.word.length; i++) {
+            const b = mk('div', 'bl' + (i < worm.typed ? ' ok' : ''));
+            b.textContent = i < worm.typed ? worm.word[i].toUpperCase() : '?';
+            lts.appendChild(b);
+        }
+    }
+    
+    flashMiss() {
+        $('blets').querySelectorAll('.bl').forEach(b => {
+            b.classList.add('bad');
+            setTimeout(() => b.classList.remove('bad'), 420);
+        });
+    }
     
     parallax(si) {
         const s = si * TW;
@@ -655,16 +794,17 @@ class Rnd {
         $('track').style.transform = `translateX(-${si * TW}px)`;
         this.parallax(si);
         $('pwrap').style.transform = `translate(-50%,-${this.flOf(e.obs[si]) * LH}px)`;
-        e.bosses.forEach(b => { if (b.alive) this.moveBoss(b, si); });
+        e.worms.forEach(w => { if (w.alive) this.moveWorm(w, si); });
     }
     
     hi(i) { $('track').querySelectorAll('.tile').forEach(t => t.classList.remove('cur')); $('track').querySelector(`[data-i="${i}"]`)?.classList.add('cur'); }
     done(i) { $('track').querySelector(`[data-i="${i}"]`)?.classList.add('done'); }
     rmCoin(i) { $('track').querySelector(`[data-i="${i}"] .coin-s`)?.remove(); }
     
-    prompt(obs, bossMode, bch) {
-        if (bossMode) { $('pkeyEl').textContent = '⚔️ БОС!'; this.kb(null,bch); this.hands(null,bch); return; }
+    prompt(obs, bm, bch) {
+        if (bm) { $('pkeyEl').textContent = '⚔️ ХРОБАК'; this.kb(null,bch); this.hands(null,bch); return; }
         if (!obs) { $('pkeyEl').textContent = '—'; this.kb(null); this.hands(null); return; }
+        if (obs.type === 'checkpoint') { $('pkeyEl').textContent = '↵ ENTER'; this.kb(obs); this.hands(null); return; }
         $('pkeyEl').textContent = obs.type==='gap' ? 'SPACE' : (obs.req ? 'Shift + ' : '') + obs.char;
         this.kb(obs); this.hands(obs);
     }
@@ -674,19 +814,21 @@ class Rnd {
     
     anim(type, ok) {
         const p = $('player');
-        p.classList.remove('js','jg','fail');
+        p.classList.remove('js','jg','jd','fail');
         this.running(false);
         if (!ok) { p.classList.add('fail'); setTimeout(()=>{ p.classList.remove('fail'); this.running(true); },280); return; }
         if (type === 'step') p.classList.add('js');
         else if (type === 'gap') p.classList.add('jg');
+        else if (type === 'checkpoint') p.classList.add('jd');
         else this.running(true);
-        setTimeout(()=>{ p.classList.remove('js','jg'); this.running(true); setTimeout(()=>this.running(false),160); },170);
+        setTimeout(()=>{ p.classList.remove('js','jg','jd'); this.running(true); setTimeout(()=>this.running(false),160); },170);
     }
     
     kb(obs, bch) {
         $('kbrows').querySelectorAll('.kk').forEach(k => { k.classList.remove('a','kr','ks','kg','kh','kb'); });
         if (bch) { $('kbrows').querySelector(`.kk[data-c="${bch.toLowerCase()}"]`)?.classList.add('a','kb'); return; }
         if (!obs) return;
+        if (obs.type === 'checkpoint') { $('kbrows').querySelector('[data-enter]')?.classList.add('a','kg'); return; }
         const cl = { run:'kr', step:'ks', gap:'kg', hit:'kh' } [obs.type];
         if (obs.type === 'gap') { $('kbrows').querySelector('[data-c=" "]')?.classList.add('a','kg'); return; }
         $('kbrows').querySelector(`.kk[data-c="${obs.char.toLowerCase()}"]`)?.classList.add('a',cl);
@@ -789,26 +931,26 @@ function _getBgStyle(bgId) {
    ІНІЦІАЛІЗАЦІЯ СТОРІНКИ УЧНЯ
    ════════════════════════════════════════════════════════════════════ */
 function initStudentPage() {
+    const savedHero = localStorage.getItem('selected_hero') || 'panda';
+    
     const heroGrid = document.getElementById('heroGrid');
     if (heroGrid) {
         heroGrid.querySelectorAll('.hero-opt').forEach(el => {
-            el.addEventListener('click', () => {
-                heroGrid.querySelectorAll('.hero-opt').forEach(h => h.classList.remove('active'));
-                el.classList.add('active');
-                G.hero = el.dataset.hero;
-                localStorage.setItem('selected_hero', G.hero);
+            el.addEventListener('click', function() {
+                const heroId = this.dataset.hero;
+                setHero(heroId);
+                if (rnd) {
+                    rnd._setHero(heroId);
+                }
             });
+            if (el.dataset.hero === savedHero) {
+                el.classList.add('active');
+            }
         });
-        const savedHero = localStorage.getItem('selected_hero') || 'panda';
-        const heroOpt = heroGrid.querySelector(`[data-hero="${savedHero}"]`);
-        if (heroOpt) {
-            heroOpt.classList.add('active');
-            G.hero = savedHero;
-        } else {
-            heroGrid.querySelector('[data-hero="panda"]').classList.add('active');
-            G.hero = 'panda';
-        }
     }
+    
+    G.hero = savedHero;
+    setHero(savedHero);
     
     const studentId = G.studentId || 'default';
     studentProgress = new StudentProgress(studentId);
@@ -855,7 +997,7 @@ function updateProgressDisplay() {
                     <div class="tip-row"><span class="tip-label">❌ Помилок</span><span class="tip-value ${s.err > 5 ? 'bad' : 'good'}">${s.err || 0}</span></div>
                     <div class="tip-row"><span class="tip-label">⚡ CPM</span><span class="tip-value">${s.cpm || 0}</span></div>
                     <div class="tip-row"><span class="tip-label">🪙 Монет</span><span class="tip-value">${s.coins || 0}</span></div>
-                    <div class="tip-row"><span class="tip-label">⚔️ Босів</span><span class="tip-value">${s.bosses || 0}</span></div>
+                    <div class="tip-row"><span class="tip-label">🐛 Хробаків</span><span class="tip-value">${s.bosses || 0}</span></div>
                     <div class="tip-row"><span class="tip-label">❤️ Життів</span><span class="tip-value">${s.lives || 0}</span></div>
                 `;
                 item.appendChild(tip);
@@ -869,7 +1011,13 @@ function updateProgressDisplay() {
    UI ПОТІК
    ════════════════════════════════════════════════════════════════════ */
 window.addEventListener('DOMContentLoaded', async () => {
-    try { const r = await fetch('index.json'); G.index = await r.json(); } catch { G.index = null; }
+    try { 
+        const r = await fetch('index.json'); 
+        G.index = await r.json(); 
+    } catch { 
+        G.index = null; 
+    }
+    
     const p = new URLSearchParams(window.location.search);
     if (p.get('role') === 'student') {
         G.lang = p.get('lang') || 'ua';
@@ -878,21 +1026,54 @@ window.addEventListener('DOMContentLoaded', async () => {
         const lid = p.get('lid');
         const lesson = G.index?.[G.lang]?.[G.grade]?.find(l => l.id === lid);
         G.lessonFile = lesson?.file || null;
+        G.lessonData = null;
         G.lessonTitle = lesson?.title || 'Урок';
         $('studentBadge').textContent = `${G.lang === 'ua' ? '🇺🇦' : '🇬🇧'} ${G.grade} клас`;
         $('studentTitle').textContent = G.lessonTitle;
-        $('studentSub').textContent = lesson ? `Урок: ${lesson.title}` : 'Оберіть XML файл';
+        $('studentSub').textContent = lesson ? `Урок: ${lesson.title}` : 'Оберіть JSON файл';
         $('studentDiff').textContent = G.difficulty;
+        const wt = getWormType(G.difficulty);
+        $('studentDiffType').textContent = `(${wt.name})`;
         initStudentPage();
         show('s-student');
     } else {
         show('s-lang');
-        const savedBg = localStorage.getItem('keyboard-bg');
+        // Підключаємо кліки по фонах
+    document.querySelectorAll('.bg-opt').forEach(btn => {
+        btn.addEventListener('click', () => selectBg(btn.dataset.bg));
+    });
+    const savedBg = localStorage.getItem('keyboard-bg');
         if (savedBg && BGS.includes(savedBg)) {
             G.bg = savedBg;
             selectBg(savedBg);
         }
     }
+    
+    // Ініціалізація повзунка складності
+    const diffSlider = document.getElementById('difficultySlider');
+    const diffValue = document.getElementById('diffValue');
+    const diffType = document.getElementById('diffType');
+    
+    if (diffSlider && diffValue && diffType) {
+        diffSlider.addEventListener('input', function() {
+            const val = parseInt(this.value);
+            diffValue.textContent = val;
+            const wt = getWormType(val);
+            diffType.innerHTML = `🐛 Тип: <strong>${wt.name} хробак</strong>`;
+            G.difficulty = val;
+        });
+        const initialVal = parseInt(diffSlider.value) || 5;
+        diffValue.textContent = initialVal;
+        const wt = getWormType(initialVal);
+        diffType.innerHTML = `🐛 Тип: <strong>${wt.name} хробак</strong>`;
+        G.difficulty = initialVal;
+    }
+});
+
+// Кнопка відкриття редактора
+document.getElementById('openCreator')?.addEventListener('click', () => {
+    initCreator();
+    show('s-creator');
 });
 
 ['ua','en'].forEach(lang => {
@@ -936,9 +1117,8 @@ function selectGrade(n) {
         card.onclick = () => {
             document.querySelectorAll('.lesson-card').forEach(c => c.classList.remove('sel'));
             card.classList.add('sel');
-            G.lessonFile = l.file;
+            G.lessonFile = l.file; G.lessonData = null; G.data = null;
             G.lessonTitle = l.title;
-            G.data = null;
             const url = new URL(window.location.href);
             url.searchParams.set('role','student');
             url.searchParams.set('lang',G.lang);
@@ -956,24 +1136,6 @@ function selectGrade(n) {
 
 $('backToGrade').onclick = () => show('s-grade');
 
-const diffSlider = $('difficultySlider');
-const diffLabel = $('diffLabel');
-if (diffSlider && diffLabel) {
-    diffSlider.addEventListener('input', () => {
-        G.difficulty = parseInt(diffSlider.value);
-        diffLabel.textContent = G.difficulty;
-        const linkText = $('linkText');
-        if (linkText) {
-            try {
-                const url = new URL(linkText.textContent);
-                url.searchParams.set('diff', G.difficulty);
-                linkText.textContent = url.toString();
-            } catch (e) {}
-        }
-    });
-    G.difficulty = parseInt(diffSlider.value);
-}
-
 $('copyBtn').onclick = () => navigator.clipboard?.writeText($('linkText').textContent).then(() => toast('Посилання скопійовано!'));
 
 $('teacherPlay').onclick = loadAndPlay;
@@ -984,34 +1146,60 @@ $('fileStudent').addEventListener('change', e => loadFromFile(e.target.files[0])
 
 async function loadAndPlay() {
     if (G.data) { launchLevel(G.data); return; }
+    if (G.lessonData) { G.data = parseLesson(G.lessonData); launchLevel(G.data); return; }
     if (!G.lessonFile) {
-        const msg = G.lang === 'ua' ? 'Оберіть урок або XML файл' : 'Select a lesson or XML file';
+        const msg = G.lang === 'ua' ? 'Оберіть урок або JSON файл' : 'Select a lesson or JSON file';
         alert(msg);
         return;
     }
     try {
         const r = await fetch(G.lessonFile);
         if (!r.ok) throw 0;
-        G.data = parseXML(await r.text());
+        const raw = await r.json();
+        G.data = parseLesson(raw);
         launchLevel(G.data);
     } catch {
-        toast(G.lang === 'ua' ? '⚠️ Оберіть XML файл через кнопку нижче' : '⚠️ Pick XML file using the button below');
+        toast(G.lang === 'ua' ? '⚠️ Оберіть JSON файл через кнопку нижче' : '⚠️ Pick JSON file using the button below');
+        const fNote = document.getElementById('lessonActions');
+        if (fNote) fNote.style.display = 'flex';
     }
 }
 
 async function loadFromFile(f) {
     if (!f) return;
-    G.data = parseXML(await f.text());
+    const text = await f.text();
+    let data;
+    if (f.name.endsWith('.json')) {
+        try { data = JSON.parse(text); } catch { toast('⚠️ Невалідний JSON'); return; }
+    } else {
+        // підтримка legacy XML  
+        try {
+            const doc = new DOMParser().parseFromString(text, 'text/xml');
+            if (doc.querySelector('parsererror')) throw new Error('bad xml');
+            data = {
+                title: doc.querySelector('title')?.textContent?.trim() || 'Урок',
+                text:  doc.querySelector('text')?.textContent || '',
+                words: [...doc.querySelectorAll('word')].map(w => w.textContent.trim().toLowerCase()).filter(Boolean)
+            };
+        } catch { toast('⚠️ Помилка читання файлу'); return; }
+    }
+    // Автовизначення мови якщо не встановлена
+    if (!G.lang) {
+        const ua = (data.text.match(/[а-яїієґ]/gi) || []).length;
+        const en = (data.text.match(/[a-z]/gi)      || []).length;
+        G.lang = ua >= en ? 'ua' : 'en';
+    }
+    G.data = parseLesson(data);
     launchLevel(G.data);
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   ЗАПУСК РІВНЯ ТА ІГРОВІ ПОДІЇ
+   ЗАПУСК РІВНЯ
    ════════════════════════════════════════════════════════════════════ */
 function launchLevel(data) {
     bossTmrs.forEach(clearInterval);
     bossTmrs = [];
-    $('stage').querySelectorAll('.boss-e').forEach(e => e.remove());
+    $('stage').querySelectorAll('.worm-wrap').forEach(e => e.remove());
     
     const raw = LP.parse(data.text);
     const obs = [{char:'',type:'start',req:false,floor:0}, ...raw];
@@ -1026,17 +1214,17 @@ function launchLevel(data) {
     });
     
     const ats = obs.map((o,i) => ({o,i})).filter(({o}) => o.type === 'run');
-    const bosses = (data.words||[]).map((w,wi) => {
+    const worms = (data.words||[]).map((w,wi) => {
         const slot = Math.floor((wi+1)*ats.length/((data.words.length||1)+1));
         const ti = ats[Math.min(slot,ats.length-1)]?.i || 10+wi*20;
-        return new Boss(w,ti);
+        return new Worm(w, ti, G.difficulty);
     });
     
-    eng = new GE(raw,bosses,coins,onEv);
+    eng = new GE(raw,worms,coins,onEv);
     eng.obs = obs;
     rnd = new Rnd(G.lang, G.bg);
     rnd.buildTrack(obs, coins);
-    bosses.forEach(b => rnd.spawnBoss(b, obs));
+    worms.forEach(w => rnd.spawnWorm(w, obs));
     rnd.hi(eng.i);
     rnd.prompt(eng.cur);
     rnd.cam(eng);
@@ -1049,83 +1237,111 @@ function launchLevel(data) {
     show('sg');
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   ІГРОВІ ПОДІЇ
+   ════════════════════════════════════════════════════════════════════ */
 function onEv(ev, pl) {
+    const ua = G.lang === 'ua';
     switch(ev) {
-        case 'cor': rnd.done(eng.i); rnd.anim(pl.t.type,true); rnd.warn(false); rnd.cam(eng); break;
-        case 'wrg': rnd.anim(pl.t.type,false); rnd.warn(true); toast('❌ Невірна клавіша!'); break;
-        case 'nl': toast('↓ Новий рядок'); break;
+        case 'cor':
+            rnd.done(eng.i); rnd.anim(pl.t.type,true); rnd.warn(false); rnd.cam(eng);
+            if (pl.t.type === 'checkpoint') toast(ua?'↵ Новий рядок':'↵ New line');
+            break;
+        case 'wrg':
+            rnd.anim(pl.t.type,false); rnd.warn(true);
+            toast(pl.t.type==='checkpoint' ? (ua?'❌ Натисни Enter!':'❌ Press Enter!') : (ua?'❌ Невірна клавіша!':'❌ Wrong key!'));
+            break;
+        case 'nl': toast(ua?'↓ Новий рядок':'↓ New line'); break;
         case 'adv':
             rnd.done(eng.i-1); rnd.hi(eng.i); rnd.cam(eng);
-            const nb = eng.bosses.find(b => b.alive && !b.fighting && b.ti > eng.i && b.ti - eng.i <= BOSS_DIST);
-            if (nb) {
-                nb.fighting=true;
-                eng.aboss=nb;
+            const nw = eng.worms.find(w => w.alive && !w.fighting && w.ti > eng.i && w.ti - eng.i <= BOSS_DIST);
+            if (nw) {
+                nw.fighting=true;
+                eng.aw=nw;
                 rnd.lock(eng.i, BOSS_DIST, true);
-                rnd.prompt(null, true, nb.cur);
-                startBossTimer(nb);
-                rnd.bossPanel(nb);
-                rnd.updBossHP(nb);
+                rnd.prompt(null, true, nw.cur);
+                startWormTimer(nw);
+                rnd.bossPanel(nw);
+                rnd.refreshWorm(nw);
             } else {
-                rnd.prompt(eng.cur, !!eng.aboss, eng.aboss?.cur);
+                rnd.prompt(eng.cur, !!eng.aw, eng.aw?.cur);
             }
             break;
-        case 'coin': rnd.rmCoin(eng.i-1); rnd.coinsUI(eng.cbank,eng.ctotal); toast(`🪙 Монета! ${eng.cbank}/3`); break;
+        case 'coin': rnd.rmCoin(eng.i-1); rnd.coinsUI(eng.cbank,eng.ctotal); toast(`🪙 ${ua?'Монета':'Coin'}! ${eng.cbank}/3`); break;
         case 'lu': rnd.coinsUI(eng.cbank,eng.ctotal); toast('❤️ +1 Життя!'); break;
-        case 'bs':
+        case 'ws':
             rnd.lock(eng.i, BOSS_DIST, true);
-            rnd.prompt(null, true, pl.b.cur);
-            startBossTimer(pl.b);
-            rnd.bossPanel(pl.b);
-            rnd.updBossHP(pl.b);
+            rnd.prompt(null, true, pl.w.cur);
+            startWormTimer(pl.w);
+            rnd.bossPanel(pl.w);
+            rnd.refreshWorm(pl.w);
             break;
-        case 'bh': rnd.updBossHP(pl.b); rnd.kb(null, pl.b.alive ? pl.b.cur : null); rnd.hands(null, pl.b.alive ? pl.b.cur : null); break;
-        case 'bm': rnd.flashMiss(); rnd.updBossHP(pl.b); toast('💥 Промах! Починай спочатку!'); break;
-        case 'bd':
+        case 'wh':
+            rnd.refreshWorm(pl.w);
+            rnd.kb(null, pl.w.alive ? pl.w.cur : null);
+            rnd.hands(null, pl.w.alive ? pl.w.cur : null);
+            break;
+        case 'wm':
+            rnd.flashMiss();
+            rnd.refreshWorm(pl.w);
+            toast(ua?'💥 Промах! Починай спочатку!':'💥 Miss! Start over!');
+            break;
+        case 'wd':
             bossTmrs.forEach(clearInterval);
             bossTmrs = [];
-            rnd.removeBoss(pl.b);
+            rnd.removeWorm(pl.w);
             rnd.lock(eng.i, BOSS_DIST, false);
-            toast('⚔️ Бос переможений!');
-            eng.aboss = null;
+            toast(ua?'🐛 Хробака переможено!':'🐛 Worm defeated!');
+            eng.aw = null;
             rnd.prompt(eng.cur);
             break;
         case 'fin': endGame(true); break;
-        case 'over': endGame(false, pl.boss); break;
+        case 'over': endGame(false, pl.worm); break;
     }
     rnd.hud(eng);
 }
 
-function startBossTimer(b) {
+/* ════════════════════════════════════════════════════════════════════
+   ТАЙМЕР ХРОБАКА (З ВПЛИВОМ СКЛАДНОСТІ)
+   ════════════════════════════════════════════════════════════════════ */
+function startWormTimer(worm) {
     bossTmrs.forEach(clearInterval);
     bossTmrs = [];
-    const diff = G.difficulty || 5;
-    const minInterval = 300;
-    const maxInterval = BOSS_TICK;
-    const normalizedDiff = (diff - 1) / 9;
-    const interval = maxInterval - normalizedDiff * (maxInterval - minInterval);
+    
+    let interval = worm.getInterval();
+    
+    // Якщо складність 0-2 - хробак не рухається
+    if (worm.difficulty <= 2) {
+        const t = setInterval(() => {}, 999999);
+        bossTmrs.push(t);
+        return;
+    }
+    
+    console.log(`🐛 Хробак: ${worm.word}, тип: ${worm.wormType.name}, інтервал: ${interval}мс`);
     
     const t = setInterval(() => {
-        if (!b.alive) { clearInterval(t); return; }
-        if (diff > 1) {
-            b.ti--;
-            rnd.moveBoss(b, eng.i - 1);
-            if (b.ti <= eng.i) {
-                clearInterval(t);
-                eng.bossTouch();
-            }
+        if (!worm.alive) { clearInterval(t); return; }
+        worm.ti--;
+        rnd.moveWorm(worm, eng.i - 1);
+        if (worm.ti <= eng.i) {
+            clearInterval(t);
+            eng.wormTouch();
         }
     }, interval);
     bossTmrs.push(t);
 }
 
-function endGame(ok, bossKill) {
+/* ════════════════════════════════════════════════════════════════════
+   ЗАВЕРШЕННЯ ГРИ
+   ════════════════════════════════════════════════════════════════════ */
+function endGame(ok, wormKill) {
     inp.off();
     rnd.running(false);
     bossTmrs.forEach(clearInterval);
     bossTmrs = [];
     
     if (ok && G.lessonFile && studentProgress) {
-        const lessonId = G.lessonFile.replace(/\.xml$/, '').replace(/^.*[\\\/]/, '');
+        const lessonId = G.lessonFile ? G.lessonFile.replace(/^.*\//,'').replace(/\.json$/,'') : 'custom';
         studentProgress.completeLesson(lessonId, {
             ok: eng.ok,
             err: eng.err,
@@ -1139,8 +1355,8 @@ function endGame(ok, bossKill) {
     }
     
     const ua = G.lang === 'ua';
-    $('resTitle').textContent = bossKill ?
-        (ua ? '🐛 Бос дістав тебе! 💀' : '🐛 Boss got you! 💀') :
+    $('resTitle').textContent = wormKill ?
+        (ua ? '🐛 Хробак тебе з\'їв! 💀' : '🐛 The worm got you! 💀') :
         ok ?
         (ua ? '🎉 Рівень пройдено! 🎉' : '🎉 Level complete! 🎉') :
         (ua ? '💥 Гра закінчена 💥' : '💥 Game over 💥');
@@ -1151,6 +1367,92 @@ function endGame(ok, bossKill) {
     $('rLives').textContent = Math.max(eng.lives, 0);
     $('rBoss').textContent = eng.bk;
     show('s-result');
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   ✏️ РЕДАКТОР УРОКІВ — ГЕНЕРАЦІЯ XML
+   ════════════════════════════════════════════════════════════════════ */
+
+function initCreator() {
+    // Лічильник символів
+    $('cr-text').addEventListener('input', updateCreatorStats);
+    updateCreatorStats();
+
+    // Перший порожній рядок для слова
+    addCreatorWord('');
+
+    $('cr-add-word').onclick = () => addCreatorWord('');
+    $('cr-play').onclick = playCreatedLesson;
+    $('cr-download').onclick = downloadCreatedXML;
+    $('backFromCreator').onclick = () => show('s-lang');
+}
+
+function updateCreatorStats() {
+    const t = $('cr-text').value;
+    const chars = t.length;
+    const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+    const lines = t.split('\n').length;
+    $('cr-stats').textContent = `${chars} символів · ${words} слів · ${lines} рядків`;
+}
+
+function addCreatorWord(val) {
+    const cont = $('cr-words');
+    const row = mk('div', 'word-row');
+    const inp = mk('input', 'creator-input word-input');
+    inp.type = 'text';
+    inp.placeholder = 'Введіть слово (наприклад: природа)...';
+    inp.value = val || '';
+    const del = mk('button', 'btn sm word-del');
+    del.textContent = '✕';
+    del.type = 'button';
+    del.onclick = () => row.remove();
+    row.append(inp, del);
+    cont.appendChild(row);
+    inp.focus();
+}
+
+function getCreatorData() {
+    const title = $('cr-title').value.trim() || 'Власний урок';
+    const text = $('cr-text').value;
+    if (!text.trim()) { toast('⚠️ Введіть текст уроку!'); return null; }
+    const words = [...$('cr-words').querySelectorAll('.word-input')]
+        .map(i => i.value.trim().toLowerCase()).filter(Boolean);
+    return { title, text, words };
+}
+
+function generateJSON(title, text, words) {
+    // JSON.stringify надійно екранує \n, лапки та юнікод —
+    // жодних проблем із нормалізацією переносів рядків, на відміну від XML.
+    return JSON.stringify({ title, text, words }, null, 2);
+}
+
+function downloadCreatedXML() {
+    const data = getCreatorData();
+    if (!data) return;
+    const json = generateJSON(data.title, data.text, data.words);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (data.title.replace(/[^a-zA-Zа-яА-ЯїієґЇІЄҐ0-9]/g, '_').toLowerCase() || 'lesson') + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    $('cr-file-note').classList.add('show');
+    toast('📥 JSON файл завантажено!');
+}
+
+function playCreatedLesson() {
+    const data = getCreatorData();
+    if (!data) return;
+    // Автовизначення мови: якщо переважають кириличні — ua
+    const ua = (data.text.match(/[а-яїієґ]/gi) || []).length;
+    const en = (data.text.match(/[a-z]/gi) || []).length;
+    G.lang = G.lang || (ua >= en ? 'ua' : 'en');
+    G.data = data;
+    launchLevel(G.data);
 }
 
 $('retryBtn').onclick = () => launchLevel(G.data);

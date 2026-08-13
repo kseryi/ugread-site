@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🐼 Клавіатурний тренажер — Панда Платформер</title>
+    <title>🐛 Клавіатурний тренажер — Хробаки</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,13 +11,61 @@
     <!-- ① МОВА -->
     <!-- ════════════════════════════════════════════════════════════════ -->
     <section id="s-lang" class="scr on">
-        <h1>🐼 Клавіатурний тренажер</h1>
+        <h1>🐛 Клавіатурний тренажер</h1>
         <p class="sub">Оберіть мову навчання — це визначає тексти уроків і розкладку клавіатури</p>
         <div class="row">
             <div class="flag-btn" id="flag-ua"><span>🇺🇦</span>Українська</div>
             <div class="flag-btn" id="flag-en"><span>🇬🇧</span>English</div>
         </div>
         <button class="btn theme-toggle" id="themeToggle">🎨 Змінити тему</button>
+        <button class="btn creator-btn" id="openCreator">✏️ Створити власний урок</button>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- ⑦ РЕДАКТОР УРОКІВ (ВЧИТЕЛЬ) -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="s-creator" class="scr" style="position:relative">
+        <button class="back" id="backFromCreator">←</button>
+        <h1>✏️ Створити власний урок</h1>
+
+        <div class="creator-form">
+
+            <div class="creator-field">
+                <label>📚 Назва уроку</label>
+                <input type="text" id="cr-title" class="creator-input" placeholder="Введіть назву уроку...">
+            </div>
+
+            <div class="creator-guide">
+                <span class="guide-item run">а</span> рівна дорога &nbsp;
+                <span class="guide-item step">А</span> підйом (Shift) &nbsp;
+                <span class="guide-item gap">__</span> прірва &nbsp;
+                <span class="guide-item hit">.,</span> підйом+фіксація &nbsp;
+                <span class="guide-item down">↵</span> Enter — натисни для переходу на новий рядок (спуск)
+            </div>
+
+            <div class="creator-field">
+                <label>📝 Текст рівня</label>
+                <textarea id="cr-text" class="creator-textarea" rows="6"
+                    placeholder="Введіть текст уроку...&#10;Кожен новий рядок — спуск на рівень нижче.&#10;Великі літери — підйом. Пробіл — прірва.&#10;Приклад:&#10;мама і тато.&#10;Ми велика родина!"></textarea>
+                <div class="creator-stats" id="cr-stats">0 символів</div>
+            </div>
+
+            <div class="creator-field">
+                <label>🐛 Словничок — боси рівня (необов'язково)</label>
+                <div class="creator-words" id="cr-words"></div>
+                <button class="btn sm" id="cr-add-word" style="align-self:flex-start;margin-top:4px">+ Додати слово-боса</button>
+            </div>
+
+            <div class="file-note" id="cr-file-note">
+                💡 Завантажений JSON можна відкрити в грі через кнопку <strong>«📂 Обрати JSON вручну»</strong> на екрані вибору уроку.
+            </div>
+
+            <div class="row">
+                <button class="btn primary" id="cr-play">▶ Грати зараз</button>
+                <button class="btn" id="cr-download">📥 Завантажити JSON</button>
+            </div>
+
+        </div>
     </section>
 
     <!-- ════════════════════════════════════════════════════════════════ -->
@@ -27,6 +75,23 @@
         <button class="back" id="backToLang">←</button>
         <h1 id="gradeTitle">Оберіть клас</h1>
         <div class="grade-grid" id="gradeGrid"></div>
+        
+        <!-- ПОВЗУНОК СКЛАДНОСТІ -->
+        <div class="difficulty-section">
+            <label>
+                🐛 Складність хробаків
+                <span><span class="diff-value" id="diffValue">5</span>/10</span>
+            </label>
+            <input type="range" id="difficultySlider" min="0" max="10" value="5" step="1">
+            <div class="diff-labels">
+                <span>🐛 Нерухомий</span>
+                <span>🐛 Повільний</span>
+                <span>🐛 Середній</span>
+                <span>🐛 Швидкий</span>
+            </div>
+            <div class="diff-type" id="diffType">🐛 Тип: <strong>Середній хробак</strong></div>
+        </div>
+        
         <div class="bg-preview" id="bgPreview">
             <div class="bg-preview-inner" id="bgPreviewInner">
                 <div class="bg-preview-label">🎨 Попередній перегляд фону</div>
@@ -49,14 +114,6 @@
         <h1 id="lessonTitle">Оберіть урок</h1>
         <div class="lesson-list" id="lessonList"></div>
         <div id="lessonActions" style="display:none;flex-direction:column;gap:12px;align-items:center;width:100%;max-width:540px;">
-            <div class="difficulty-control">
-                <label>🐛 Складність боса: <span id="diffLabel">5</span></label>
-                <input type="range" id="difficultySlider" min="1" max="10" value="5" step="1">
-                <div class="diff-hint">
-                    <span>1 - бос не рухається</span>
-                    <span>10 - максимальна швидкість</span>
-                </div>
-            </div>
             <div class="link-box"><span id="linkText"></span>
                 <button class="btn sm" id="copyBtn">Копіювати</button>
             </div>
@@ -64,8 +121,8 @@
                 <button class="btn primary" id="teacherPlay">▶ Почати гру</button>
             </div>
             <label class="file-label">
-                <input type="file" id="fileTeacher" accept=".xml">
-                📂 Обрати XML вручну (якщо file://)
+                <input type="file" id="fileTeacher" accept=".json">
+                📂 Обрати JSON вручну (якщо file://)
             </label>
         </div>
     </section>
@@ -82,31 +139,17 @@
         <div class="hero-selector">
             <label class="hero-label">🦸 Оберіть героя:</label>
             <div class="hero-grid" id="heroGrid">
-                <div class="hero-opt active" data-hero="panda">
-                    <span class="hero-icon">🐼</span>
-                    <span class="hero-name">Панда</span>
-                </div>
-                <div class="hero-opt" data-hero="knight">
-                    <span class="hero-icon">⚔️</span>
-                    <span class="hero-name">Лицар</span>
-                </div>
-                <div class="hero-opt" data-hero="elf">
-                    <span class="hero-icon">🧝</span>
-                    <span class="hero-name">Ельф</span>
-                </div>
-                <div class="hero-opt" data-hero="viking">
-                    <span class="hero-icon">⚔️</span>
-                    <span class="hero-name">Вікінг</span>
-                </div>
-                <div class="hero-opt" data-hero="princess">
-                    <span class="hero-icon">👸</span>
-                    <span class="hero-name">Принцеса</span>
-                </div>
+                <div class="hero-opt active" data-hero="panda"><span class="hero-icon">🐼</span><span class="hero-name">Панда</span></div>
+                <div class="hero-opt" data-hero="knight"><span class="hero-icon">⚔️</span><span class="hero-name">Лицар</span></div>
+                <div class="hero-opt" data-hero="elf"><span class="hero-icon">🧝</span><span class="hero-name">Ельф</span></div>
+                <div class="hero-opt" data-hero="viking"><span class="hero-icon">⚔️</span><span class="hero-name">Вікінг</span></div>
+                <div class="hero-opt" data-hero="princess"><span class="hero-icon">👸</span><span class="hero-name">Принцеса</span></div>
             </div>
         </div>
         
         <div class="difficulty-display">
             🐛 Складність: <span id="studentDiff">5</span>/10
+            <span id="studentDiffType" style="margin-left:8px;font-size:12px;color:var(--dim);">(Середній)</span>
         </div>
         
         <!-- ШКАЛА ПРОГРЕСУ -->
@@ -120,8 +163,8 @@
         
         <button class="btn primary" id="studentPlay">▶ Почати гру</button>
         <label class="file-label">
-            <input type="file" id="fileStudent" accept=".xml">
-            📂 Обрати XML вручну (якщо file://)
+            <input type="file" id="fileStudent" accept=".json">
+            📂 Обрати JSON вручну (якщо file://)
         </label>
         <button class="btn theme-toggle" id="themeToggle2">🎨 Змінити тему</button>
     </section>
@@ -149,17 +192,11 @@
             <div class="ridge rnear" id="rnear"></div>
             <div class="trees" id="trees"></div>
             <div class="ground"></div>
-            <div class="prompt" id="promptEl"><span>Натисніть:</span><span class="pkey" id="pkeyEl">—</span></div>
+            <div class="prompt" id="promptEl"><span>→</span><span class="pkey" id="pkeyEl">—</span></div>
             
             <div class="bpanel" id="bpanel">
-                <div class="bptitle">⚔️ БОС!</div>
-                <div class="boss-word-display" id="bossWordDisplay">
-                    <span class="boss-word-label">Ти переможеш якщо введеш правильно:</span>
-                    <span class="boss-word" id="bossWord">—</span>
-                </div>
-                <div class="boss-hp-bar">
-                    <div class="boss-hp-fill" id="bossHpFill" style="width:100%"></div>
-                </div>
+                <div class="bptitle">⚔️ ХРОБАК АТАКУЄ!</div>
+                <div class="blets" id="blets"></div>
             </div>
             
             <div class="toast" id="toastEl"></div>
@@ -181,14 +218,14 @@
     <!-- ⑥ РЕЗУЛЬТАТ -->
     <!-- ════════════════════════════════════════════════════════════════ -->
     <section id="s-result" class="scr">
-        <h1 id="resTitle">Рівень пройдено!</h1>
+        <h1 id="resTitle">🎉</h1>
         <div class="resbox">
             <div class="rrow"><span>Правильних символів</span><span id="rTotal">0</span></div>
             <div class="rrow"><span>Символів за хвилину</span><span id="rCpm">0</span></div>
             <div class="rrow"><span>Помилок</span><span id="rErr">0</span></div>
             <div class="rrow"><span>Монет зібрано</span><span id="rCoins">0</span></div>
             <div class="rrow"><span>Залишилось життів</span><span id="rLives">0</span></div>
-            <div class="rrow"><span>Босів переможено</span><span id="rBoss">0</span></div>
+            <div class="rrow"><span>Хробаків переможено</span><span id="rBoss">0</span></div>
         </div>
         <div class="row">
             <button class="btn" id="retryBtn">Спробувати знову</button>

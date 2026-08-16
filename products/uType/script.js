@@ -261,6 +261,17 @@ class StudentProgress {
             if (raw) {
                 const parsed = JSON.parse(raw);
                 if (parsed && typeof parsed === 'object') {
+                    // Міграція зі старого формату (один stats-об'єкт -> масив attempts)
+                    if (parsed.lessons) {
+                        Object.values(parsed.lessons).forEach(l => {
+                            if (l.stats && !l.attempts) {
+                                l.attempts = [l.stats];
+                                delete l.stats;
+                            }
+                            if (!l.attempts) l.attempts = [];
+                        });
+                    }
+                    if (!parsed.mistakes) parsed.mistakes = {};
                     return parsed;
                 }
             }
@@ -270,7 +281,8 @@ class StudentProgress {
         return {
             lessons: {},
             lastLesson: null,
-            totalCompleted: 0
+            totalCompleted: 0,
+            mistakes: {}   // { 'а': 5, 'SPACE': 2, ... } — глобальна агрегація по всіх уроках
         };
     }
     
@@ -282,19 +294,38 @@ class StudentProgress {
         }
     }
     
+    /** Зберігає нову спробу проходження уроку (не перезаписує попередні!) */
     completeLesson(lessonId, stats) {
         if (!this.data.lessons[lessonId]) {
-            this.data.lessons[lessonId] = { completed: false, stats: {} };
+            this.data.lessons[lessonId] = { completed: false, attempts: [] };
         }
-        this.data.lessons[lessonId].completed = true;
-        this.data.lessons[lessonId].stats = stats;
+        const entry = this.data.lessons[lessonId];
+        const prevAttempt = entry.attempts.length ? entry.attempts[entry.attempts.length - 1] : null;
+        const attemptNumber = entry.attempts.length + 1;
+        const record = { ...stats, attemptNumber };
+        entry.attempts.push(record);
+        entry.completed = true;
         this.data.lastLesson = lessonId;
         this.data.totalCompleted = Object.values(this.data.lessons).filter(l => l.completed).length;
+        this.save();
+        return { attemptNumber, prevAttempt, record };
+    }
+    
+    /** Додає помилки поточного проходження до глобальної статистики символів */
+    recordMistakes(mistakeLog) {
+        if (!mistakeLog) return;
+        for (const [ch, count] of Object.entries(mistakeLog)) {
+            this.data.mistakes[ch] = (this.data.mistakes[ch] || 0) + count;
+        }
         this.save();
     }
     
     getLesson(lessonId) {
         return this.data.lessons[lessonId] || null;
+    }
+    
+    getAttempts(lessonId) {
+        return this.data.lessons[lessonId]?.attempts || [];
     }
     
     isCompleted(lessonId) {
@@ -306,6 +337,102 @@ class StudentProgress {
         const completed = this.data.totalCompleted;
         return { total, completed, percent: total > 0 ? Math.round(completed / total * 100) : 0 };
     }
+    
+    /** Топ проблемних символів, відсортовано за кількістю помилок */
+    getTopMistakes(limit = 15) {
+        return Object.entries(this.data.mistakes)
+            .sort((a,b) => b[1] - a[1])
+            .slice(0, limit)
+            .map(([ch, count]) => ({ ch, count }));
+    }
+    
+    /** Агрегація помилок по пальцях (на основі FM-карти розкладки) */
+    getFingerMistakes(lang) {
+        const map = FM[lang] || FM.en;
+        const byFinger = {};
+        for (const [ch, count] of Object.entries(this.data.mistakes)) {
+            const info = map[ch.toLowerCase()];
+            if (!info) continue; // SPACE/ENTER не мають пальця в карті
+            const key = `${info.h}-${info.f}`;
+            byFinger[key] = (byFinger[key] || 0) + count;
+        }
+        return Object.entries(byFinger)
+            .sort((a,b) => b[1] - a[1])
+            .map(([key, count]) => {
+                const [h, f] = key.split('-');
+                return { hand: h, finger: f, count };
+            });
+    }
+    
+    /** Список усіх пройдених уроків з останньою спробою, для екрану історії */
+    getAllLessonHistory() {
+        return Object.entries(this.data.lessons)
+            .filter(([,l]) => l.attempts && l.attempts.length)
+            .map(([id, l]) => ({ id, attempts: l.attempts }));
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   👤 ПРОФІЛІ УЧНІВ (ім'я -> локальне збереження прогресу)
+   ════════════════════════════════════════════════════════════════════ */
+const PROFILES_KEY = 'utype_profiles';
+
+function slugifyName(name) {
+    return name.trim().toLowerCase().replace(/\s+/g,'_').replace(/[^a-zа-яїієґ0-9_]/gi,'') || 'учень';
+}
+
+function getProfiles() {
+    try {
+        const raw = localStorage.getItem(PROFILES_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+}
+
+function saveProfile(name) {
+    const id = slugifyName(name);
+    let profiles = getProfiles();
+    const existing = profiles.find(p => p.id === id);
+    if (existing) {
+        existing.lastUsed = Date.now();
+        existing.name = name.trim(); // оновлюємо відображуване ім'я (регістр міг змінитись)
+    } else {
+        profiles.push({ id, name: name.trim(), lastUsed: Date.now(), createdAt: Date.now() });
+    }
+    profiles.sort((a,b) => b.lastUsed - a.lastUsed);
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+    return id;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   🔊 ОЗВУЧЕННЯ СЛІВ СЛОВНИЧКА (Web Speech API)
+   ════════════════════════════════════════════════════════════════════ */
+let _voicesCache = null;
+function _loadVoices() {
+    if (!('speechSynthesis' in window)) return [];
+    const v = window.speechSynthesis.getVoices();
+    if (v && v.length) _voicesCache = v;
+    return v;
+}
+if ('speechSynthesis' in window) {
+    _loadVoices();
+    window.speechSynthesis.onvoiceschanged = _loadVoices;
+}
+
+function speakWord(word, lang) {
+    if (!word || !('speechSynthesis' in window)) return;
+    try {
+        window.speechSynthesis.cancel(); // не накопичуємо чергу
+        const u = new SpeechSynthesisUtterance(word);
+        const targetLang = lang === 'ua' ? 'uk' : 'en';
+        u.lang = lang === 'ua' ? 'uk-UA' : 'en-US';
+        u.rate = 0.85;
+        u.pitch = 1.05;
+        u.volume = CONFIG.VOLUME + 0.3;
+        const voices = _voicesCache || _loadVoices();
+        const match = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(targetLang));
+        if (match) u.voice = match;
+        window.speechSynthesis.speak(u);
+    } catch (e) { console.warn('TTS помилка:', e); }
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -488,6 +615,7 @@ class GE {
         this.done = false;
         this.dead = false;
         this.aw = null;
+        this.mistakeLog = {}; // { 'а': 3, 'SPACE': 1, 'ENTER': 2, ... }
         while (this.cur && this.cur.type === 'rest') this.i++;
     }
     get cur() { return this.obs[this.i]; }
@@ -499,7 +627,10 @@ class GE {
         if (this.aw) {
             const w = this.aw;
             if (ch === w.cur) { w.hit(); this.cb('wh',{w}); if(!w.alive){ this.bk++; this.aw=null; sounds.wormDefeat(); this.cb('wd',{w}); } }
-            else { w.miss(); sounds.wormMiss(); this.cb('wm',{w}); }
+            else {
+                this.mistakeLog[w.cur] = (this.mistakeLog[w.cur] || 0) + 1;
+                w.miss(); sounds.wormMiss(); this.cb('wm',{w});
+            }
             return;
         }
         const t = this.cur;
@@ -508,7 +639,13 @@ class GE {
         if (nw) { nw.fighting=true; this.aw=nw; sounds.wormAppear(); this.cb('ws',{w:nw}); return; }
         const good = this.validate(t,ch,shift,space,isEnter);
         if (good) { this.ok++; sounds.correct(); this.cb('cor',{t}); this.chkCoin(this.i); this.adv(); }
-        else { this.err++; this.lives--; sounds.wrong(); this.cb('wrg',{t}); if(this.lives<=0){ this.dead=true; this.tEnd=Date.now(); sounds.gameOver(); this.cb('over',{}); } }
+        else {
+            this.err++; this.lives--; sounds.wrong();
+            const logKey = t.type === 'gap' ? 'SPACE' : t.type === 'checkpoint' ? 'ENTER' : t.char;
+            this.mistakeLog[logKey] = (this.mistakeLog[logKey] || 0) + 1;
+            this.cb('wrg',{t});
+            if(this.lives<=0){ this.dead=true; this.tEnd=Date.now(); sounds.gameOver(); this.cb('over',{}); }
+        }
     }
     
     validate(t,ch,sh,sp,isEnter=false) {
@@ -952,8 +1089,7 @@ function initStudentPage() {
     G.hero = savedHero;
     setHero(savedHero);
     
-    const studentId = G.studentId || 'default';
-    studentProgress = new StudentProgress(studentId);
+    studentProgress = new StudentProgress(G.studentId);
     updateProgressDisplay();
 }
 
@@ -987,12 +1123,14 @@ function updateProgressDisplay() {
         
         if (completed) {
             const lessonData = studentProgress.getLesson(lesson.id);
-            if (lessonData && lessonData.stats) {
+            const attempts = lessonData?.attempts || [];
+            const s = attempts[attempts.length - 1]; // остання спроба
+            if (s) {
                 const tip = document.createElement('div');
                 tip.className = 'tooltip';
-                const s = lessonData.stats;
                 tip.innerHTML = `
                     <div class="tip-row"><span class="tip-label">📚 Урок</span><span class="tip-value">${lesson.title}</span></div>
+                    <div class="tip-row"><span class="tip-label">🔁 Спроба</span><span class="tip-value">№${attempts.length}</span></div>
                     <div class="tip-row"><span class="tip-label">✅ Правильних</span><span class="tip-value good">${s.ok || 0}</span></div>
                     <div class="tip-row"><span class="tip-label">❌ Помилок</span><span class="tip-value ${s.err > 5 ? 'bad' : 'good'}">${s.err || 0}</span></div>
                     <div class="tip-row"><span class="tip-label">⚡ CPM</span><span class="tip-value">${s.cpm || 0}</span></div>
@@ -1002,6 +1140,7 @@ function updateProgressDisplay() {
                 `;
                 item.appendChild(tip);
             }
+            item.addEventListener('click', () => showHistoryFor(lesson.id, lesson.title));
         }
         grid.appendChild(item);
     });
@@ -1010,6 +1149,178 @@ function updateProgressDisplay() {
 /* ════════════════════════════════════════════════════════════════════
    UI ПОТІК
    ════════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════════════
+   👤 ЕКРАН ВИБОРУ ПРОФІЛЮ (ІМ'Я УЧНЯ)
+   ════════════════════════════════════════════════════════════════════ */
+function showNameScreen() {
+    const list = $('nameList');
+    const profiles = getProfiles();
+    list.innerHTML = '';
+    if (profiles.length) {
+        profiles.forEach(p => {
+            const btn = mk('div','name-chip');
+            btn.innerHTML = `<span class="name-chip-icon">👤</span><span>${p.name}</span>`;
+            btn.onclick = () => confirmProfile(p.name);
+            list.appendChild(btn);
+        });
+    } else {
+        const hint = mk('p','sub');
+        hint.textContent = G.lang === 'ua' ? 'Ще немає збережених імен — введи своє нижче 👇' : 'No saved names yet — enter yours below 👇';
+        list.appendChild(hint);
+    }
+    $('nameInput').value = '';
+    show('s-name');
+    setTimeout(() => $('nameInput').focus(), 100);
+}
+
+function confirmProfile(name) {
+    name = (name || '').trim();
+    if (!name) { toast(G.lang === 'ua' ? '⚠️ Введи імʼя!' : '⚠️ Enter a name!'); return; }
+    const id = saveProfile(name);
+    G.studentId = id;
+    G.studentName = name;
+    localStorage.setItem('utype_active_profile', id);
+    const badge = $('studentNameBadge');
+    if (badge) badge.textContent = `👤 ${name}`;
+    initStudentPage();
+    show('s-student');
+}
+
+function initNameScreen() {
+    $('nameConfirm').onclick = () => confirmProfile($('nameInput').value);
+    $('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') confirmProfile($('nameInput').value); });
+    $('changeProfileBtn')?.addEventListener('click', showNameScreen);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   📊 ЕКРАН ДЕТАЛЬНОЇ СТАТИСТИКИ (помилки по літерах / пальцях)
+   ════════════════════════════════════════════════════════════════════ */
+const FINGER_NAMES = {
+    'L-pinky': '🖐️ Лівий мізинець', 'L-ring': '🖐️ Лівий безіменний', 'L-mid': '🖐️ Лівий середній', 'L-idx': '🖐️ Лівий вказівний',
+    'R-pinky': '🖐️ Правий мізинець', 'R-ring': '🖐️ Правий безіменний', 'R-mid': '🖐️ Правий середній', 'R-idx': '🖐️ Правий вказівний'
+};
+
+function showStatsScreen() {
+    if (!studentProgress) return;
+    const ua = G.lang === 'ua';
+    const top = studentProgress.getTopMistakes(15);
+    const byFinger = studentProgress.getFingerMistakes(G.lang);
+    
+    const letterBox = $('statsLetters');
+    const fingerBox = $('statsFingers');
+    letterBox.innerHTML = '';
+    fingerBox.innerHTML = '';
+    
+    if (!top.length) {
+        letterBox.innerHTML = `<p class="sub">${ua ? 'Поки немає даних про помилки. Пройди урок!' : 'No mistake data yet. Play a lesson!'}</p>`;
+    } else {
+        const maxCount = top[0].count;
+        top.forEach(({ch,count}) => {
+            const row = mk('div','stat-row');
+            const label = ch === 'SPACE' ? '␣ SPACE' : ch === 'ENTER' ? '↵ ENTER' : ch;
+            const pct = Math.max(8, Math.round(count / maxCount * 100));
+            row.innerHTML = `
+                <span class="stat-label">${label}</span>
+                <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%"></div></div>
+                <span class="stat-count">${count}</span>
+            `;
+            letterBox.appendChild(row);
+        });
+    }
+    
+    if (!byFinger.length) {
+        fingerBox.innerHTML = `<p class="sub">${ua ? 'Немає даних по пальцях.' : 'No finger data yet.'}</p>`;
+    } else {
+        const maxF = byFinger[0].count;
+        byFinger.forEach(({hand,finger,count}) => {
+            const row = mk('div','stat-row');
+            const name = FINGER_NAMES[`${hand}-${finger}`] || `${hand}-${finger}`;
+            const pct = Math.max(8, Math.round(count / maxF * 100));
+            row.innerHTML = `
+                <span class="stat-label">${name}</span>
+                <div class="stat-bar-track"><div class="stat-bar-fill finger" style="width:${pct}%"></div></div>
+                <span class="stat-count">${count}</span>
+            `;
+            fingerBox.appendChild(row);
+        });
+    }
+    
+    show('s-stats');
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   📜 ЕКРАН ІСТОРІЇ СПРОБ
+   ════════════════════════════════════════════════════════════════════ */
+function showHistoryScreen() {
+    if (!studentProgress) return;
+    const ua = G.lang === 'ua';
+    const history = studentProgress.getAllLessonHistory();
+    const box = $('historyList');
+    box.innerHTML = '';
+    
+    if (!history.length) {
+        box.innerHTML = `<p class="sub">${ua ? 'Ще немає пройдених уроків.' : 'No completed lessons yet.'}</p>`;
+        show('s-history');
+        return;
+    }
+    
+    history.forEach(({id, attempts}) => {
+        const lessonMeta = findLessonMetaById(id);
+        const title = lessonMeta?.title || id;
+        const section = mk('div','history-lesson');
+        const head = mk('div','history-lesson-title');
+        head.textContent = `📚 ${title} (${attempts.length} ${ua ? (attempts.length===1?'спроба':'спроб') : (attempts.length===1?'attempt':'attempts')})`;
+        section.appendChild(head);
+        
+        attempts.slice().reverse().forEach((a, ridx) => {
+            const idx = attempts.length - ridx; // реальний номер спроби
+            const prev = attempts[idx - 2]; // попередня (в хронології) спроба
+            const row = mk('div','history-attempt');
+            const d = a.date ? new Date(a.date) : null;
+            const dateStr = d ? d.toLocaleString(ua ? 'uk-UA' : 'en-US', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+            let deltaHtml = '';
+            if (prev) {
+                const cd = a.cpm - (prev.cpm||0);
+                const ed = a.err - (prev.err||0);
+                const cArrow = cd>0?'🔼':cd<0?'🔽':'➖';
+                const eArrow = ed<0?'🔼':ed>0?'🔽':'➖';
+                deltaHtml = `<span class="history-delta ${cd>0?'good':cd<0?'bad':''}">${cArrow}CPM</span> <span class="history-delta ${ed<0?'good':ed>0?'bad':''}">${eArrow}${ua?'Помилки':'Err'}</span>`;
+            }
+            row.innerHTML = `
+                <span class="history-num">№${idx}</span>
+                <span class="history-date">${dateStr}</span>
+                <span class="history-stat">⚡${a.cpm||0}</span>
+                <span class="history-stat">❌${a.err||0}</span>
+                <span class="history-stat">🐛${a.bosses||0}</span>
+                ${deltaHtml}
+            `;
+            section.appendChild(row);
+        });
+        box.appendChild(section);
+    });
+    
+    show('s-history');
+}
+
+function showHistoryFor(lessonId, title) {
+    showHistoryScreen();
+    // прокручуємо до потрібного уроку, якщо є кілька
+    setTimeout(() => {
+        const el = [...document.querySelectorAll('.history-lesson-title')].find(e => e.textContent.includes(title));
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+}
+
+function findLessonMetaById(lessonId) {
+    for (const lang of Object.keys(G.index || {})) {
+        for (const grade of Object.keys(G.index[lang] || {})) {
+            const found = G.index[lang][grade].find(l => l.id === lessonId);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
     try { 
         const r = await fetch('index.json'); 
@@ -1034,8 +1345,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         $('studentDiff').textContent = G.difficulty;
         const wt = getWormType(G.difficulty);
         $('studentDiffType').textContent = `(${wt.name})`;
-        initStudentPage();
-        show('s-student');
+        // Спершу показуємо вибір профілю (ім'я учня) — прогрес завжди привʼязаний до імені
+        showNameScreen();
     } else {
         show('s-lang');
         // Підключаємо кліки по фонах
@@ -1068,6 +1379,12 @@ window.addEventListener('DOMContentLoaded', async () => {
         diffType.innerHTML = `🐛 Тип: <strong>${wt.name} хробак</strong>`;
         G.difficulty = initialVal;
     }
+    
+    initNameScreen();
+    $('openStats')?.addEventListener('click', showStatsScreen);
+    $('openHistory')?.addEventListener('click', showHistoryScreen);
+    $('backFromStats')?.addEventListener('click', () => show('s-student'));
+    $('backFromHistory')?.addEventListener('click', () => show('s-student'));
 });
 
 // Кнопка відкриття редактора
@@ -1292,6 +1609,7 @@ function onEv(ev, pl) {
             rnd.removeWorm(pl.w);
             rnd.lock(eng.i, BOSS_DIST, false);
             toast(ua?'🐛 Хробака переможено!':'🐛 Worm defeated!');
+            speakWord(pl.w.word, G.lang);
             eng.aw = null;
             rnd.prompt(eng.cur);
             break;
@@ -1340,17 +1658,22 @@ function endGame(ok, wormKill) {
     bossTmrs.forEach(clearInterval);
     bossTmrs = [];
     
-    if (ok && G.lessonFile && studentProgress) {
-        const lessonId = G.lessonFile ? G.lessonFile.replace(/^.*\//,'').replace(/\.json$/,'') : 'custom';
-        studentProgress.completeLesson(lessonId, {
-            ok: eng.ok,
-            err: eng.err,
-            cpm: eng.cpm,
-            coins: eng.ctotal,
-            bosses: eng.bk,
-            lives: Math.max(eng.lives, 0),
-            date: new Date().toISOString()
-        });
+    let attemptInfo = null;
+    if (G.lessonFile && studentProgress) {
+        const lessonId = G.lessonFile.replace(/^.*\//,'').replace(/\.json$/,'');
+        // Записуємо помилки цієї спроби в глобальну статистику незалежно від результату
+        studentProgress.recordMistakes(eng.mistakeLog);
+        if (ok) {
+            attemptInfo = studentProgress.completeLesson(lessonId, {
+                ok: eng.ok,
+                err: eng.err,
+                cpm: eng.cpm,
+                coins: eng.ctotal,
+                bosses: eng.bk,
+                lives: Math.max(eng.lives, 0),
+                date: new Date().toISOString()
+            });
+        }
         updateProgressDisplay();
     }
     
@@ -1366,6 +1689,34 @@ function endGame(ok, wormKill) {
     $('rCoins').textContent = eng.ctotal;
     $('rLives').textContent = Math.max(eng.lives, 0);
     $('rBoss').textContent = eng.bk;
+    
+    // Номер спроби + порівняння з попередньою (прогрес/регрес)
+    const attemptRow = $('rAttemptRow');
+    const deltaRow = $('rDeltaRow');
+    if (attemptInfo) {
+        $('rAttempt').textContent = attemptInfo.attemptNumber;
+        if (attemptRow) attemptRow.style.display = 'flex';
+        if (attemptInfo.prevAttempt && deltaRow) {
+            const prev = attemptInfo.prevAttempt;
+            const cpmDelta = eng.cpm - (prev.cpm || 0);
+            const errDelta = eng.err - (prev.err || 0);
+            const cpmArrow = cpmDelta > 0 ? '🔼' : cpmDelta < 0 ? '🔽' : '➖';
+            const errArrow = errDelta < 0 ? '🔼' : errDelta > 0 ? '🔽' : '➖'; // менше помилок = прогрес
+            const cpmColor = cpmDelta > 0 ? 'good' : cpmDelta < 0 ? 'bad' : '';
+            const errColor = errDelta < 0 ? 'good' : errDelta > 0 ? 'bad' : '';
+            $('rDelta').innerHTML =
+                `<span class="${cpmColor}">CPM ${cpmArrow} ${cpmDelta > 0 ? '+' : ''}${cpmDelta}</span>` +
+                `&nbsp;&nbsp;` +
+                `<span class="${errColor}">${ua?'Помилки':'Errors'} ${errArrow} ${errDelta > 0 ? '+' : ''}${errDelta}</span>`;
+            deltaRow.style.display = 'flex';
+        } else if (deltaRow) {
+            deltaRow.style.display = 'none';
+        }
+    } else {
+        if (attemptRow) attemptRow.style.display = 'none';
+        if (deltaRow) deltaRow.style.display = 'none';
+    }
+    
     show('s-result');
 }
 

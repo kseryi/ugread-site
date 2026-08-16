@@ -128,10 +128,24 @@
     </section>
 
     <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- 👤 ВИБІР ІМЕНІ УЧНЯ -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="s-name" class="scr">
+        <h1>👋 Привіт!</h1>
+        <p class="sub">Введи своє ім'я, щоб зберігати свій прогрес, або обери його зі списку раніше введених.</p>
+        <div class="name-list" id="nameList"></div>
+        <div class="name-entry-row">
+            <input type="text" id="nameInput" class="creator-input" placeholder="Введи ім'я...">
+            <button class="btn primary" id="nameConfirm">Продовжити ▶</button>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
     <!-- ④ УЧЕНЬ -->
     <!-- ════════════════════════════════════════════════════════════════ -->
     <section id="s-student" class="scr">
         <div class="badge" id="studentBadge">Урок</div>
+        <div class="name-badge" id="studentNameBadge">👤</div>
         <h1 id="studentTitle">—</h1>
         <h2 id="studentSub"></h2>
         
@@ -162,6 +176,11 @@
         </div>
         
         <button class="btn primary" id="studentPlay">▶ Почати гру</button>
+        <div class="row">
+            <button class="btn sm" id="openStats">📊 Статистика помилок</button>
+            <button class="btn sm" id="openHistory">📜 Історія спроб</button>
+            <button class="btn sm" id="changeProfileBtn">🔄 Змінити профіль</button>
+        </div>
         <label class="file-label">
             <input type="file" id="fileStudent" accept=".json">
             📂 Обрати JSON вручну (якщо file://)
@@ -220,17 +239,47 @@
     <section id="s-result" class="scr">
         <h1 id="resTitle">🎉</h1>
         <div class="resbox">
+            <div class="rrow" id="rAttemptRow" style="display:none;"><span>🔁 Спроба №</span><span id="rAttempt">1</span></div>
             <div class="rrow"><span>Правильних символів</span><span id="rTotal">0</span></div>
             <div class="rrow"><span>Символів за хвилину</span><span id="rCpm">0</span></div>
             <div class="rrow"><span>Помилок</span><span id="rErr">0</span></div>
             <div class="rrow"><span>Монет зібрано</span><span id="rCoins">0</span></div>
             <div class="rrow"><span>Залишилось життів</span><span id="rLives">0</span></div>
             <div class="rrow"><span>Хробаків переможено</span><span id="rBoss">0</span></div>
+            <div class="rrow" id="rDeltaRow" style="display:none;"><span>Порівняно з минулою спробою</span><span id="rDelta"></span></div>
         </div>
         <div class="row">
             <button class="btn" id="retryBtn">Спробувати знову</button>
             <button class="btn" id="menuBtn">До меню</button>
         </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- 📊 ДЕТАЛЬНА СТАТИСТИКА ПОМИЛОК -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="s-stats" class="scr" style="position:relative">
+        <button class="back" id="backFromStats">←</button>
+        <h1>📊 Статистика помилок</h1>
+        <p class="sub">Символи та пальці, на яких найчастіше трапляються помилки</p>
+        <div class="stats-panel">
+            <h2 class="stats-subtitle">🔤 Проблемні символи</h2>
+            <div class="stats-list" id="statsLetters"></div>
+        </div>
+        <div class="stats-panel">
+            <h2 class="stats-subtitle">🖐️ Проблемні пальці</h2>
+            <div class="stats-list" id="statsFingers"></div>
+        </div>
+        <button class="btn" id="menuFromStats" onclick="show('s-student')">До меню</button>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- 📜 ІСТОРІЯ СПРОБ -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="s-history" class="scr" style="position:relative">
+        <button class="back" id="backFromHistory">←</button>
+        <h1>📜 Історія спроб</h1>
+        <p class="sub">Всі пройдені уроки та порівняння результатів між спробами</p>
+        <div class="history-container" id="historyList"></div>
     </section>
 
     <script src="script.js"></script>

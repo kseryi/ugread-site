@@ -1,0 +1,6 @@
+{
+  "name": "3D-Майстерня для дітей",
+  "description": "Дитяча інтерактивна 3D-майстерня для учнів 6-10 років: конструктор фігур, LEGO та Minecraft з простим та яскравим керуванням.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

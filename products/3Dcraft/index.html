@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D-Майстерня для дітей 🎨</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Nunito',sans-serif;background:#E8F6FF;overflow-x:hidden;user-select:none;}
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.bubble{position:absolute;border-radius:50%;opacity:.25;animation:float 8s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0) scale(1) rotate(0deg);}50%{transform:translateY(-28px) scale(1.08) rotate(8deg);}}
+
+.wrap{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px 16px 36px;justify-content:center;gap:24px;}
+
+/* Top Bar */
+.top-bar{display:flex;align-items:center;gap:12px;width:100%;max-width:1050px;justify-content:space-between;flex-wrap:wrap;}
+.badge-school{
+  background:#fff;border:3px solid #D8EEFD;border-bottom:5px solid #C2DFFA;
+  border-radius:20px;padding:8px 16px;font-family:'Baloo 2',sans-serif;
+  font-weight:800;font-size:15px;color:#2B2D42;display:flex;align-items:center;gap:8px;
+}
+.actions-right{display:flex;align-items:center;gap:10px;}
+.sound-btn{
+  background:#fff;border:3px solid #D8EEFD;border-bottom:5px solid #C2DFFA;
+  border-radius:18px;padding:8px 16px;font-family:'Baloo 2',sans-serif;
+  font-weight:800;font-size:14px;color:#2B2D42;cursor:pointer;
+  display:flex;align-items:center;gap:8px;transition:transform .1s, background .15s;
+}
+.sound-btn:hover{background:#F0F8FF;transform:translateY(-2px);}
+.sound-btn:active{transform:translateY(2px);border-bottom-width:2px;}
+
+.logo{text-align:center;}
+.logo .badge-top{
+  display:inline-block;background:#FFE484;color:#7A4B00;font-family:'Baloo 2';
+  font-size:14px;font-weight:800;padding:5px 18px;border-radius:20px;
+  border:2px solid #E8B920;box-shadow:0 3px 10px rgba(232,185,32,.25);
+  margin-bottom:8px;animation:pulse 2.2s infinite ease-in-out;
+}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+
+.logo h1{
+  font-family:'Baloo 2',sans-serif;font-size:clamp(32px,5.5vw,56px);
+  font-weight:800;color:#2B2D42;line-height:1.15;letter-spacing:-0.5px;
+}
+.logo h1 .hl-1{color:#FF6B6B;}
+.logo h1 .hl-2{color:#4FB3E8;}
+.logo h1 .hl-3{color:#5FBE6B;}
+.logo p{
+  font-size:clamp(15px,2.2vw,20px);color:#5B5F7A;font-weight:800;
+  margin-top:6px;max-width:680px;line-height:1.4;
+}
+
+/* 3 Big Game Cards */
+.cards{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:24px;width:100%;max-width:1050px;margin-top:6px;
+}
+.card{
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  background:#fff;border-radius:28px;padding:28px 24px;
+  border:4px solid #D8EEFD;border-bottom:10px solid #C2DFFA;
+  text-decoration:none;color:inherit;
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, border-color .18s ease;
+  box-shadow:0 12px 32px rgba(43,45,66,.08);
+  cursor:pointer;position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:8px;
+  background:transparent;
+}
+.card:hover{
+  transform:translateY(-10px) scale(1.02);
+  box-shadow:0 24px 48px rgba(43,45,66,.18);
+}
+.card:active{transform:translateY(2px);border-bottom-width:4px;}
+
+.card.shapes{border-bottom-color:#FF9F7A;}
+.card.shapes::before{background:linear-gradient(90deg,#FF8C61,#FFD23F);}
+.card.lego  {border-bottom-color:#FF6B6B;}
+.card.lego::before{background:linear-gradient(90deg,#FF6B6B,#9D4EDD);}
+.card.mc    {border-bottom-color:#48B857;}
+.card.mc::before{background:linear-gradient(90deg,#5FBE6B,#4FB3E8);}
+
+.card-icon{
+  width:94px;height:94px;border-radius:24px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 20px rgba(0,0,0,.12);
+  transition:transform .2s ease;
+}
+.card:hover .card-icon{transform:scale(1.1) rotate(4deg);}
+
+.card.shapes .card-icon{background:linear-gradient(135deg,#FF8C61,#FFD23F);}
+.card.lego   .card-icon{background:linear-gradient(135deg,#FF6B6B,#9D4EDD);}
+.card.mc     .card-icon{background:linear-gradient(135deg,#5FBE6B,#3A86FF);}
+
+.card-icon svg{width:56px;height:56px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2));}
+
+.card h2{
+  font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:800;
+  color:#2B2D42;text-align:center;
+}
+.card p{
+  font-size:14px;color:#5B5F7A;font-weight:700;
+  text-align:center;line-height:1.45;flex:1;
+}
+
+.card-btn{
+  width:100%;padding:12px;border-radius:16px;border:none;
+  font-family:'Baloo 2',sans-serif;font-weight:800;font-size:17px;
+  color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 12px rgba(0,0,0,.12);margin-top:6px;
+}
+.card.shapes .card-btn{background:#FF8C61;}
+.card.lego   .card-btn{background:#FF5964;}
+.card.mc     .card-btn{background:#48B857;}
+
+.card .badge{
+  position:absolute;top:14px;right:14px;background:#FFF4D4;
+  border:2px solid #FFE08A;color:#B36B00;font-size:11px;
+  font-weight:800;padding:3px 10px;border-radius:12px;
+}
+
+/* Quick Features Info */
+.features{
+  display:flex;gap:16px;max-width:1000px;width:100%;
+  flex-wrap:wrap;justify-content:center;margin-top:4px;
+}
+.feat-item{
+  background:rgba(255,255,255,.85);backdrop-filter:blur(6px);
+  border:2px solid #D8EEFD;border-radius:16px;padding:8px 16px;
+  display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#4A5568;
+}
+
+/* How to play modal */
+#helpModal{
+  position:fixed;inset:0;background:rgba(20,30,50,.6);backdrop-filter:blur(4px);
+  z-index:999;display:none;align-items:center;justify-content:center;padding:20px;
+}
+#helpModal.open{display:flex;}
+.modal-box{
+  background:#fff;border-radius:28px;max-width:540px;width:100%;
+  padding:28px;border:4px solid #D8EEFD;box-shadow:0 24px 60px rgba(0,0,0,.25);
+  display:flex;flex-direction:column;gap:16px;position:relative;
+}
+.modal-box h3{font-family:'Baloo 2';font-size:24px;color:#2B2D42;font-weight:800;}
+.modal-steps{display:flex;flex-direction:column;gap:12px;}
+.step{display:flex;gap:12px;align-items:flex-start;}
+.step-num{
+  width:32px;height:32px;border-radius:50%;background:#FFD23F;color:#7A4B00;
+  font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.step-txt{font-size:14px;color:#4A5568;font-weight:700;line-height:1.4;}
+.modal-close{
+  align-self:center;background:#5FBE6B;color:#fff;border:none;
+  padding:10px 28px;border-radius:14px;font-family:'Baloo 2';font-weight:800;
+  font-size:16px;cursor:pointer;border-bottom:4px solid #3E9A4C;margin-top:8px;
+}
+</style>
+</head>
+<body>
+<div class="bg" id="bg"></div>
+
+<div class="wrap">
+  <div class="top-bar">
+    <div class="badge-school">🎓 Для юних творців 6–10 років</div>
+    <div class="actions-right">
+      <button class="sound-btn" id="soundToggle">🔊 Звук: Увімкнено</button>
+      <button class="sound-btn" id="helpBtn" style="background:#FFF9E6;border-color:#FFE8A3;color:#855800;">❓ Як грати?</button>
+    </div>
+  </div>
+
+  <div class="logo">
+    <div class="badge-top">⭐ Творча 3D-майстерня ⭐</div>
+    <h1>3D-<span class="hl-1">Майс</span><span class="hl-2">тер</span><span class="hl-3">ня</span> 🚀</h1>
+    <p>Обирай улюблений світ і створюй дивовижні 3D-моделі легко та весело!</p>
+  </div>
+
+  <div class="cards">
+    <!-- Shapes Card -->
+    <a class="card shapes" href="shapes.html" id="linkShapes">
+      <span class="badge">Фігури & Набори</span>
+      <div class="card-icon">
+        <svg viewBox="0 0 48 48" fill="none">
+          <rect x="4" y="20" width="18" height="18" rx="4" fill="#fff" opacity=".95"/>
+          <circle cx="35" cy="16" r="11" fill="#fff" opacity=".95"/>
+          <polygon points="22,44 31,28 40,44" fill="#fff" opacity=".95"/>
+        </svg>
+      </div>
+      <h2>🔷 Чарівні Фігури</h2>
+      <p>Куби, кулі, піраміди, робот, машинка та замок! Розфарбовуй та з'єднуй форми!</p>
+      <div class="card-btn">Творити з фігур ➜</div>
+    </a>
+
+    <!-- LEGO Card -->
+    <a class="card lego" href="lego.html" id="linkLego">
+      <span class="badge">Авто-клік 🧱</span>
+      <div class="card-icon">
+        <svg viewBox="0 0 48 48" fill="none">
+          <rect x="4" y="22" width="40" height="18" rx="4" fill="#fff" opacity=".95"/>
+          <circle cx="13" cy="18" r="5" fill="#fff" opacity=".95"/>
+          <circle cx="24" cy="18" r="5" fill="#fff" opacity=".95"/>
+          <circle cx="35" cy="18" r="5" fill="#fff" opacity=".95"/>
+        </svg>
+      </div>
+      <h2>🧱 LEGO Світ</h2>
+      <p>Справжні деталі лего самі стають на місце. Обирай кольори, крути деталі та будуй вежі!</p>
+      <div class="card-btn">Будувати з LEGO ➜</div>
+    </a>
+
+    <!-- Minecraft Card -->
+    <a class="card mc" href="minecraft.html" id="linkMc">
+      <span class="badge">Вокселі & Блоки ⛏️</span>
+      <div class="card-icon">
+        <svg viewBox="0 0 48 48" fill="none">
+          <rect x="6"  y="6"  width="16" height="16" rx="3" fill="#FFE57F"/>
+          <rect x="26" y="6"  width="16" height="16" rx="3" fill="#90E0EF"/>
+          <rect x="6"  y="26" width="16" height="16" rx="3" fill="#70E000"/>
+          <rect x="26" y="26" width="16" height="16" rx="3" fill="#FF8FA3"/>
+        </svg>
+      </div>
+      <h2>⛏️ Minecraft Майстер</h2>
+      <p>Трава, золото, дерево, скло, лава та вода! Будуй будиночки або фортеці з блоків!</p>
+      <div class="card-btn">Грати в Minecraft ➜</div>
+    </a>
+  </div>
+
+  <div class="features">
+    <div class="feat-item">✨ Просте керування мишкою або пальцем</div>
+    <div class="feat-item">📸 Збереження фото малюнка одним кліком</div>
+    <div class="feat-item">🔊 Веселі звуки та свято конфеті</div>
+    <div class="feat-item">🖨️ Експорт у STL/OBJ для 3D-друку</div>
+  </div>
+</div>
+
+<!-- Modal Help -->
+<div id="helpModal">
+  <div class="modal-box">
+    <h3>💡 Як грати у 3D-Майстерні?</h3>
+    <div class="modal-steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-txt"><strong>Обери режим:</strong> Фігури, LEGO або Minecraft блоками.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-txt"><strong>Обери колір або блок</strong> на панелі та клікни на поле, щоб поставити!</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-txt"><strong>Крути камеру:</strong> затисни ліву кнопку і тягни мишкою, щоб оглянути свій шедевр з усіх боків.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-txt"><strong>Зроби фото 📸:</strong> тисни кнопку фотоапарата і збережи зображення на згадку!</div>
+      </div>
+    </div>
+    <button class="modal-close" id="modalClose">Зрозуміло, поїхали! 🚀</button>
+  </div>
+</div>
+
+<script>
+let soundEnabled = localStorage.getItem('sound_enabled') !== 'false';
+function updateSoundBtn() {
+  const btn = document.getElementById('soundToggle');
+  btn.textContent = soundEnabled ? '🔊 Звук: Увімкнено' : '🔇 Звук: Вимкнено';
+  btn.style.opacity = soundEnabled ? '1' : '0.7';
+}
+updateSoundBtn();
+
+let audioCtx = null;
+function getAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playChime(freq = 520, type = 'sine', duration = 0.15) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.5, ctx.currentTime + duration);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch (e) {}
+}
+
+document.getElementById('soundToggle').addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('sound_enabled', soundEnabled);
+  updateSoundBtn();
+  if (soundEnabled) playChime(600, 'triangle', 0.2);
+});
+
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('mouseenter', () => playChime(440, 'sine', 0.08));
+  card.addEventListener('click', () => playChime(880, 'triangle', 0.25));
+});
+
+// Modal
+const modal = document.getElementById('helpModal');
+document.getElementById('helpBtn').addEventListener('click', () => {
+  modal.classList.add('open');
+  playChime(550, 'sine', 0.12);
+});
+document.getElementById('modalClose').addEventListener('click', () => {
+  modal.classList.remove('open');
+  playChime(700, 'triangle', 0.15);
+});
+
+// Animated floating bubbles
+const colors=['#FF8C61','#FFD23F','#4FB3E8','#5FBE6B','#C77DFF','#FF6B6B','#FFAAA6'];
+const bg=document.getElementById('bg');
+for(let i=0;i<12;i++){
+  const b=document.createElement('div');
+  b.className='bubble';
+  const s=60+Math.random()*160;
+  b.style.cssText=`width:${s}px;height:${s}px;background:${colors[i%colors.length]};
+    left:${Math.random()*96}%;top:${Math.random()*96}%;
+    animation-delay:${Math.random()*5}s;animation-duration:${6+Math.random()*6}s;`;
+  bg.appendChild(b);
+}
+</script>
+</body>
+</html>

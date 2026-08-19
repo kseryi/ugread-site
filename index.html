@@ -4,14 +4,24 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>UGRead — освітній портал</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
+
+  <!-- ХЕДЕР З ДИНАМІЧНИМИ ЧАСТИНКАМИ ТА НАВІГАЦІЄЮ -->
   <header class="site-header">
     <canvas id="header-bg"></canvas>
     <div class="container header-inner">
-      <a class="brand" href="#"><img src = logo.png width=50%></a>
+      <a class="brand" href="#">
+        <div class="brand-badge">UG</div>
+        <div class="brand-text">
+          <span class="brand-title">UGRead</span>
+          <span class="brand-sub">Освітній портал</span>
+        </div>
+      </a>
       <nav class="main-nav" id="mainNav">
         <a href="#categories">Категорії</a>
         <a href="#products">Продукти</a>
@@ -24,78 +34,310 @@
   </header>
 
   <main>
+    <!-- ГОЛОВНИЙ БЛОК (HERO) -->
     <section class="hero container">
-      <h2>Universal Gateway for Realistic Education And Development</h2>
-      <h3>Універсальний Портал для Реальної Освіти й Саморозвитку</h3>
-      
+      <div class="hero-badge">✨ Освітній Простір</div>
+      <h1>Universal Gateway for Realistic Education And Development</h1>
+      <h2>Універсальний Портал для Реальної Освіти й Саморозвитку</h2>
       <p class="lead">Доступ до модулів, уроків та інтерактивних інструментів для навчання онлайн та офлайн.</p>
       <div class="hero-actions">
         <a class="btn primary" href="#categories">Переглянути категорії</a>
-        <a class="btn outline" href="./ugboard/index.html">Відкрити UGboard</a>
+        <a class="btn outline" href="./ugboard/index.html">🧑‍🏫 Відкрити UGboard</a>
       </div>
     </section>
-<section id="categories" class="container categories">
-      <h2>UGBoard</h2>
-      <div class="cards-grid" id="cardsGrid">
-        <a class="card" href="./ugboard/index.html"><div class="card-icon">𝞹📈🧠📚</div><div class="card-body"><h3>Дошка</h3></div></a>
-        
-      </div>
-  <!--
-    </section>
-    <section id="categories" class="container categories">
-      <h2>Категорії предметів</h2>
-      <div class="cards-grid" id="cardsGrid">
-        <a class="card" href="products/mathematics/index.html"><div class="card-icon">∑</div><div class="card-body"><h3>Математика</h3></div></a>
-        <a class="card" href="products/physics/index.html"><div class="card-icon">⚛</div><div class="card-body"><h3>Фізика</h3></div></a>
-        <a class="card" href="products/physics/index.html"><div class="card-icon">🪐</div><div class="card-body"><h3>Астрономія</h3></div></a>
-        <a class="card" href="products/stem/index.html"><div class="card-icon">🦾</div><div class="card-body"><h3>STEM</h3></div></a>
-        <a class="card" href="products/chemistry/index.html"><div class="card-icon">🧪</div><div class="card-body"><h3>Хімія</h3></div></a>
-        <a class="card" href="products/informatics/index.html"><div class="card-icon">💻</div><div class="card-body"><h3>Інформатика</h3></div></a>
-        <a class="card" href="products/geography/index.html"><div class="card-icon">🗺</div><div class="card-body"><h3>Географія</h3></div></a>
-        <a class="card" href="products/biology/index.html"><div class="card-icon">🌱</div><div class="card-body"><h3>Біологія</h3></div></a>
-        <a class="card" href="products/history/index.html"><div class="card-icon">📜</div><div class="card-body"><h3>Історія</h3></div></a>
-        <a class="card" href="products/language/index.html"><div class="card-icon">📖</div><div class="card-body"><h3>Українська мова та література</h3></div></a>
+
+    <!-- АКЦЕНТНА КАРТКА UGBOARD -->
+    <section class="container banner-section">
+      <div class="featured-banner">
+        <div class="banner-content">
+          <span class="badge-tag">UGBoard</span>
+          <h3>Інтерактивна дошка UGboard</h3>
+          <p>Дошка 𝞹📈🧠📚 для онлайн-уроків: малювання, формули, геометричні фігури та збереження конспектів.</p>
+        </div>
+        <a class="btn white-btn" href="./ugboard/index.html">Відкрити дошку ↗</a>
       </div>
     </section>
-  -->
 
-    <section id="products" class="container products">
-      <h2>Популярні продукти</h2>
-      <ul class="product-list">
-        
-        <div class="cards-grid" id="cardsGrid">
-        <a class="card" href="./ugboard/index.html"><div class="card-icon">🧑‍🏫👩‍🏫</div><div class="card-body"><h3>UGboard</h3></div></a>
-        <a class="card" href="products/periodic/periodic.html"><div class="card-icon">⚗️</div><div class="card-body"><h3>Periodic table</h3></div></a>
-        <a class="card" href="products/uPy/index.htm"><div class="card-icon">🐍</div><div class="card-body"><h3>uPython</h3></div></a>
-        <a class="card" href="products/uweb/index.html"><div class="card-icon">🌐</div><div class="card-body"><h3>uWeb</h3></div></a>
-        <a class="card" href="products/fredactor/formula.html"><div class="card-icon">📐</div><div class="card-body"><h3>uFormula</h3></div></a>
-        <a class="card" href="products/cutpdf/index.html"><div class="card-icon">📜</div><div class="card-body"><h3>uCutPDF</h3></div></a>
-        <a class="card" href="products/informatics/index.html"><div class="card-icon">💻</div><div class="card-body"><h3>Snap4A controls</h3></div></a>
-        <a class="card" href="products/solar_system/solar_system.html"><div class="card-icon">🪐</div><div class="card-body"><h3>Сонячна система</h3></div></a>
-        
-
+    <!-- КАТЕГОРІЇ ПРЕДМЕТІВ (ПЛИТОЧКИ, ЩО ВІДКРИВАЮТЬ МОДАЛЬНЕ ВІКНО З СИМУЛЯЦІЯМИ) -->
+    <section id="categories" class="container categories-section">
+      <div class="section-header">
+        <div>
+          <h2>Категорії предметів</h2>
+          <p class="section-sub">Оберіть предмет, щоб відкрити список тем та посилань на симуляції</p>
+        </div>
+        <span class="count-pill">10 предметів</span>
       </div>
-        
-      </ul>
+
+      <div class="cards-grid" id="categoryGrid">
+        <button type="button" class="card category-card" data-cat="math">
+          <div class="card-icon">∑</div>
+          <div class="card-body">
+            <h3>Математика</h3>
+            <span class="card-sub">6 тем / симуляцій</span>
+          </div>
+        </button>
+
+        <button type="button" class="card category-card" data-cat="physics">
+          <div class="card-icon">⚛</div>
+          <div class="card-body">
+            <h3>Фізика</h3>
+            <span class="card-sub">6 тем / симуляцій</span>
+          </div>
+        </button>
+
+        <button type="button" class="card category-card" data-cat="astronomy">
+          <div class="card-icon">🪐</div>
+          <div class="card-body">
+            <h3>Астрономія</h3>
+            <span class="card-sub">5 тем / симуляцій</span>
+          </div>
+        </button>
+
+        <button type="button" class="card category-card" data-cat="stem">
+          <div class="card-icon">🦾</div>
+          <div class="card-body">
+            <h3>STEM</h3>
+            <span class="card-sub">4 теми / симуляції</span>
+          </div>
+        </button>
+
+        <button type="button" class="card category-card" data-cat="chemistry">
+          <div class="card-icon">🧪</div>
+          <div class="card-body">
+            <h3>Хімія</h3>
+            <span class="card-sub">5 тем / симуляцій</span>
+          </div>
+        </button>
+
+        <button type="button" class="card category-card" data-cat="informatics">
+          <div class="card-icon">💻</div>
+          <div class="card-body">
+            <h3>Інформатика</h3>
+            <span class="card-sub">5 тем / симуляцій</span>
+          </div>
+        </button>
+
+        <button type="button" class="card category-card" data-cat="geography">
+          <div class="card-icon">🗺</div>
+          <div class="card-body">
+            <h3>Географія</h3>
+            <span class="card-sub">5 тем / симуляцій</span>
+          </div>
+        </button>
+
+        <button type="button" class="card category-card" data-cat="biology">
+          <div class="card-icon">🌱</div>
+          <div class="card-body">
+            <h3>Біологія</h3>
+            <span class="card-sub">5 тем / симуляцій</span>
+          </div>
+        </button>
+
+        <button type="button" class="card category-card" data-cat="history">
+          <div class="card-icon">📜</div>
+          <div class="card-body">
+            <h3>Історія</h3>
+            <span class="card-sub">5 тем / симуляцій</span>
+          </div>
+        </button>
+
+        <button type="button" class="card category-card" data-cat="language">
+          <div class="card-icon">📖</div>
+          <div class="card-body">
+            <h3>Українська мова та література</h3>
+            <span class="card-sub">5 тем / симуляцій</span>
+          </div>
+        </button>
+      </div>
     </section>
 
-    <section id="about" class="container about">
-      <h2>Про UGRead</h2>
-      <p>UGRead — освітній портал для учнів та вчителів, який поєднує готові матеріали та інтерактивні інструменти. Використовуй наші продукти на уроці чи дистанційно.</p>
+    <!-- ПОПУЛЯРНІ ПРОДУКТИ (ПРЯМІ ПОСИЛАННЯ) -->
+    <section id="products" class="container products-section">
+      <div class="section-header">
+        <div>
+          <h2>Популярні продукти</h2>
+          <p class="section-sub">Інтерактивні веб-додатки, симулятори та утиліти для інтерактивного навчання</p>
+        </div>
+        <span class="count-pill">8 продуктів</span>
+      </div>
+
+      <div class="products-grid">
+        <a class="product-card" href="./ugboard/index.html">
+          <div class="product-top">
+            <div class="product-icon">🧑‍🏫👩‍🏫</div>
+            <span class="tag">Інструмент</span>
+          </div>
+          <h3 class="product-title">UGboard <span class="arrow">↗</span></h3>
+          <p class="product-tagline">Інтерактивна дошка для вчителів та учнів</p>
+          <p class="product-desc">Інструмент для онлайн-уроків: малювання, формули, геометричні фігури та конспекти.</p>
+          <div class="product-footer">Відкрити симуляцію ↗</div>
+        </a>
+
+        <a class="product-card" href="products/periodic/periodic.html">
+          <div class="product-top">
+            <div class="product-icon">⚗️</div>
+            <span class="tag">Хімія</span>
+          </div>
+          <h3 class="product-title">Periodic table <span class="arrow">↗</span></h3>
+          <p class="product-tagline">Інтерактивна таблиця Менделєєва</p>
+          <p class="product-desc">Детальна інформація про 118 хімічних елементів: атомна маса, конфігурація та властивості.</p>
+          <div class="product-footer">Відкрити симуляцію ↗</div>
+        </a>
+
+        <a class="product-card" href="products/uPy/index.htm">
+          <div class="product-top">
+            <div class="product-icon">🐍</div>
+            <span class="tag">Інформатика</span>
+          </div>
+          <h3 class="product-title">uPython <span class="arrow">↗</span></h3>
+          <p class="product-tagline">Онлайн пісочниця Python</p>
+          <p class="product-desc">Браузерний редактор коду з навчальними прикладами для уроків програмування.</p>
+          <div class="product-footer">Відкрити симуляцію ↗</div>
+        </a>
+
+        <a class="product-card" href="products/uweb/index.html">
+          <div class="product-top">
+            <div class="product-icon">🌐</div>
+            <span class="tag">Веб-розробка</span>
+          </div>
+          <h3 class="product-title">uWeb <span class="arrow">↗</span></h3>
+          <p class="product-tagline">Веб-редактор HTML / CSS / JS</p>
+          <p class="product-desc">Редактор коду з миттєвим попереднім переглядом для вивчення веб-розробки.</p>
+          <div class="product-footer">Відкрити симуляцію ↗</div>
+        </a>
+
+        <a class="product-card" href="products/fredactor/formula.html">
+          <div class="product-top">
+            <div class="product-icon">📐</div>
+            <span class="tag">Математика</span>
+          </div>
+          <h3 class="product-title">uFormula <span class="arrow">↗</span></h3>
+          <p class="product-tagline">Редактор математичних формул</p>
+          <p class="product-desc">Генератор формул із математичними символами, дробами та експортом у LaTeX.</p>
+          <div class="product-footer">Відкрити симуляцію ↗</div>
+        </a>
+
+        <a class="product-card" href="products/cutpdf/index.html">
+          <div class="product-top">
+            <div class="product-icon">📜</div>
+            <span class="tag">Утиліта</span>
+          </div>
+          <h3 class="product-title">uCutPDF <span class="arrow">↗</span></h3>
+          <p class="product-tagline">Інструмент для роботи з PDF</p>
+          <p class="product-desc">Розділення, об’єднання та вилучення сторінок навчальних посібників.</p>
+          <div class="product-footer">Відкрити симуляцію ↗</div>
+        </a>
+
+        <a class="product-card" href="products/informatics/index.html">
+          <div class="product-top">
+            <div class="product-icon">💻</div>
+            <span class="tag">STEM / IT</span>
+          </div>
+          <h3 class="product-title">Snap4A controls <span class="arrow">↗</span></h3>
+          <p class="product-tagline">Блочне візуальне програмування</p>
+          <p class="product-desc">Інтерактивна середа блок-схем та візуального керування алгоритмами.</p>
+          <div class="product-footer">Відкрити симуляцію ↗</div>
+        </a>
+
+        <a class="product-card" href="products/solar_system/solar_system.html">
+          <div class="product-top">
+            <div class="product-icon">🪐</div>
+            <span class="tag">Астрономія</span>
+          </div>
+          <h3 class="product-title">Сонячна система <span class="arrow">↗</span></h3>
+          <p class="product-tagline">3D/2D Модель Сонячної системи</p>
+          <p class="product-desc">Інтерактивна модель планетних орбіт з реальними астрономічними даними.</p>
+          <div class="product-footer">Відкрити симуляцію ↗</div>
+        </a>
+      </div>
     </section>
 
-    <section id="contacts" class="container contacts">
-      <h2>Контакти</h2>
-      <p>Зв'яжіться з нами: <a href="mailto:info@ugread.com">info@ugread.com</a></p>
+    <!-- ПРО ПЛАТФОРМУ -->
+    <section id="about" class="container about-section">
+      <div class="about-card">
+        <span class="badge-label">Про нас</span>
+        <h2>Про UGRead</h2>
+        <p class="about-lead">UGRead — освітній портал для учнів та вчителів, який поєднує готові матеріали та інтерактивні інструменти. Використовуй наші продукти на уроці чи дистанційно.</p>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="feature-icon">🎯</div>
+            <h4>Доступність</h4>
+            <p>Працює у будь-якому браузері локально або онлайн без встановлення.</p>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">⚡</div>
+            <h4>Інтерактивність</h4>
+            <p>Симуляції, інтерактивні дошки, редактори коду та формул.</p>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🇺🇦</div>
+            <h4>Український контент</h4>
+            <p>Адаптовано під шкільну та університетську програму України.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- КОНТАКТИ -->
+    <section id="contacts" class="container contacts-section">
+      <div class="contacts-card">
+        <span class="badge-label-cyan">Зворотний зв’язок</span>
+        <h2>Контакти</h2>
+        <p>Зв'яжіться з нами для запитань, пропозицій або співпраці:</p>
+        <div class="email-link">
+          ✉️ <a href="mailto:info@ugread.com">info@ugread.com</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ПОДЯКИ -->
+    <section id="thankfulness" class="container thankfulness-section">
+      <div class="thank-card">
+        <div class="heart-icon">❤️</div>
+        <h2>Подяки</h2>
+        <p>Щира подяка викладачам, методистам, учням та відкритій освітній спільноті України за натхнення, тестування інтерактивних інструментів та щоденний внесок у якісну освіту.</p>
+      </div>
     </section>
   </main>
 
+  <!-- ФУТЕР -->
   <footer class="site-footer">
     <div class="container footer-inner">
-      <div>© UGRead — 2025</div>
-      <div class="footer-links"><a href="#">Політика конфіденційності</a></div>
+      <div><strong>UGRead</strong> — © 2025. Всі права захищено.</div>
+      <div class="footer-links">
+        <a href="#">Політика конфіденційності</a>
+        <a href="mailto:info@ugread.com">info@ugread.com</a>
+      </div>
     </div>
   </footer>
+
+  <!-- МОДАЛЬНЕ ВІКНО З СИМУЛЯЦІЯМИ ДЛЯ ОБРАНОГО ПРЕДМЕТУ -->
+  <div id="subjectModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span id="modalIcon" class="modal-icon">∑</span>
+          <div>
+            <h3 id="modalTitle" class="modal-title">Назва предмету</h3>
+            <p class="modal-sub">Оберіть тему або симуляцію для переходу</p>
+          </div>
+        </div>
+        <button id="closeModal" class="modal-close" aria-label="Закрити">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p id="modalDesc" class="modal-desc">Опис предмету...</p>
+        <h4 class="modal-section-title">Основні теми та симуляції предмету:</h4>
+        <!-- Список тем з посиланнями генерується динамічно з script.js -->
+        <div id="modalTopicsList" class="topics-grid"></div>
+      </div>
+
+      <div class="modal-footer">
+        <span class="modal-hint">💡 Посилання на симуляції налаштовуються у файлі <code>script.js</code></span>
+        <button id="closeModalBtn" class="btn btn-secondary">Закрити</button>
+      </div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>

@@ -102,7 +102,7 @@ const CATEGORIES_DATA = {
     name: 'Пізнаємо природу',
     desc: 'Орфографія, синтаксис, стилістика та шедеври української класичної й сучасної літератури.',
     topics: [
-      { name: 'Кругообіг води в природі', link: '' },
+      { name: 'Кругообіг води в природі', link: './products/watercycle/water_cycle_simulation.html' },
       
     ]
   }

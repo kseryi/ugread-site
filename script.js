@@ -65,7 +65,7 @@ const CATEGORIES_DATA = {
     name: 'Інформатика',
     desc: 'Алгоритми, структури даних, програмування на Python, веб-розробка та бази даних.',
     topics: [
-      { name: 'ЗD моделювання для дітей', link: '' },
+      { name: 'ЗD моделювання для дітей', link: './products/3Dcraft/index.html' },
       { name: 'Веб-технології: HTML, CSS та JS', link: '' },
       { name: 'Блочне програмування', link: '' }
     ]

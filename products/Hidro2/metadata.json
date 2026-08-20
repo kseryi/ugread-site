@@ -1,0 +1,6 @@
+{
+  "name": "HydroPhysics: Communicating Vessels & Hydraulic Press Simulator",
+  "description": "Interactive physics laboratory simulating communicating vessels of 2, 3, 4 tubes of varied shapes and widths with fluid pouring dynamics, immiscible liquids, plus a hydraulic press and lever-operated car jack simulator with Pascal's law.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

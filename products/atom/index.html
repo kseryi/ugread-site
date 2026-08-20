@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>Візуалізація Атома</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Вкладки -->
+  <div id="tabBar">
+    <button class="tabBtn active" data-tab="classic">Класична модель</button>
+    <button class="tabBtn" data-tab="shell">Енергетичні оболонки</button>
+    <button class="tabBtn" data-tab="constructor">Конструктор атома</button>
+  </div>
+
+  <!-- 3D сцена (використовується вкладками "Класична" та "Оболонки") -->
+  <div id="sceneContainer">
+    <a-scene id="mainScene" background="color: #222" embedded>
+      <a-entity id="nucleus" position="0 1.6 -3"></a-entity>
+      <a-entity id="orbits"></a-entity>
+      <a-entity id="mainCameraRig" position="0 1.6 -3" rotation="0 0 0">
+        <a-entity id="mainCamera" camera position="0 0 3"></a-entity>
+      </a-entity>
+    </a-scene>
+
+    <div id="dragHint" class="dragHintOverlay">Затисніть та тягніть — обертання. Колесо миші — наближення.</div>
+
+    <!-- UI Перемикачі і кнопки -->
+    <div id="ui">
+      <div id="switchesTable">
+        <div id="atomicControls">
+          <button id="decrease">−</button>
+          <div id="atomicNumber">Z = 3</div>
+          <button id="increase">+</button>
+        </div>
+
+        <table>
+          <tbody>
+            <tr>
+              <td><label for="toggleTrails">Трейли електронів</label></td>
+              <td>
+                <label class="switch" title="Вмикнути/Вимкнути трейли">
+                  <input type="checkbox" id="toggleTrails" checked />
+                  <span class="slider"></span>
+                </label>
+              </td>
+            </tr>
+            <tr>
+              <td><label for="toggleTheme">Світлий режим</label></td>
+              <td>
+                <label class="switch" title="Світлий/Темний режим">
+                  <input type="checkbox" id="toggleTheme" />
+                  <span class="slider"></span>
+                </label>
+              </td>
+            </tr>
+            <tr>
+              <td><label for="toggleNucleusView">Вигляд ядра</label></td>
+              <td>
+                <label class="switch" title="Перемикач вигляду ядра">
+                  <input type="checkbox" id="toggleNucleusView" checked />
+                  <span class="slider"></span>
+                </label>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="infoTable">
+      <table>
+        <thead>
+          <tr><th>Частка</th><th>Кількість</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Елемент</td><td id="elementName">-</td></tr>
+          <tr><td>Протони</td><td id="protonCount">-</td></tr>
+          <tr><td>Нейтрони</td><td id="neutronCount">-</td></tr>
+          <tr><td>Електрони</td><td id="electronCount">-</td></tr>
+        </tbody>
+      </table>
+      <div id="shellLegend" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- Вкладка "Конструктор атома" -->
+  <div id="constructorView" class="hidden">
+    <div id="constructorSceneWrap">
+      <a-scene id="ctorScene" background="color: #222" embedded>
+        <a-entity id="ctorNucleus" position="0 1.6 -3"></a-entity>
+        <a-entity id="ctorOrbits"></a-entity>
+        <a-entity id="ctorCameraRig" position="0 1.6 -3" rotation="0 0 0">
+          <a-entity id="ctorCamera" camera position="0 0 3.4"></a-entity>
+        </a-entity>
+      </a-scene>
+      <div id="ctorDragHint" class="dragHintOverlay">Перетягніть сюди частинку, або натисніть на неї в панелі →</div>
+    </div>
+
+    <div id="constructorPanel">
+      <div id="particlePalette">
+        <h3>Частинки</h3>
+
+        <div class="paletteRow">
+          <div class="paletteItem" draggable="true" data-type="proton" id="protonChip">
+            <div class="particleDot proton"></div>
+            <span>Протон (p⁺)</span>
+          </div>
+          <button class="minusBtn" data-type="proton" title="Прибрати протон">−</button>
+        </div>
+
+        <div class="paletteRow">
+          <div class="paletteItem" draggable="true" data-type="neutron" id="neutronChip">
+            <div class="particleDot neutron"></div>
+            <span>Нейтрон (n)</span>
+          </div>
+          <button class="minusBtn" data-type="neutron" title="Прибрати нейтрон">−</button>
+        </div>
+
+        <div class="paletteRow">
+          <div class="paletteItem" draggable="true" data-type="electron" id="electronChip">
+            <div class="particleDot electron"></div>
+            <span>Електрон (e⁻)</span>
+          </div>
+          <button class="minusBtn" data-type="electron" title="Прибрати електрон">−</button>
+        </div>
+
+        <p class="hint">Перетягніть частинку у сцену або просто натисніть на неї, щоб додати. Кнопка «−» прибирає останню частинку цього типу.</p>
+        <button id="clearNucleusBtn">Очистити все</button>
+      </div>
+
+      <div id="constructorInfo">
+        <table>
+          <tbody>
+            <tr><td>Протони (Z)</td><td id="ctorProtons">0</td></tr>
+            <tr><td>Нейтрони (N)</td><td id="ctorNeutrons">0</td></tr>
+            <tr><td>Масове число (A)</td><td id="ctorMass">0</td></tr>
+            <tr><td>Електрони (розміщено)</td><td id="ctorElectrons">0</td></tr>
+            <tr><td>Заряд іона</td><td id="ctorCharge">0</td></tr>
+            <tr><td>Елемент</td><td id="ctorElement">-</td></tr>
+          </tbody>
+        </table>
+        <div id="stabilityBox" class="stability-empty">Додайте протони та нейтрони, щоб побачити результат</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="atom.js"></script>
+</body>
+</html>

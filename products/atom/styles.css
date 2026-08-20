@@ -1,0 +1,494 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  background-color: #222;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.light-theme {
+  background-color: #f0f8ff;
+  color: #222;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------- Вкладки ---------- */
+#tabBar {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 20;
+  background-color: rgba(0,0,0,0.4);
+  border-radius: 10px;
+  padding: 6px;
+}
+
+body.light-theme #tabBar {
+  background-color: rgba(255,255,255,0.6);
+}
+
+.tabBtn {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 0.95rem;
+  font-family: inherit;
+  padding: 8px 14px;
+  height: auto;
+  width: auto;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.tabBtn:hover {
+  background-color: rgba(78,170,255,0.25);
+}
+
+.tabBtn.active {
+  background-color: #4eaaff;
+  color: #111;
+}
+
+body.light-theme .tabBtn {
+  color: #222;
+}
+
+body.light-theme .tabBtn.active {
+  background-color: #3399ff;
+  color: white;
+}
+
+/* ---------- Сцена / базовий UI ---------- */
+#sceneContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#ui {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 15px;
+  z-index: 10;
+}
+
+#switchesTable table {
+  border-collapse: collapse;
+  background-color: rgba(0,0,0,0.4);
+  border-radius: 10px;
+  padding: 10px 15px;
+  color: white;
+  font-size: 1rem;
+  user-select: none;
+  min-width: 200px;
+}
+
+#switchesTable td {
+  padding: 6px 10px;
+  vertical-align: middle;
+  text-align: right;
+  color: inherit;
+}
+
+#switchesTable label {
+  cursor: pointer;
+}
+
+#atomicControls {
+  padding: 10px 0px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+button {
+  background-color: #4eaaff;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+button:hover {
+  background-color: #3d8ddb;
+}
+
+body.light-theme button {
+  background-color: #3399ff;
+  color: #222;
+}
+
+body.light-theme button:hover {
+  background-color: #1c75d8;
+}
+
+#atomicNumber {
+  font-size: 2rem;
+  user-select: none;
+  min-width: 60px;
+  text-align: center;
+}
+
+#infoTable {
+  position: fixed;
+  top: 70px;
+  left: 20px;
+  background-color: transparent;
+  border: 2px solid #4eaaff;
+  border-radius: 8px;
+  padding: 10px 15px;
+  color: white;
+  font-size: 1.2rem;
+  user-select: none;
+  z-index: 10;
+  transition: border-color 0.3s ease, color 0.3s ease;
+}
+
+body.light-theme #infoTable {
+  border-color: #3399ff;
+  color: #222;
+}
+
+#infoTable table {
+  border-collapse: collapse;
+  width: 220px;
+}
+
+#infoTable th, #infoTable td {
+  border: 1px solid #4eaaff;
+  padding: 6px 10px;
+  text-align: left;
+  transition: border-color 0.3s ease, color 0.3s ease;
+}
+
+body.light-theme #infoTable th, body.light-theme #infoTable td {
+  border-color: #3399ff;
+  color: #222;
+}
+
+#infoTable th {
+  background-color: #4eaaff;
+  color: #222;
+}
+
+body.light-theme #infoTable th {
+  background-color: #3399ff;
+  color: white;
+}
+
+#elementName {
+  font-weight: bold;
+  color: #ffcc66;
+}
+
+.dragHintOverlay {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0,0,0,0.45);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 5;
+  white-space: nowrap;
+}
+
+body.light-theme .dragHintOverlay {
+  background-color: rgba(255,255,255,0.65);
+  color: #222;
+}
+
+#shellLegend {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shellLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shellLegendDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ---------- Перемикач (toggle) ---------- */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #888;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #4eaaff;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+/* ---------- Конструктор атома (3D, drag & drop) ---------- */
+#constructorView {
+  width: 100%;
+  height: 100%;
+  padding-top: 78px;
+  box-sizing: border-box;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+}
+
+#constructorSceneWrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border-right: 1px solid rgba(255,255,255,0.15);
+}
+
+#constructorSceneWrap.dragOver {
+  outline: 3px dashed #ffcc66;
+  outline-offset: -3px;
+}
+
+#constructorSceneWrap a-scene {
+  width: 100%;
+  height: 100%;
+}
+
+#constructorPanel {
+  flex: 0 0 300px;
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background-color: rgba(0,0,0,0.25);
+}
+
+body.light-theme #constructorPanel {
+  background-color: rgba(255,255,255,0.35);
+}
+
+#particlePalette {
+  background-color: rgba(0,0,0,0.35);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+body.light-theme #particlePalette {
+  background-color: rgba(255,255,255,0.5);
+}
+
+#particlePalette h3 {
+  margin: 0 0 4px 0;
+}
+
+.paletteRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.paletteItem {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background-color: rgba(255,255,255,0.08);
+  border-radius: 10px;
+  cursor: grab;
+  user-select: none;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.paletteItem:hover {
+  background-color: rgba(78,170,255,0.25);
+  transform: translateY(-2px);
+}
+
+.paletteItem:active {
+  cursor: grabbing;
+}
+
+.minusBtn {
+  width: 36px;
+  height: 36px;
+  font-size: 1.3rem;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background-color: rgba(255,255,255,0.12);
+  box-shadow: none;
+}
+
+.minusBtn:hover {
+  background-color: rgba(231,76,60,0.55);
+}
+
+.particleDot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.particleDot.proton {
+  background-color: #ff4444;
+}
+
+.particleDot.neutron {
+  background-color: #888888;
+}
+
+.particleDot.electron {
+  background-color: #3399ff;
+}
+
+.hint {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  line-height: 1.3;
+  margin: 4px 0;
+}
+
+#clearNucleusBtn {
+  width: auto;
+  height: auto;
+  font-size: 0.9rem;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+#constructorInfo {
+  background-color: rgba(0,0,0,0.35);
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+body.light-theme #constructorInfo {
+  background-color: rgba(255,255,255,0.5);
+}
+
+#constructorInfo table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#constructorInfo td {
+  padding: 5px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+body.light-theme #constructorInfo td {
+  border-bottom: 1px solid rgba(0,0,0,0.15);
+}
+
+#constructorInfo td:last-child {
+  text-align: right;
+  font-weight: bold;
+}
+
+#stabilityBox {
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  text-align: center;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.stability-empty {
+  background-color: rgba(255,255,255,0.1);
+  color: inherit;
+}
+
+.stability-stable {
+  background-color: #2ecc71;
+  color: #123;
+}
+
+.stability-radioactive {
+  background-color: #f5a623;
+  color: #221;
+}
+
+.stability-impossible {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.stability-unstable {
+  background-color: #e74c3c;
+  color: white;
+}

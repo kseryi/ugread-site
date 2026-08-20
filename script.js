@@ -22,11 +22,11 @@ const CATEGORIES_DATA = {
     name: 'Фізика',
     desc: 'Механіка, термодинаміка, оптика, електродинаміка та квантові явища.',
     topics: [
-      { name: 'Оптична лава', link: '' },
-      { name: 'Закон Архімеда', link: '' },
-      { name: 'Сполучені посудини', link: '' },
-      { name: 'Симулятор ГЕС', link: '' },
-      { name: 'Математичний маятник', link: '' }
+      { name: 'Оптична лава', link: './products/optical_lava/index.html' },
+      { name: 'Закон Архімеда', link: './products/Archimed/index.html' },
+      { name: 'Сполучені посудини', link: './products/Hidro1' },
+      { name: 'Симулятор ГЕС', link: './products/GES/index.html' },
+      { name: 'Математичний маятник', link: './products/prndulum/index.html' }
     ]
   },
   astronomy: {
@@ -45,8 +45,9 @@ const CATEGORIES_DATA = {
     name: 'STEM',
     desc: 'Інженерні проєкти, робототехніка, 3D-моделювання та наукові експерименти.',
     topics: [
-      { name: 'Симулятор ЧПК верстата', link: '' },
-      { name: 'Сканер штрих-коду', link: '' },
+      { name: 'Симулятор ЧПК верстата', link: './products/cnc%20v%200.14/index.html' },
+      { name: 'Сканер штрих-коду', link: './products/stem/barcodescan2.html' },
+      { name: 'Генератор QR', link: './products/stem/QR_gen.html' },
 
     ]
   },
@@ -74,7 +75,7 @@ const CATEGORIES_DATA = {
     name: 'Географія',
     desc: 'Фізична та економічна географія, інтерактивні карти, кліматичні пояси та геологія.',
     topics: [
-      { name: 'Інтерактивний глобус', link: '' },
+      { name: 'Інтерактивний глобус', link: './products/globe/globe.html' },
       
     ]
   },

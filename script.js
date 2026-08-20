@@ -69,7 +69,7 @@ const CATEGORIES_DATA = {
     topics: [
       { name: 'ЗD моделювання для дітей', link: './products/3Dcraft/index.html' },
       { name: 'Веб-технології: HTML, CSS та JS', link: './products/uweb/index.html' },
-      { name: 'Блочне програмування', link: '' }
+      { name: 'Блочне програмування', link: 'https://kseryi.github.io/uPyth/' }
     ]
   },
   geography: {

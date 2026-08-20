@@ -36,7 +36,7 @@ const CATEGORIES_DATA = {
     topics: [
       { name: 'Сонячна системи', link: './products/solar_system/solar_system.html' },
       { name: 'Будова Землі', link: './products/structure_of_the_earth/index.html' },
-      { name: 'Зміна пір року', link: '' },
+      { name: 'Зміна пір року', link: './products/seasons/index.html' },
       { name: 'Фази Місяця та затемнення', link: '' }
     ]
   },

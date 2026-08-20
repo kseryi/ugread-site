@@ -25,6 +25,8 @@ const CATEGORIES_DATA = {
       { name: 'Оптична лава', link: './products/optical_lava/index.html' },
       { name: 'Закон Архімеда', link: './products/Archimed/index.html' },
       { name: 'Сполучені посудини', link: './products/Hidro1' },
+      { name: 'Капілярність', link: './products/Capilar/index.html' },
+      { name: 'Гідроудар', link: './products/hidrohamm/simulation.html' },
       { name: 'Симулятор ГЕС', link: './products/GES/index.html' },
       { name: 'Математичний маятник', link: './products/prndulum/index.html' }
     ]

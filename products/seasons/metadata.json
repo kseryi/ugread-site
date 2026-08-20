@@ -1,0 +1,6 @@
+{
+  "name": "Earth Orbit & Seasons 3D Interactive Simulation",
+  "description": "Інтерактивна 3D-модель руху Землі навколо Сонця, нахилу осі та зміни пір року на чистому JavaScript, HTML та CSS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,945 @@
+/* ==========================================================================
+   Frosted Glass Design System
+   Земля навколо Сонця — 3D-модель та зміна пір року
+   ========================================================================== */
+
+:root {
+  --bg-deep-space: #02040a;
+  --bg-space-center: #0a1324;
+  
+  /* Frosted Glass Layers */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg-hover: rgba(255, 255, 255, 0.08);
+  --glass-bg-active: rgba(255, 255, 255, 0.12);
+  --glass-bg-card: rgba(255, 255, 255, 0.04);
+  --glass-bg-inset: rgba(0, 0, 0, 0.25);
+  
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-border-hover: rgba(255, 255, 255, 0.22);
+  --glass-border-active: rgba(242, 166, 35, 0.45);
+  --glass-border-highlight: rgba(255, 255, 255, 0.15);
+  
+  --glass-blur: blur(20px) saturate(190%);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.42), inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
+  --glass-shadow-glow: 0 0 25px rgba(242, 166, 35, 0.25);
+  
+  /* Typography Colors */
+  --text-main: #f8fafc;
+  --text-muted: rgba(255, 255, 255, 0.65);
+  --text-dim: rgba(255, 255, 255, 0.40);
+  --text-faint: rgba(255, 255, 255, 0.25);
+  
+  /* Accents */
+  --accent-sun: #f2a623;
+  --accent-sun-glow: rgba(242, 166, 35, 0.35);
+  --accent-blue: #3b82f6;
+  --accent-blue-glow: rgba(59, 130, 246, 0.35);
+  
+  --season-spring: #97c459;
+  --season-summer: #f2a623;
+  --season-autumn: #d85a30;
+  --season-winter: #38bdf8;
+
+  /* Geometry */
+  --radius-full: 9999px;
+  --radius-xl: 20px;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: radial-gradient(circle at center, var(--bg-space-center) 0%, var(--bg-deep-space) 100%);
+  color: var(--text-main);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* 3D Canvas Container */
+#scene-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   UI Overlays (Шар інтерфейсу над WebGL сценою)
+   ========================================================================== */
+
+.ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.25rem;
+  gap: 1rem;
+}
+
+.ui-interactive {
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   Frosted Glass Components
+   ========================================================================== */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  pointer-events: none;
+}
+
+.glass-panel:hover {
+  border-color: var(--glass-border-hover);
+  background: var(--glass-bg-hover);
+}
+
+/* ==========================================================================
+   Верхня панель (Header)
+   ========================================================================== */
+
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: var(--radius-xl);
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.brand-icon {
+  font-size: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 12px rgba(242, 166, 35, 0.6));
+  animation: pulse-glow 3.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(242, 166, 35, 0.5)); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(242, 166, 35, 0.85)); }
+}
+
+.brand-text h1 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.brand-text p {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Швидкі кнопки сонцестоянь / рівнодень */
+.astro-quick-jumps {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.astro-jump-btn {
+  padding: 0.45rem 0.85rem;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+.astro-jump-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.astro-jump-btn:active {
+  transform: translateY(0);
+}
+
+.astro-jump-btn.summer { border-left: 3px solid var(--season-summer); }
+.astro-jump-btn.autumn { border-left: 3px solid var(--season-autumn); }
+.astro-jump-btn.winter { border-left: 3px solid var(--season-winter); }
+.astro-jump-btn.spring { border-left: 3px solid var(--season-spring); }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Language Switcher */
+.lang-switch-group {
+  display: flex;
+  align-items: center;
+  background: rgba(10, 19, 36, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  gap: 2px;
+}
+
+.lang-btn {
+  padding: 0.35rem 0.65rem;
+  border-radius: calc(var(--radius-md) - 2px);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.04em;
+}
+
+.lang-btn:hover {
+  color: var(--text-main);
+}
+
+.lang-btn.active {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.btn-ghost {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   Основний вміст (Ліва та Права панелі)
+   ========================================================================== */
+
+.main-content-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  flex: 1;
+  pointer-events: none;
+  min-height: 0;
+}
+
+/* Ліва та права бічні панелі */
+.side-panel {
+  width: 310px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-height: calc(100vh - 210px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.side-panel::-webkit-scrollbar,
+.right-panel::-webkit-scrollbar {
+  width: 4px;
+}
+.side-panel::-webkit-scrollbar-thumb,
+.right-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.panel-card {
+  padding: 1.1rem 1.25rem;
+}
+
+.card-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Картка сезонів */
+.hemisphere-season-block {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  padding: 0.8rem 0.9rem;
+  margin-bottom: 0.6rem;
+  transition: all 0.2s ease;
+}
+
+.hemisphere-season-block:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.hemisphere-season-block:last-child {
+  margin-bottom: 0;
+}
+
+.season-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.hemisphere-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.season-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(8px);
+}
+
+.badge-summer { background: rgba(242, 166, 35, 0.18); color: #f2a623; border: 1px solid rgba(242, 166, 35, 0.4); box-shadow: 0 0 12px rgba(242, 166, 35, 0.2); }
+.badge-winter { background: rgba(56, 189, 248, 0.18); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); box-shadow: 0 0 12px rgba(56, 189, 248, 0.2); }
+.badge-spring { background: rgba(151, 196, 89, 0.18); color: #97c459; border: 1px solid rgba(151, 196, 89, 0.4); box-shadow: 0 0 12px rgba(151, 196, 89, 0.2); }
+.badge-autumn { background: rgba(216, 90, 48, 0.18); color: #d85a30; border: 1px solid rgba(216, 90, 48, 0.4); box-shadow: 0 0 12px rgba(216, 90, 48, 0.2); }
+.badge-neutral { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+
+.season-description {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Інспектор інсоляції / сонячні метрики */
+.metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.8rem;
+}
+
+.metric-row:last-child {
+  border-bottom: none;
+}
+
+.metric-label {
+  color: var(--text-muted);
+}
+
+.metric-val {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.select-custom {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: rgba(10, 16, 30, 0.75);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: 0.78rem;
+  margin-top: 0.6rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.select-custom:focus, .select-custom:hover {
+  border-color: var(--accent-blue);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+/* Права панель (Камери, Шари, Експеримент з віссю) */
+.right-panel {
+  width: 290px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-height: calc(100vh - 210px);
+  overflow-y: auto;
+}
+
+.camera-modes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.45rem;
+}
+
+.camera-btn {
+  padding: 0.55rem 0.45rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.camera-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+}
+
+.camera-btn.active {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: var(--accent-blue);
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.3);
+}
+
+/* Експеримент з нахилом осі */
+.tilt-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.tilt-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.tilt-slider-row input[type="range"] {
+  flex: 1;
+}
+
+.tilt-val {
+  min-width: 48px;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--accent-sun);
+  text-align: right;
+}
+
+.tilt-quick-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.btn-xs {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-xs:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+/* Перемикачі шарів */
+.layers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.layer-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.layer-checkbox-label input[type="checkbox"] {
+  accent-color: var(--accent-sun);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.layer-checkbox-label:hover {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Нижня панель керування (Bottom Capsule Dock)
+   ========================================================================== */
+
+.bottom-dock {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  box-shadow: var(--glass-shadow);
+}
+
+/* Шкала місяців */
+.months-bar-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.month-chip {
+  flex: 1;
+  padding: 0.3rem 0.15rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.month-chip:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.month-chip.active {
+  background: rgba(242, 166, 35, 0.2);
+  border-color: rgba(242, 166, 35, 0.45);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(242, 166, 35, 0.3);
+}
+
+/* Основний блок таймлайну */
+.timeline-main-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.playback-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.btn-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: none;
+  color: #02040a;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.45);
+}
+
+.btn-circle:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 28px rgba(255, 255, 255, 0.7);
+}
+
+.btn-circle:active {
+  transform: scale(0.96);
+}
+
+.btn-icon-small {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-icon-small:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+/* Слайдер орбіти */
+.slider-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.slider-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.date-status {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.event-tag {
+  font-size: 0.74rem;
+  font-family: var(--font-mono);
+  color: var(--accent-sun);
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.angle-counter {
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--accent-sun);
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  background: var(--accent-sun);
+  box-shadow: 0 0 16px rgba(242, 166, 35, 0.9);
+}
+
+/* Селектор швидкості */
+.speed-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.speed-btn {
+  padding: 0.3rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.speed-btn:hover {
+  color: #ffffff;
+}
+
+.speed-btn.active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Модальне вікно теорії (Educational Guide Modal)
+   ========================================================================== */
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(2, 4, 10, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.modal-backdrop.open,
+.modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-box {
+  background: rgba(10, 19, 36, 0.85);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-xl);
+  max-width: 680px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modal-header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  color: var(--text-main);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.theory-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.2rem;
+}
+
+.theory-card h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent-sun);
+  margin-bottom: 0.45rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.myth-box {
+  background: rgba(216, 90, 48, 0.12);
+  border-left: 3px solid var(--season-autumn);
+  padding: 0.85rem 1.1rem;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 0.85rem;
+}
+
+.myth-box strong {
+  color: #fca5a5;
+}
+
+/* ==========================================================================
+   Адаптивність (Mobile / Tablet Responsive)
+   ========================================================================== */
+
+@media (max-width: 960px) {
+  .main-content-layout {
+    flex-direction: column;
+    overflow-y: auto;
+    pointer-events: none;
+  }
+  
+  .side-panel, .right-panel {
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    pointer-events: auto;
+  }
+
+  .astro-quick-jumps {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .ui-layer {
+    padding: 0.6rem;
+  }
+
+  .header-bar {
+    padding: 0.6rem 0.9rem;
+  }
+
+  .brand-text h1 {
+    font-size: 0.9rem;
+  }
+
+  .brand-text p {
+    display: none;
+  }
+
+  .bottom-dock {
+    padding: 0.75rem 1rem;
+  }
+
+  .months-bar-wrapper {
+    display: none;
+  }
+}

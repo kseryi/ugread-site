@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="meta-title">Земля навколо Сонця — 3D-модель та зміна пір року</title>
+  <meta id="meta-desc" name="description" content="Інтерактивна 3D-модель руху Землі навколо Сонця, нахилу осі 23.44°, рівнодень, сонцестоянь та зміни пір року." />
+  <link rel="stylesheet" href="./src/css/styles.css" />
+</head>
+<body>
+  <!-- 3D Canvas Container -->
+  <div id="scene-container"></div>
+
+  <!-- UI Overlay Layer -->
+  <div class="ui-layer">
+    <!-- Верхня панель (Header) -->
+    <header class="header-bar glass-panel ui-interactive">
+      <div class="brand-section">
+        <span class="brand-icon">☀️</span>
+        <div class="brand-text">
+          <h1 id="brand-title">Земля навколо Сонця</h1>
+          <p id="brand-subtitle">3D-модель орбіти, нахилу осі та зміни пір року</p>
+        </div>
+      </div>
+
+      <!-- Швидкий перехід до кардинальних астрономічних точок -->
+      <div class="astro-quick-jumps">
+        <button class="astro-jump-btn summer" data-angle="0" id="jump-summer-btn" title="21 червня">☀️ Літнє сонцестояння</button>
+        <button class="astro-jump-btn autumn" data-angle="90" id="jump-autumn-btn" title="23 вересня">🍂 Осіннє рівнодення</button>
+        <button class="astro-jump-btn winter" data-angle="180" id="jump-winter-btn" title="21 грудня">❄️ Зимове сонцестояння</button>
+        <button class="astro-jump-btn spring" data-angle="270" id="jump-spring-btn" title="20 березня">🌱 Весняне рівнодення</button>
+      </div>
+
+      <div class="header-actions">
+        <!-- Перемикач мов UA / EN -->
+        <div class="lang-switch-group" aria-label="Language selector">
+          <button class="lang-btn active" data-lang="uk" title="Українська мова">UA</button>
+          <button class="lang-btn" data-lang="en" title="English language">EN</button>
+        </div>
+
+        <button id="open-theory-btn" class="btn-ghost" title="Дізнатися чому насправді змінюються пори року">
+          <span>📖</span> <span id="theory-btn-text">Теорія та пояснення</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Основна середня зона (Інформаційні панелі) -->
+    <main class="main-content-layout">
+      <!-- Ліва панель: Статус пір року та сонячний інспектор -->
+      <aside class="side-panel ui-interactive">
+        <!-- Картка пір року для обох півкуль -->
+        <div class="glass-panel panel-card">
+          <div class="card-title">
+            <span id="title-current-seasons">Поточні пори року</span>
+            <span id="astronomy-event-tag" class="event-tag">21 червня</span>
+          </div>
+
+          <!-- Північна півкуля -->
+          <div class="hemisphere-season-block">
+            <div class="season-header">
+              <span class="hemisphere-name">
+                <span id="north-season-icon">☀️</span> <span id="north-hemisphere-label">Північна півкуля</span>
+              </span>
+              <span id="north-season-badge" class="season-badge badge-summer">Літо</span>
+            </div>
+            <h4 id="north-season-title" style="display:none;">Північ: Літо</h4>
+            <p id="north-season-desc" class="season-description">
+              Максимальний кут падіння променів, довгі дні та найбільше нагрівання.
+            </p>
+          </div>
+
+          <!-- Південна півкуля -->
+          <div class="hemisphere-season-block">
+            <div class="season-header">
+              <span class="hemisphere-name">
+                <span id="south-season-icon">❄️</span> <span id="south-hemisphere-label">Південна півкуля</span>
+              </span>
+              <span id="south-season-badge" class="season-badge badge-winter">Зима</span>
+            </div>
+            <h4 id="south-season-title" style="display:none;">Південь: Зима</h4>
+            <p id="south-season-desc" class="season-description">
+              Косі промені Сонця, короткі дні та мінімальне сонячне тепло.
+            </p>
+          </div>
+        </div>
+
+        <!-- Інспектор сонячної інсоляції та довжини дня -->
+        <div class="glass-panel panel-card">
+          <div class="card-title">
+            <span id="title-insolation">Сонячна інсоляція</span>
+            <span>📊</span>
+          </div>
+
+          <div class="metric-row">
+            <span class="metric-label" id="label-declination">Схилення Сонця (δ):</span>
+            <span id="declination-value" class="metric-val">+23.4°</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label" id="label-sun-altitude">Висота Сонця опівдні:</span>
+            <span id="sun-altitude-value" class="metric-val">63.0°</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label" id="label-day-length">Тривалість дня:</span>
+            <span id="day-length-value" class="metric-val">16 год 20 хв</span>
+          </div>
+
+          <label for="latitude-select" id="label-select-latitude" style="display:block; font-size:0.75rem; color:var(--text-muted); margin-top:0.7rem;">
+            Обрати широту спостереження:
+          </label>
+          <select id="latitude-select" class="select-custom"></select>
+        </div>
+      </aside>
+
+      <!-- Права панель: Ракурси камери, Нахил осі та Шари -->
+      <aside class="right-panel ui-interactive">
+        <div class="glass-panel panel-card" style="margin-bottom: 0.9rem;">
+          <div class="card-title">
+            <span id="title-camera-view">Ракурс камери</span>
+            <span>🎥</span>
+          </div>
+          <div class="camera-modes-grid">
+            <button class="camera-btn active" data-camera-mode="free" id="cam-btn-free">Вільний огляд</button>
+            <button class="camera-btn" data-camera-mode="follow" id="cam-btn-follow">Крупно Земля</button>
+            <button class="camera-btn" data-camera-mode="north_pole" id="cam-btn-north">З Півночі (згори)</button>
+            <button class="camera-btn" data-camera-mode="ecliptic" id="cam-btn-ecliptic">Площина орбіти</button>
+          </div>
+        </div>
+
+        <!-- Інтерактивний експеримент з нахилом осі -->
+        <div class="glass-panel panel-card" style="margin-bottom: 0.9rem;">
+          <div class="card-title">
+            <span id="title-axial-tilt">Нахил осі Землі</span>
+            <span id="tilt-val-out" class="tilt-val">23.4°</span>
+          </div>
+          <div class="tilt-control-group">
+            <div class="tilt-slider-row">
+              <input type="range" id="tilt-slider" min="0" max="90" step="0.5" value="23.44" />
+            </div>
+            <div class="tilt-quick-actions">
+              <button id="reset-tilt-btn" class="btn-xs" title="Справжній нахил осі Землі">23.44° (Реальна)</button>
+              <button id="zero-tilt-btn" class="btn-xs" title="Подивитися що буде якщо нахил 0°">0° (Без сезонів)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Перемикачі шарів -->
+        <div class="glass-panel panel-card">
+          <div class="card-title">
+            <span id="title-visual-layers">Візуальні шари</span>
+            <span>👁️</span>
+          </div>
+          <div class="layers-list">
+            <label class="layer-checkbox-label">
+              <input type="checkbox" id="toggle-orbit" checked />
+              <span id="label-layer-orbit">Орбітальні дуги пір року</span>
+            </label>
+            <label class="layer-checkbox-label">
+              <input type="checkbox" id="toggle-latitudes" checked />
+              <span id="label-layer-latitudes">Екватор, тропіки та полярні кола</span>
+            </label>
+            <label class="layer-checkbox-label">
+              <input type="checkbox" id="toggle-markers" checked />
+              <span id="label-layer-markers">Маркери сонцестоянь</span>
+            </label>
+            <label class="layer-checkbox-label">
+              <input type="checkbox" id="toggle-atmosphere" checked />
+              <span id="label-layer-atmosphere">Блакитне сяйво атмосфери</span>
+            </label>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Нижня панель керування часом та орбітою (Bottom Dock) -->
+    <footer class="bottom-dock glass-panel ui-interactive">
+      <!-- Шкала 12 місяців року -->
+      <div id="months-bar" class="months-bar-wrapper"></div>
+
+      <!-- Головний блок таймлайну -->
+      <div class="timeline-main-row">
+        <!-- Керування відтворенням -->
+        <div class="playback-controls">
+          <button id="step-prev-btn" class="btn-icon-small" title="Крок назад на 5 днів">⏪</button>
+          <button id="play-btn" class="btn-circle" title="Старт / Пауза">
+            <svg id="play-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:none; margin-left: 2px;">
+              <polygon points="5,3 19,12 5,21"></polygon>
+            </svg>
+            <svg id="pause-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          </button>
+          <button id="step-next-btn" class="btn-icon-small" title="Крок вперед на 5 днів">⏩</button>
+        </div>
+
+        <!-- Повзунок орбітального кута -->
+        <div class="slider-container">
+          <div class="slider-meta-row">
+            <div class="date-status">
+              <span id="current-date-display">21 червня</span>
+            </div>
+            <span id="orbit-angle-out" class="angle-counter">0°</span>
+          </div>
+          <input type="range" id="orbit-slider" min="0" max="359.9" step="0.5" value="0" />
+        </div>
+
+        <!-- Кнопки вибору швидкості -->
+        <div class="speed-selector">
+          <button class="speed-btn" data-speed="0.25">0.25x</button>
+          <button class="speed-btn" data-speed="0.5">0.5x</button>
+          <button class="speed-btn active" data-speed="1.0">1x</button>
+          <button class="speed-btn" data-speed="2.5">2.5x</button>
+          <button class="speed-btn" data-speed="5.0">5x</button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Модальне вікно теорії та освітнього матеріалу -->
+  <div id="theory-modal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="theory-modal-title">Чому насправді змінюються пори року?</h2>
+        <button id="close-theory-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="myth-box" id="theory-myth-box">
+          <strong>❌ Головний міф:</strong> Багато хто вважає, що літо настає через те, що Земля стає ближчою до Сонця. Це хибно! Насправді орбіта Землі майже ідеально кругла, а в січні (під час зими в Україні) Земля перебуває у перигелії — найближчій точці до Сонця!
+        </div>
+
+        <div class="theory-card">
+          <h3 id="theory-sec1-title">🌍 1. Нахил осі обертання (23.44°)</h3>
+          <p id="theory-sec1-text">
+            Вісь обертання Землі нахилена відносно перпендикуляра до площини її орбіти (екліптики) під кутом приблизно <strong>23.44°</strong>. Цей напрямок залишається постійним у просторі протягом року (орієнтований на Полярну зірку).
+          </p>
+        </div>
+
+        <div class="theory-card">
+          <h3 id="theory-sec2-title">📐 2. Кут падіння сонячних променів</h3>
+          <p id="theory-sec2-text">
+            Коли півкуля нахилена <em>до</em> Сонця (як Північна в червні), промені падають під прямим або майже прямим кутом. Енергія концентрується на меншій площі, викликаючи інтенсивне нагрівання — настає <strong>літо</strong>. Коли півкуля нахилена <em>від</em> Сонця (у грудні), промені падають косо, розсіюються на більшу площу і проходять довший шлях крізь атмосферу — настає <strong>зима</strong>.
+          </p>
+        </div>
+
+        <div class="theory-card">
+          <h3 id="theory-sec3-title">⏳ 3. Тривалість світлового дня</h3>
+          <p id="theory-sec3-text">
+            Влітку через нахил осі Сонце довше перебуває над горизонтом (у Києві до 16.5 годин), що дає поверхні більше часу для нагрівання. Взимку день триває лише ~8 годин, і нічне охолодження переважає денне прогрівання.
+          </p>
+        </div>
+
+        <div class="theory-card">
+          <h3 id="theory-sec4-title">⚖️ 4. Рівнодення та сонцестояння</h3>
+          <p id="theory-sec4-text">
+            <strong>21 червня (Літнє сонцестояння):</strong> Сонце в зеніті над Тропіком Рака (23.44° N).<br>
+            <strong>23 вересня (Осіннє рівнодення):</strong> Сонце в зеніті над Екватором (день = ніч = 12 год).<br>
+            <strong>21 грудня (Зимове сонцестояння):</strong> Сонце в зеніті над Тропіком Козорога (23.44° S).<br>
+            <strong>20 березня (Весняне рівнодення):</strong> Сонце знову в зеніті над Екватором.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Головний вхідний скрипт (чистий Vanilla JS без модульних обмежень CORS) -->
+  <script src="./src/js/app.js"></script>
+</body>
+</html>

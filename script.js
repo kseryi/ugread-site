@@ -79,6 +79,7 @@ const CATEGORIES_DATA = {
     desc: 'Фізична та економічна географія, інтерактивні карти, кліматичні пояси та геологія.',
     topics: [
       { name: 'Інтерактивний глобус', link: './products/globe/globe.html' },
+       { name: 'Симулятор рельєфу', link: './products/relief/relief.html' }
       
     ]
   },

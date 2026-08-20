@@ -34,8 +34,8 @@ const CATEGORIES_DATA = {
     name: 'Астрономія',
     desc: 'Будова Всесвіту, планети Сонячної системи, зорі, галактики та космічні місії.',
     topics: [
-      { name: 'Планети Сонячної системи', link: '' },
-      { name: 'Будова Землі', link: '' },
+      { name: 'Сонячна системи', link: './products/solar_system/solar_system.html' },
+      { name: 'Будова Землі', link: './products/structure_of_the_earth/index.html' },
       { name: 'Зміна пір року', link: '' },
       { name: 'Фази Місяця та затемнення', link: '' }
     ]

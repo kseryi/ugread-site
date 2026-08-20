@@ -45,10 +45,9 @@ const CATEGORIES_DATA = {
     name: 'STEM',
     desc: 'Інженерні проєкти, робототехніка, 3D-моделювання та наукові експерименти.',
     topics: [
-      { name: 'Основи робототехніки та сенсори', link: '' },
-      { name: '3D-моделювання та конструкції', link: '' },
-      { name: 'Мікроконтролери Arduino', link: '' },
-      { name: 'STEM-лабораторія винаходів', link: '' }
+      { name: 'Симулятор ЧПК верстата', link: '' },
+      { name: 'Сканер штрих-коду', link: '' },
+
     ]
   },
   chemistry: {
@@ -66,7 +65,7 @@ const CATEGORIES_DATA = {
     desc: 'Алгоритми, структури даних, програмування на Python, веб-розробка та бази даних.',
     topics: [
       { name: 'ЗD моделювання для дітей', link: './products/3Dcraft/index.html' },
-      { name: 'Веб-технології: HTML, CSS та JS', link: '' },
+      { name: 'Веб-технології: HTML, CSS та JS', link: './products/uweb/index.html' },
       { name: 'Блочне програмування', link: '' }
     ]
   },

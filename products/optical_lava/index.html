@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Оптична лава — симулятор геометричної оптики</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" width="30" height="30" aria-hidden="true">
+        <line x1="2" y1="20" x2="38" y2="20" stroke="var(--axis)" stroke-width="1"/>
+        <path d="M18 6 C24 6 24 34 18 34 C24 34 24 6 18 6 Z" fill="none" stroke="var(--ray)" stroke-width="2"/>
+        <circle cx="20" cy="20" r="1.6" fill="var(--ray)"/>
+      </svg>
+      <div class="brand-text">
+        <h1>Оптична&nbsp;лава</h1>
+        <span>симулятор ходу променів у реальному часі</span>
+      </div>
+    </div>
+
+    <div class="toolbar" role="toolbar" aria-label="Додати елементи">
+      <button class="tool-btn" data-add="lens-convex" title="Додати збиральну лінзу">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M11 2 C15 2 15 22 11 22 C15 22 15 2 11 2 Z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>Збиральна лінза</span>
+      </button>
+      <button class="tool-btn" data-add="lens-concave" title="Додати розсіювальну лінзу">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 2 C4 2 4 22 8 22 M16 2 C20 2 20 22 16 22" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>Розсіювальна лінза</span>
+      </button>
+      <button class="tool-btn" data-add="mirror-concave" title="Додати увігнуте дзеркало">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 2 C15 2 15 22 9 22" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M18 4 L15 7 M18 9 L15 11 M18 14 L15 16 M18 19 L15 20" stroke="currentColor" stroke-width="1.2"/></svg>
+        <span>Увігнуте дзеркало</span>
+      </button>
+      <button class="tool-btn" data-add="mirror-convex" title="Додати опукле дзеркало">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 2 C9 2 9 22 15 22" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M18 4 L15 7 M18 9 L15 11 M18 14 L15 16 M18 19 L15 20" stroke="currentColor" stroke-width="1.2"/></svg>
+        <span>Опукле дзеркало</span>
+      </button>
+      <button class="tool-btn" data-add="object-arrow" title="Додати предмет (стрілку)">
+        <svg viewBox="0 0 24 24" width="18" height="18"><line x1="12" y1="21" x2="12" y2="4" stroke="currentColor" stroke-width="1.6"/><path d="M8 8 L12 3 L16 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span>Предмет</span>
+      </button>
+      <button class="tool-btn" data-add="point-source" title="Додати точкове джерело">
+        <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="6" cy="12" r="2.2" fill="currentColor"/><line x1="9" y1="12" x2="21" y2="6" stroke="currentColor" stroke-width="1.3"/><line x1="9" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.3"/><line x1="9" y1="12" x2="21" y2="18" stroke="currentColor" stroke-width="1.3"/></svg>
+        <span>Точкове джерело</span>
+      </button>
+      <button class="tool-btn" data-add="parallel-beam" title="Додати паралельний пучок (лазер)">
+        <svg viewBox="0 0 24 24" width="18" height="18"><line x1="3" y1="7" x2="21" y2="7" stroke="currentColor" stroke-width="1.3"/><line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.3"/><line x1="3" y1="17" x2="21" y2="17" stroke="currentColor" stroke-width="1.3"/></svg>
+        <span>Паралельний пучок</span>
+      </button>
+      <button class="tool-btn danger" id="clear-all" title="Очистити все">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span>Очистити все</span>
+      </button>
+      <button class="tool-btn accent" id="open-task-modal" title="Режим задачі: створити або розв'язати">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3 L21 8 L12 13 L3 8 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6 10.5 V16 C6 17.5 8.5 19 12 19 C15.5 19 18 17.5 18 16 V10.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>Задачі</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="workspace">
+
+    <section class="canvas-wrap">
+      <canvas id="scene"></canvas>
+      <svg id="lens-layer" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="axis-label left">← до лінзи (об'єкт)</div>
+      <div class="axis-label right">хід променів →</div>
+      <div class="legend">
+        <span><i class="sw sw-real"></i>дійсне зображення</span>
+        <span><i class="sw sw-virtual"></i>уявне зображення</span>
+      </div>
+      <div class="zoom-ctrl" role="group" aria-label="Масштаб оптичної лави">
+        <button id="zoom-out" title="Зменшити масштаб">−</button>
+        <span id="zoom-level">100%</span>
+        <button id="zoom-in" title="Збільшити масштаб">+</button>
+        <button id="zoom-reset" title="Скинути масштаб">⤾</button>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+
+      <div class="panel presets">
+        <h2>Сценарії <small>(для обраної лінзи/дзеркала)</small></h2>
+        <div class="preset-grid">
+          <button class="preset-btn" data-preset="beyond2f"><b>d &gt; 2F</b><span>за подвійним фокусом</span></button>
+          <button class="preset-btn" data-preset="at2f"><b>d = 2F</b><span>у подвійному фокусі</span></button>
+          <button class="preset-btn" data-preset="between"><b>F &lt; d &lt; 2F</b><span>між F та 2F</span></button>
+          <button class="preset-btn" data-preset="atf"><b>d = F</b><span>у фокусі</span></button>
+          <button class="preset-btn" data-preset="belowf"><b>d &lt; F</b><span>між лінзою та F</span></button>
+        </div>
+      </div>
+
+      <div class="panel elements-list">
+        <h2>Елементи <span class="count" id="count">0</span></h2>
+        <ul id="elements-ul"><li class="empty">Додайте елемент з панелі зверху</li></ul>
+      </div>
+
+      <div class="panel properties" id="properties-panel">
+        <h2>Властивості</h2>
+        <div id="properties-body"><p class="muted">Оберіть елемент на схемі або у списку.</p></div>
+      </div>
+
+      <div class="panel image-info" id="image-info-panel">
+        <h2>Характеристики зображення</h2>
+        <div id="image-info-body"><p class="muted">Додайте предмет і лінзу, щоб побачити побудову.</p></div>
+      </div>
+
+      <div class="panel task-panel hidden" id="task-panel">
+        <h2>🎓 Задача <span class="count" id="task-max-score">12</span></h2>
+        <div id="task-panel-body"></div>
+      </div>
+
+    </aside>
+
+  </main>
+</div>
+
+<div class="modal-overlay hidden" id="task-modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="teacher">Створити задачу (вчитель)</button>
+        <button class="modal-tab" data-tab="student">Розв'язати задачу (учень)</button>
+      </div>
+      <button class="modal-close" id="task-modal-close" title="Закрити">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="modal-pane" data-pane="teacher">
+        <p class="muted">
+          1. Побудуйте на схемі задані елементи (лінзу, дзеркало тощо) зі звичайної панелі інструментів.<br>
+          2. У властивостях кожного такого елемента увімкніть перемикач <b>«🎓 Зробити умовою задачі»</b> — учень не зможе його рухати чи видаляти.<br>
+          3. Опишіть критерії очікуваного результату нижче та згенеруйте PDF-аркуш завдання.
+        </p>
+
+        <div class="prop-row">
+          <label>Додаткові інструкції для учня (необов'язково)</label>
+          <textarea id="task-instructions" rows="2" placeholder="Наприклад: побудуйте хід променів і вкажіть відстань до предмета"></textarea>
+        </div>
+
+        <div class="task-criteria-grid">
+          <div class="prop-row">
+            <label>Тип зображення</label>
+            <select id="crit-real">
+              <option value="">Будь-який</option>
+              <option value="real">Дійсне</option>
+              <option value="virtual">Уявне</option>
+            </select>
+          </div>
+          <div class="prop-row">
+            <label>Орієнтація</label>
+            <select id="crit-orientation">
+              <option value="">Будь-яка</option>
+              <option value="upright">Пряме</option>
+              <option value="inverted">Перевернуте</option>
+            </select>
+          </div>
+          <div class="prop-row">
+            <label>Розмір</label>
+            <select id="crit-size">
+              <option value="">Будь-який</option>
+              <option value="enlarged">Збільшене</option>
+              <option value="reduced">Зменшене</option>
+              <option value="equal">Рівне за розміром</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="check-row">
+          <input type="checkbox" id="crit-mag-enable">
+          Враховувати діапазон модуля збільшення Γ
+        </label>
+        <div class="row-inline task-mag-range" id="task-mag-range">
+          <input type="number" id="crit-mag-min" placeholder="від" step="0.1" min="0">
+          <input type="number" id="crit-mag-max" placeholder="до" step="0.1" min="0">
+        </div>
+
+        <div class="prop-row">
+          <label>Максимальний бал</label>
+          <input type="number" id="task-max-score-input" value="12" min="1" max="100">
+        </div>
+
+        <button class="delete-el-btn primary-btn" id="generate-task-btn">📄 Згенерувати PDF-аркуш завдання</button>
+
+        <div id="task-code-output" class="task-code-output hidden">
+          <label>Код задачі (можна надіслати учню й окремо від PDF)</label>
+          <textarea id="task-code-text" rows="3" readonly></textarea>
+          <button class="seg-btn" id="copy-task-code">Скопіювати код</button>
+        </div>
+      </div>
+
+      <div class="modal-pane hidden" data-pane="student">
+        <p class="muted">Вставте код задачі, отриманий від учителя (він надрукований унизу PDF-аркуша), і натисніть «Завантажити».</p>
+        <div class="prop-row">
+          <label>Код задачі</label>
+          <textarea id="student-task-code" rows="4" placeholder="Вставте код задачі сюди…"></textarea>
+        </div>
+        <button class="delete-el-btn primary-btn" id="load-task-btn">Завантажити задачу</button>
+        <p class="muted" id="load-task-error"></p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

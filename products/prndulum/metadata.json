@@ -1,0 +1,6 @@
+{
+  "name": "Mathematical Pendulum Simulator",
+  "description": "Interactive mathematical pendulum simulation with real-time analytics, string length, amplitude, period, and frequency measurements in Ukrainian and English.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

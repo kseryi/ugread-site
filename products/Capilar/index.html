@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Фізика Капілярності та Змочування — Інтерактивна Лабораторія</title>
+  <style>
+    :root {
+      --bg-main: #090d16;
+      --bg-card: #0f172a;
+      --bg-panel: rgba(15, 23, 42, 0.85);
+      --border-color: #1e293b;
+      --border-focus: #06b6d4;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent-cyan: #06b6d4;
+      --accent-blue: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --accent-amber: #f59e0b;
+      --accent-indigo: #6366f1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Ubuntu, Cantarell, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0b1120; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* Header */
+    header {
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #06b6d4, #6366f1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+
+    .brand-text h1 {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      background: linear-gradient(to right, #ffffff, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      background: #0b1120;
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      background: var(--accent-cyan);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(6, 182, 212, 0.35);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-secondary:hover {
+      background: #334155;
+      color: #ffffff;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 1024px) {
+      .tab-content.active {
+        grid-template-columns: 7fr 5fr;
+      }
+    }
+
+    /* Panels & Cards */
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .panel-header {
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      background: #060911;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Controls Grid */
+    .controls-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+
+    .control-val {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    /* Sliders */
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 4px;
+      appearance: none;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--accent-cyan);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+      transition: transform 0.1s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Grid selector buttons */
+    .btn-grid {
+      display: grid;
+      gap: 6px;
+    }
+
+    .btn-grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .btn-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .btn-grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .btn-grid-5 { grid-template-columns: repeat(5, 1fr); }
+
+    .choice-btn {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border-color);
+      color: #cbd5e1;
+      padding: 7px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .choice-btn:hover {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    .choice-btn.active {
+      background: rgba(6, 182, 212, 0.15);
+      border-color: var(--accent-cyan);
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+    }
+
+    .choice-btn-title {
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .choice-btn-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: ui-monospace, monospace;
+    }
+
+    /* Tube Quantity buttons */
+    .tube-qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: #1e293b;
+      color: #94a3b8;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .tube-qty-btn.active {
+      background: var(--accent-cyan);
+      color: #ffffff;
+      border-color: var(--accent-cyan);
+    }
+
+    /* Floating badges on canvas */
+    .floating-hud {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      backdrop-filter: blur(8px);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 11px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      pointer-events: none;
+    }
+
+    /* Tube selector cards inside controls */
+    .tube-selector-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .tube-selector-card.active {
+      border-color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.12);
+    }
+
+    /* Formula table */
+    .table-container {
+      overflow-x: auto;
+      padding: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      text-align: left;
+    }
+
+    th {
+      color: var(--text-muted);
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border-color);
+      font-weight: 600;
+    }
+
+    td {
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.8);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      max-width: 750px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      color: #cbd5e1;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .modal-box h2 { color: #ffffff; font-size: 18px; }
+    .modal-box h3 { color: var(--accent-cyan); font-size: 14px; margin-top: 10px; }
+    .formula-box {
+      background: #060911;
+      border: 1px solid #1e293b;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-family: ui-monospace, monospace;
+      font-weight: bold;
+      color: var(--accent-amber);
+      text-align: center;
+      font-size: 15px;
+    }
+
+    .close-btn {
+      align-self: flex-end;
+      background: var(--accent-cyan);
+      color: #ffffff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">💧</div>
+      <div class="brand-text">
+        <h1>Капілярність & Змочування</h1>
+        <p>Інтерактивна фізична лабораторія (Offline HTML5)</p>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('jurin')">🧪 Капіляри & Жюрен</button>
+      <button class="tab-btn" onclick="switchTab('porous')">🧽 Пористе вбирання</button>
+      <button class="tab-btn" onclick="switchTab('molecular')">🔬 Молекулярні сили</button>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-secondary" onclick="openTheoryModal()">📚 Теорія & Формули</button>
+    </div>
+  </header>
+
+  <!-- Main Simulator Area -->
+  <main>
+
+    <!-- TAB 1: CAPILLARY TUBES & JURIN'S LAW -->
+    <div id="tab-jurin" class="tab-content active">
+      
+      <!-- Visual Canvas Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>Кількість капілярів:</span>
+            <button class="tube-qty-btn active" id="qty-1" onclick="setTubeCount(1)">1</button>
+            <button class="tube-qty-btn" id="qty-2" onclick="setTubeCount(2)">2</button>
+            <button class="tube-qty-btn" id="qty-3" onclick="setTubeCount(3)">3</button>
+            <button class="tube-qty-btn" id="qty-4" onclick="setTubeCount(4)">4</button>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-secondary" id="btn-vectors" onclick="toggleVectors()">↗ Вектори сил</button>
+            <button class="btn-secondary" id="btn-ruler" onclick="toggleRuler()">📏 Лінійка</button>
+          </div>
+        </div>
+
+        <div class="canvas-container">
+          <canvas id="capillaryCanvas"></canvas>
+          <div class="floating-hud" id="floatingHud">
+            <div style="color: var(--text-muted); font-size: 10px;">Активний капіляр №<span id="hud-num">1</span></div>
+            <div style="font-size: 13px; font-weight: 800; color: var(--accent-blue);" id="hud-height">h = +14.85 мм</div>
+            <div style="color: #64748b; font-size: 10px;" id="hud-extra">r = 0.50 мм | θ = 15°</div>
+          </div>
+        </div>
+
+        <!-- Summary comparison table -->
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Трубка</th>
+                <th>Матеріал</th>
+                <th>Радіус r</th>
+                <th>Кут θ</th>
+                <th>Нахил α</th>
+                <th style="text-align: right;">Висота h (мм)</th>
+              </tr>
+            </thead>
+            <tbody id="tubesTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>⚙️ Налаштування активного капіляра</span>
+          <span style="color: var(--accent-cyan); font-family: monospace;" id="activeTubeTag">Капіляр №1</span>
+        </div>
+
+        <div class="controls-body">
+          
+          <!-- Select Active Tube Cards -->
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Виберіть трубку для редагування:</span>
+            </div>
+            <div class="btn-grid btn-grid-4" id="tubeSelectorGrid">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Radius Slider -->
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Радіус капіляра r:</span>
+              <span class="control-val" id="val-radius">0.50 мм</span>
+            </div>
+            <input type="range" id="slider-radius" min="0.08" max="2.5" step="0.02" value="0.5" oninput="updateActiveTubeRadius(this.value)">
+          </div>
+
+          <!-- Tube Material Preset -->
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Матеріал трубки (крайовий кут):</span>
+            </div>
+            <div class="btn-grid btn-grid-3" id="materialGrid">
+              <button class="choice-btn active" onclick="setTubeMaterial('glass')">
+                <span class="choice-btn-title">Скло</span>
+                <span class="choice-btn-sub">θ ≈ 15° (Змочує)</span>
+              </button>
+              <button class="choice-btn" onclick="setTubeMaterial('plastic')">
+                <span class="choice-btn-title">Пластик (PE)</span>
+                <span class="choice-btn-sub">θ ≈ 85° (Слабке)</span>
+              </button>
+              <button class="choice-btn" onclick="setTubeMaterial('teflon')">
+                <span class="choice-btn-title">Тефлон (PTFE)</span>
+                <span class="choice-btn-sub">θ ≈ 110° (Незмочує)</span>
+              </button>
+              <button class="choice-btn" onclick="setTubeMaterial('copper')">
+                <span class="choice-btn-title">Мідь / Метал</span>
+                <span class="choice-btn-sub">θ ≈ 65°</span>
+              </button>
+              <button class="choice-btn" onclick="setTubeMaterial('wax')">
+                <span class="choice-btn-title">Віск / Парафін</span>
+                <span class="choice-btn-sub">θ ≈ 105° (Незмочує)</span>
+              </button>
+              <button class="choice-btn" onclick="setTubeMaterial('ceramic')">
+                <span class="choice-btn-title">Кераміка</span>
+                <span class="choice-btn-sub">θ ≈ 5° (Повне)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tilt Angle Slider -->
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Кут нахилу трубки α:</span>
+              <span class="control-val" id="val-tilt">0°</span>
+            </div>
+            <input type="range" id="slider-tilt" min="0" max="75" step="1" value="0" oninput="updateActiveTubeTilt(this.value)">
+          </div>
+
+          <!-- Contact Angle Manual Slider -->
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Точний крайовий кут θ:</span>
+              <span class="control-val" id="val-theta">15°</span>
+            </div>
+            <input type="range" id="slider-theta" min="0" max="180" step="1" value="15" oninput="updateActiveTubeTheta(this.value)">
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 4px 0;">
+
+          <!-- Liquid Selection -->
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Рідина в резервуарі:</span>
+            </div>
+            <div class="btn-grid btn-grid-2">
+              <button class="choice-btn active" id="liq-water" onclick="setLiquid('water')">
+                <span class="choice-btn-title">💧 Вода (20°C)</span>
+                <span class="choice-btn-sub">γ = 72.8 мН/м | ρ = 998</span>
+              </button>
+              <button class="choice-btn" id="liq-soap" onclick="setLiquid('soap')">
+                <span class="choice-btn-title">🧼 Мильна вода (ПАР)</span>
+                <span class="choice-btn-sub">γ = 28.0 мН/м | ρ = 1000</span>
+              </button>
+              <button class="choice-btn" id="liq-ethanol" onclick="setLiquid('ethanol')">
+                <span class="choice-btn-title">🌿 Етанол 96%</span>
+                <span class="choice-btn-sub">γ = 22.1 мН/м | ρ = 789</span>
+              </button>
+              <button class="choice-btn" id="liq-mercury" onclick="setLiquid('mercury')">
+                <span class="choice-btn-title">⚪ Ртуть (Hg)</span>
+                <span class="choice-btn-sub">γ = 485 мН/м | ρ = 13546</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Gravity -->
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Гравітаційне поле g:</span>
+              <span class="control-val" id="val-g">9.81 м/с²</span>
+            </div>
+            <div class="btn-grid btn-grid-3">
+              <button class="choice-btn active" id="grav-earth" onclick="setGravity('earth')">🌍 Земля (9.81)</button>
+              <button class="choice-btn" id="grav-moon" onclick="setGravity('moon')">🌕 Місяць (1.62)</button>
+              <button class="choice-btn" id="grav-mars" onclick="setGravity('mars')">🪐 Марс (3.72)</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: POROUS ABSORPTION (SUGAR / SPONGE / PAPER) -->
+    <div id="tab-porous" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <span>Вбирання рідини (Кінетика Люкаса-Вошберна)</span>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-secondary" id="btn-porous-start" onclick="togglePorousSim()">▶ Занурити і почати</button>
+            <button class="btn-secondary" onclick="resetPorousSim()">🔄 Скинути зразок</button>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas id="porousCanvas"></canvas>
+          <div class="floating-hud" id="porousHud">
+            <div style="color: var(--text-muted); font-size: 10px;">Фронт просочування h(t)</div>
+            <div style="font-size: 14px; font-weight: 800; color: var(--accent-cyan);" id="porous-height">0.0 мм</div>
+            <div style="color: #64748b; font-size: 10px;" id="porous-mass">Маса ввібраної рідини: 0.00 г</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span>Параметри пористого тіла</span>
+        </div>
+        <div class="controls-body">
+          <div class="control-group">
+            <div class="control-label-row"><span>Вибір зразка:</span></div>
+            <div class="btn-grid btn-grid-2">
+              <button class="choice-btn active" onclick="setPorousMaterial('sugar')">
+                <span class="choice-btn-title">🧊 Шматок цукру</span>
+                <span class="choice-btn-sub">r = 18 мкм, розчиняється</span>
+              </button>
+              <button class="choice-btn" onclick="setPorousMaterial('sponge')">
+                <span class="choice-btn-title">🧽 Губка</span>
+                <span class="choice-btn-sub">r = 55 мкм, пористість 80%</span>
+              </button>
+              <button class="choice-btn" onclick="setPorousMaterial('paper')">
+                <span class="choice-btn-title">📜 Паперовий рушник</span>
+                <span class="choice-btn-sub">r = 12 мкм, капілярні нитки</span>
+              </button>
+              <button class="choice-btn" onclick="setPorousMaterial('chalk')">
+                <span class="choice-btn-title">🖍 Шкільна крейда</span>
+                <span class="choice-btn-sub">r = 3.5 мкм, високий підйом</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row"><span>Розчин / Барвник:</span></div>
+            <div class="btn-grid btn-grid-3">
+              <button class="choice-btn active" onclick="setPorousDye('coffee')">☕ Кава / Чай</button>
+              <button class="choice-btn" onclick="setPorousDye('blue')">🔷 Синій барвник</button>
+              <button class="choice-btn" onclick="setPorousDye('red')">🍷 Вино / Червоний</button>
+            </div>
+          </div>
+
+          <div class="formula-box">
+            h(t) ≈ √[ (γ · r_eff · cosθ / 2η) · t ]
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: MOLECULAR FORCES (ADHESION VS COHESION) -->
+    <div id="tab-molecular" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <span>Частинкова модель взаємодії молекул</span>
+        </div>
+        <div class="canvas-container">
+          <canvas id="molecularCanvas"></canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span>Сили взаємодії</span>
+        </div>
+        <div class="controls-body">
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Сила Адгезії (Рідина ↔ Стінка):</span>
+              <span class="control-val" id="val-adhesion">75%</span>
+            </div>
+            <input type="range" id="slider-adhesion" min="0" max="100" value="75" oninput="updateMolecularForces()">
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Сила Когезії (Рідина ↔ Рідина):</span>
+              <span class="control-val" id="val-cohesion">45%</span>
+            </div>
+            <input type="range" id="slider-cohesion" min="0" max="100" value="45" oninput="updateMolecularForces()">
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <span>Тепловий рух молекул:</span>
+              <span class="control-val" id="val-thermal">30%</span>
+            </div>
+            <input type="range" id="slider-thermal" min="0" max="100" value="30" oninput="updateMolecularForces()">
+          </div>
+
+          <div class="formula-box">
+            Адгезія > Когезія → Змочування (θ &lt; 90°)<br>
+            Когезія > Адгезія → Незмочування (θ &gt; 90°)
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Theory & Physics Formulas Modal -->
+  <div class="modal-backdrop" id="theoryModal">
+    <div class="modal-box">
+      <h2>Фізичні закони капілярності та змочування</h2>
+
+      <h3>1. Закон Жюрена (Jurin's Law)</h3>
+      <p>Визначає рівноважну висоту підняття або опускання стовпчика рідини в тонкому циліндричному капілярі радіуса $r$:</p>
+      <div class="formula-box">h = (2 · γ · cosθ) / (ρ · g · r)</div>
+      <p>де:</p>
+      <ul style="padding-left: 20px;">
+        <li><strong>γ</strong> — коефіцієнт поверхневого натягу (Н/м або мН/м)</li>
+        <li><strong>θ</strong> — крайовий кут змочування рідини з матеріалом трубки</li>
+        <li><strong>ρ</strong> — густина рідини (кг/м³)</li>
+        <li><strong>g</strong> — прискорення вільного падіння (9.81 м/с²)</li>
+        <li><strong>r</strong> — внутрішній радіус капіляра (м)</li>
+      </ul>
+
+      <h3>2. Закон Люкаса-Вошберна (Вбирання в пористі тіла)</h3>
+      <p>Описує динаміку просування фронту рідини крізь звивисту систему пор у часі:</p>
+      <div class="formula-box">h(t) ≈ √[ (γ · r_eff · cosθ / 2η) · t ]</div>
+
+      <button class="close-btn" onclick="closeTheoryModal()">Зрозуміло / Закрити</button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT ENGINE (All offline, 0 dependencies) -->
+  <script>
+    // Physical Constants & Presets
+    const LIQUIDS = {
+      water: { name: 'Вода (20°C)', gamma: 0.0728, rho: 998, color: '#06b6d4' },
+      soap: { name: 'Мильна вода', gamma: 0.0280, rho: 1000, color: '#a78bfa' },
+      ethanol: { name: 'Етанол 96%', gamma: 0.0221, rho: 789, color: '#34d399' },
+      mercury: { name: 'Ртуть', gamma: 0.4850, rho: 13546, color: '#94a3b8' }
+    };
+
+    const GRAVITIES = {
+      earth: 9.81,
+      moon: 1.62,
+      mars: 3.72
+    };
+
+    const MATERIALS = {
+      glass: { name: 'Скло', angles: { water: 15, soap: 5, ethanol: 0, mercury: 140 } },
+      plastic: { name: 'Пластик', angles: { water: 85, soap: 35, ethanol: 15, mercury: 150 } },
+      teflon: { name: 'Тефлон', angles: { water: 110, soap: 60, ethanol: 35, mercury: 155 } },
+      copper: { name: 'Мідь', angles: { water: 65, soap: 25, ethanol: 10, mercury: 125 } },
+      wax: { name: 'Віск', angles: { water: 105, soap: 45, ethanol: 25, mercury: 155 } },
+      ceramic: { name: 'Кераміка', angles: { water: 5, soap: 2, ethanol: 0, mercury: 135 } }
+    };
+
+    // State
+    let activeTab = 'jurin';
+    let currentLiquid = 'water';
+    let currentGravity = 'earth';
+    let showVectors = true;
+    let showRuler = true;
+
+    // Up to 4 customizable tubes
+    let tubes = [
+      { id: 1, radiusMm: 0.4, material: 'glass', tiltDeg: 0, thetaDeg: 15, color: '#06b6d4' },
+      { id: 2, radiusMm: 0.8, material: 'glass', tiltDeg: 0, thetaDeg: 15, color: '#ec4899' }
+    ];
+    let activeTubeIdx = 0;
+    let animHeights = [0, 0, 0, 0];
+
+    // Porous Sim State
+    let porousRunning = false;
+    let porousTime = 0;
+    let porousMat = 'sugar';
+    let porousDye = 'coffee';
+
+    // Molecular Sim State
+    let particles = [];
+    for (let i = 0; i < 45; i++) {
+      particles.push({
+        x: 160 + (Math.random() - 0.5) * 120,
+        y: 180 + (Math.random() - 0.5) * 80,
+        vx: (Math.random() - 0.5) * 2,
+        vy: (Math.random() - 0.5) * 2
+      });
+    }
+
+    // -------------------------------------------------------------
+    // Initialization & Event Binding
+    // -------------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      renderTubeSelectorGrid();
+      renderTubesTable();
+      updateActiveTubeControls();
+      startAnimationLoops();
+    });
+
+    function switchTab(tabId) {
+      activeTab = tabId;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      if (tabId === 'jurin') document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      if (tabId === 'porous') document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      if (tabId === 'molecular') document.querySelectorAll('.tab-btn')[2].classList.add('active');
+
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    function setTubeCount(count) {
+      document.querySelectorAll('.tube-qty-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('qty-' + count).classList.add('active');
+
+      const defRadii = [0.35, 0.7, 1.2, 2.0];
+      const colors = ['#06b6d4', '#ec4899', '#a855f7', '#f59e0b'];
+
+      if (count > tubes.length) {
+        for (let i = tubes.length; i < count; i++) {
+          tubes.push({
+            id: i + 1,
+            radiusMm: defRadii[i] || 0.5,
+            material: 'glass',
+            tiltDeg: 0,
+            thetaDeg: MATERIALS.glass.angles[currentLiquid] || 15,
+            color: colors[i]
+          });
+        }
+      } else {
+        tubes = tubes.slice(0, count);
+        if (activeTubeIdx >= tubes.length) activeTubeIdx = tubes.length - 1;
+      }
+
+      renderTubeSelectorGrid();
+      renderTubesTable();
+      updateActiveTubeControls();
+    }
+
+    function selectActiveTube(idx) {
+      activeTubeIdx = idx;
+      renderTubeSelectorGrid();
+      renderTubesTable();
+      updateActiveTubeControls();
+    }
+
+    function renderTubeSelectorGrid() {
+      const container = document.getElementById('tubeSelectorGrid');
+      container.innerHTML = '';
+      tubes.forEach((tube, idx) => {
+        const btn = document.createElement('div');
+        btn.className = `tube-selector-card ${idx === activeTubeIdx ? 'active' : ''}`;
+        btn.onclick = () => selectActiveTube(idx);
+        btn.innerHTML = `
+          <div style="font-weight: bold; font-size: 11px; color: ${tube.color};">№${idx + 1}</div>
+          <div style="font-size: 10px; color: #94a3b8;">r = ${tube.radiusMm} мм</div>
+        `;
+        container.appendChild(btn);
+      });
+    }
+
+    function updateActiveTubeControls() {
+      const t = tubes[activeTubeIdx];
+      if (!t) return;
+
+      document.getElementById('activeTubeTag').innerText = `Капіляр №${activeTubeIdx + 1}`;
+      document.getElementById('slider-radius').value = t.radiusMm;
+      document.getElementById('val-radius').innerText = `${t.radiusMm.toFixed(2)} мм`;
+
+      document.getElementById('slider-tilt').value = t.tiltDeg;
+      document.getElementById('val-tilt').innerText = `${t.tiltDeg}°`;
+
+      document.getElementById('slider-theta').value = t.thetaDeg;
+      document.getElementById('val-theta').innerText = `${t.thetaDeg}°`;
+
+      // update material active state
+      document.querySelectorAll('#materialGrid .choice-btn').forEach(btn => btn.classList.remove('active'));
+    }
+
+    function updateActiveTubeRadius(val) {
+      tubes[activeTubeIdx].radiusMm = parseFloat(val);
+      document.getElementById('val-radius').innerText = `${parseFloat(val).toFixed(2)} мм`;
+      renderTubeSelectorGrid();
+      renderTubesTable();
+    }
+
+    function updateActiveTubeTilt(val) {
+      tubes[activeTubeIdx].tiltDeg = parseInt(val);
+      document.getElementById('val-tilt').innerText = `${val}°`;
+      renderTubesTable();
+    }
+
+    function updateActiveTubeTheta(val) {
+      tubes[activeTubeIdx].thetaDeg = parseInt(val);
+      document.getElementById('val-theta').innerText = `${val}°`;
+      renderTubesTable();
+    }
+
+    function setTubeMaterial(matKey) {
+      tubes[activeTubeIdx].material = matKey;
+      const angle = MATERIALS[matKey].angles[currentLiquid] ?? 15;
+      tubes[activeTubeIdx].thetaDeg = angle;
+      document.getElementById('slider-theta').value = angle;
+      document.getElementById('val-theta').innerText = `${angle}°`;
+      renderTubesTable();
+    }
+
+    function setLiquid(liqKey) {
+      currentLiquid = liqKey;
+      document.querySelectorAll('[id^="liq-"]').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('liq-' + liqKey).classList.add('active');
+
+      tubes.forEach(t => {
+        t.thetaDeg = MATERIALS[t.material]?.angles[liqKey] ?? 15;
+      });
+      updateActiveTubeControls();
+      renderTubesTable();
+    }
+
+    function setGravity(gravKey) {
+      currentGravity = gravKey;
+      document.querySelectorAll('[id^="grav-"]').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('grav-' + gravKey).classList.add('active');
+      document.getElementById('val-g').innerText = `${GRAVITIES[gravKey]} м/с²`;
+      renderTubesTable();
+    }
+
+    function toggleVectors() {
+      showVectors = !showVectors;
+      document.getElementById('btn-vectors').style.background = showVectors ? '#4f46e5' : '#1e293b';
+    }
+
+    function toggleRuler() {
+      showRuler = !showRuler;
+      document.getElementById('btn-ruler').style.background = showRuler ? '#0891b2' : '#1e293b';
+    }
+
+    // Math calculation for Jurin law
+    function calcJurinHeight(r_mm, theta_deg) {
+      const liq = LIQUIDS[currentLiquid];
+      const g = GRAVITIES[currentGravity];
+      const r_m = r_mm * 1e-3;
+      const theta_rad = (theta_deg * Math.PI) / 180;
+      const h_m = (2 * liq.gamma * Math.cos(theta_rad)) / (liq.rho * g * r_m);
+      return h_m * 1000; // in mm
+    }
+
+    function renderTubesTable() {
+      const tbody = document.getElementById('tubesTableBody');
+      tbody.innerHTML = '';
+
+      tubes.forEach((t, idx) => {
+        const h = calcJurinHeight(t.radiusMm, t.thetaDeg);
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        if (idx === activeTubeIdx) tr.style.background = 'rgba(6, 182, 212, 0.15)';
+        tr.onclick = () => selectActiveTube(idx);
+
+        tr.innerHTML = `
+          <td><span style="color: ${t.color}; font-weight: bold;">№${idx + 1}</span></td>
+          <td>${MATERIALS[t.material]?.name || 'Скло'}</td>
+          <td>${t.radiusMm.toFixed(2)} мм</td>
+          <td>${t.thetaDeg}°</td>
+          <td>${t.tiltDeg}°</td>
+          <td style="text-align: right; font-weight: bold; color: ${h >= 0 ? '#38bdf8' : '#f43f5e'};">
+            ${h > 0 ? '+' : ''}${h.toFixed(2)} мм
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Update HUD
+      const curH = calcJurinHeight(tubes[activeTubeIdx].radiusMm, tubes[activeTubeIdx].thetaDeg);
+      document.getElementById('hud-num').innerText = activeTubeIdx + 1;
+      document.getElementById('hud-height').innerText = `h = ${curH > 0 ? '+' : ''}${curH.toFixed(2)} мм`;
+      document.getElementById('hud-extra').innerText = `r = ${tubes[activeTubeIdx].radiusMm.toFixed(2)} мм | θ = ${tubes[activeTubeIdx].thetaDeg}°`;
+    }
+
+    function openTheoryModal() { document.getElementById('theoryModal').classList.add('open'); }
+    function closeTheoryModal() { document.getElementById('theoryModal').classList.remove('open'); }
+
+    // -------------------------------------------------------------
+    // Porous Simulator Methods
+    // -------------------------------------------------------------
+    function togglePorousSim() {
+      porousRunning = !porousRunning;
+      document.getElementById('btn-porous-start').innerText = porousRunning ? '⏸ Пауза' : '▶ Продовжити';
+    }
+
+    function resetPorousSim() {
+      porousRunning = false;
+      porousTime = 0;
+      document.getElementById('btn-porous-start').innerText = '▶ Занурити і почати';
+    }
+
+    function setPorousMaterial(mat) {
+      porousMat = mat;
+      resetPorousSim();
+    }
+
+    function setPorousDye(dye) {
+      porousDye = dye;
+    }
+
+    // -------------------------------------------------------------
+    // Main Physics Animation Loops (Canvas)
+    // -------------------------------------------------------------
+    function startAnimationLoops() {
+      function loop() {
+        if (activeTab === 'jurin') drawCapillaryCanvas();
+        else if (activeTab === 'porous') drawPorousCanvas();
+        else if (activeTab === 'molecular') drawMolecularCanvas();
+
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    }
+
+    function drawCapillaryCanvas() {
+      const canvas = document.getElementById('capillaryCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+      }
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      const w = rect.width;
+      const h = rect.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background
+      ctx.fillStyle = '#060911';
+      ctx.fillRect(0, 0, w, h);
+
+      // Reservoir boundaries
+      const resTop = h * 0.62;
+      const resBottom = h - 30;
+      const resLeft = 50;
+      const resRight = w - (showRuler ? 65 : 30);
+      const resWidth = resRight - resLeft;
+      const pxPerMm = 3.8;
+
+      // Draw Glass Beaker
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(resLeft, resTop, resWidth, resBottom - resTop);
+
+      // Reservoir Liquid
+      ctx.fillStyle = LIQUIDS[currentLiquid].color;
+      ctx.globalAlpha = 0.45;
+      ctx.fillRect(resLeft + 2, resTop, resWidth - 4, resBottom - resTop);
+      ctx.globalAlpha = 1.0;
+
+      // Surface line
+      ctx.strokeStyle = LIQUIDS[currentLiquid].color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(resLeft, resTop);
+      ctx.lineTo(resRight, resTop);
+      ctx.stroke();
+
+      // Zero label
+      ctx.fillStyle = '#64748b';
+      ctx.font = '10px monospace';
+      ctx.fillText('0 мм (Рівень рідини)', resLeft + 8, resTop - 6);
+
+      // Draw Tubes
+      const num = tubes.length;
+      const spacing = resWidth / (num + 1);
+
+      tubes.forEach((tube, idx) => {
+        const targetH = calcJurinHeight(tube.radiusMm, tube.thetaDeg);
+        animHeights[idx] = (animHeights[idx] || 0) + (targetH - (animHeights[idx] || 0)) * 0.15;
+
+        const tubeX = resLeft + spacing * (idx + 1);
+        const tubeRadPx = Math.max(3.5, Math.min(22, tube.radiusMm * 11));
+        const tiltRad = (tube.tiltDeg * Math.PI) / 180;
+        const currentHPx = animHeights[idx] * pxPerMm;
+        const colLenPx = currentHPx / Math.cos(tiltRad);
+
+        ctx.save();
+        ctx.translate(tubeX, resTop);
+        ctx.rotate(tiltRad);
+
+        const tubeTopY = -h * 0.55;
+        const tubeBottomY = resBottom - resTop - 8;
+        const liquidTopY = -colLenPx;
+
+        // Tube Liquid Column
+        ctx.fillStyle = LIQUIDS[currentLiquid].color;
+        ctx.fillRect(-tubeRadPx, liquidTopY, tubeRadPx * 2, tubeBottomY - liquidTopY);
+
+        // Meniscus
+        ctx.beginPath();
+        const amp = Math.min(tubeRadPx * 0.9, tubeRadPx * Math.abs(Math.cos(tube.thetaDeg * Math.PI / 180)));
+        if (tube.thetaDeg < 90) {
+          ctx.moveTo(-tubeRadPx, liquidTopY);
+          ctx.quadraticCurveTo(0, liquidTopY + amp, tubeRadPx, liquidTopY);
+        } else if (tube.thetaDeg > 90) {
+          ctx.moveTo(-tubeRadPx, liquidTopY);
+          ctx.quadraticCurveTo(0, liquidTopY - amp, tubeRadPx, liquidTopY);
+        } else {
+          ctx.moveTo(-tubeRadPx, liquidTopY);
+          ctx.lineTo(tubeRadPx, liquidTopY);
+        }
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Tube Glass Walls
+        ctx.fillStyle = idx === activeTubeIdx ? 'rgba(6, 182, 212, 0.25)' : 'rgba(255, 255, 255, 0.15)';
+        ctx.strokeStyle = idx === activeTubeIdx ? '#06b6d4' : '#64748b';
+        ctx.lineWidth = 2;
+
+        ctx.fillRect(-tubeRadPx - 3, tubeTopY, 3, tubeBottomY - tubeTopY);
+        ctx.strokeRect(-tubeRadPx - 3, tubeTopY, 3, tubeBottomY - tubeTopY);
+
+        ctx.fillRect(tubeRadPx, tubeTopY, 3, tubeBottomY - tubeTopY);
+        ctx.strokeRect(tubeRadPx, tubeTopY, 3, tubeBottomY - tubeTopY);
+
+        ctx.restore();
+
+        // Draw Force Vectors
+        if (showVectors && Math.abs(targetH) > 0.5) {
+          const mX = tubeX - Math.sin(tiltRad) * colLenPx;
+          const mY = resTop - Math.cos(tiltRad) * colLenPx;
+          if (tube.thetaDeg < 90) {
+            drawArrow(ctx, mX, mY, mX - Math.sin(tiltRad) * 35, mY - Math.cos(tiltRad) * 35, '#10b981');
+            drawArrow(ctx, (tubeX + mX) / 2, (resTop + mY) / 2, (tubeX + mX) / 2, (resTop + mY) / 2 + 30, '#ef4444');
+          }
+        }
+      });
+
+      // Measurement Ruler
+      if (showRuler) {
+        const rx = w - 30;
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        ctx.fillRect(rx - 20, 20, 26, h - 40);
+        ctx.strokeStyle = '#334155';
+        ctx.strokeRect(rx - 20, 20, 26, h - 40);
+
+        ctx.font = '8px monospace';
+        ctx.fillStyle = '#94a3b8';
+        for (let mm = -30; mm <= 80; mm += 10) {
+          const y = resTop - mm * pxPerMm;
+          if (y > 25 && y < h - 25) {
+            ctx.beginPath();
+            ctx.moveTo(rx - 10, y);
+            ctx.lineTo(rx + 2, y);
+            ctx.strokeStyle = mm === 0 ? '#06b6d4' : '#475569';
+            ctx.stroke();
+            ctx.fillText(mm, rx - 18, y + 3);
+          }
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function drawPorousCanvas() {
+      const canvas = document.getElementById('porousCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+      }
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      const w = rect.width;
+      const h = rect.height;
+
+      if (porousRunning) porousTime += 0.05;
+
+      ctx.fillStyle = '#060911';
+      ctx.fillRect(0, 0, w, h);
+
+      // Dish with liquid
+      const dishY = h * 0.75;
+      ctx.fillStyle = porousDye === 'coffee' ? '#78350f' : (porousDye === 'blue' ? '#1d4ed8' : '#991b1b');
+      ctx.fillRect(w * 0.25, dishY, w * 0.5, h * 0.2);
+
+      // Porous Sample Block
+      const sampleW = 120;
+      const sampleH = 180;
+      const sampleX = (w - sampleW) / 2;
+      const sampleY = dishY - sampleH + 15;
+
+      // Rate constant for Washburn
+      const r_eff = porousMat === 'sugar' ? 18e-6 : (porousMat === 'sponge' ? 55e-6 : (porousMat === 'paper' ? 12e-6 : 3.5e-6));
+      const k = Math.sqrt((0.0728 * r_eff * 0.95 / (2 * 0.001)) * porousTime) * 1000;
+      const wetHeightPx = Math.min(sampleH, k * 2.2);
+
+      // Draw dry part
+      ctx.fillStyle = porousMat === 'sugar' ? '#f8fafc' : (porousMat === 'sponge' ? '#fde047' : '#e2e8f0');
+      ctx.fillRect(sampleX, sampleY, sampleW, sampleH);
+
+      // Draw wet absorbed part
+      if (wetHeightPx > 0) {
+        ctx.fillStyle = porousDye === 'coffee' ? '#b45309' : (porousDye === 'blue' ? '#3b82f6' : '#ef4444');
+        ctx.fillRect(sampleX, dishY + 15 - wetHeightPx, sampleW, wetHeightPx);
+      }
+
+      ctx.strokeStyle = '#334155';
+      ctx.strokeRect(sampleX, sampleY, sampleW, sampleH);
+
+      // Update Porous HUD
+      document.getElementById('porous-height').innerText = `${(wetHeightPx / 2.2).toFixed(1)} мм`;
+      document.getElementById('porous-mass').innerText = `Маса ввібраної рідини: ${(wetHeightPx * 0.04).toFixed(2)} г`;
+
+      ctx.restore();
+    }
+
+    function drawMolecularCanvas() {
+      const canvas = document.getElementById('molecularCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+      }
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      const w = rect.width;
+      const h = rect.height;
+
+      ctx.fillStyle = '#060911';
+      ctx.fillRect(0, 0, w, h);
+
+      // Solid Wall
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 0, 70, h);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.strokeRect(0, 0, 70, h);
+
+      // Adhesion / Cohesion parameters
+      const adh = parseInt(document.getElementById('slider-adhesion')?.value || 75) / 100;
+      const coh = parseInt(document.getElementById('slider-cohesion')?.value || 45) / 100;
+
+      // Update particles
+      particles.forEach(p => {
+        // Wall attraction (Adhesion)
+        if (p.x < 180) p.vx -= adh * 0.6;
+        // Inter-particle attraction (Cohesion center)
+        if (p.x > 140) p.vx -= coh * 0.2;
+
+        p.vx += (Math.random() - 0.5) * 0.4;
+        p.vy += (Math.random() - 0.5) * 0.4 + 0.05; // gravity
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        p.vx *= 0.92;
+        p.vy *= 0.92;
+
+        if (p.x < 75) { p.x = 75; p.vx *= -0.5; }
+        if (p.x > w - 10) { p.x = w - 10; p.vx *= -0.5; }
+        if (p.y > h - 40) { p.y = h - 40; p.vy *= -0.5; }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fill();
+      });
+
+      ctx.restore();
+    }
+
+    function updateMolecularForces() {
+      document.getElementById('val-adhesion').innerText = document.getElementById('slider-adhesion').value + '%';
+      document.getElementById('val-cohesion').innerText = document.getElementById('slider-cohesion').value + '%';
+      document.getElementById('val-thermal').innerText = document.getElementById('slider-thermal').value + '%';
+    }
+
+    function drawArrow(ctx, fromx, fromy, tox, toy, color) {
+      const headlen = 7;
+      const angle = Math.atan2(toy - fromy, tox - fromx);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(fromx, fromy);
+      ctx.lineTo(tox, toy);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(tox, toy);
+      ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+    }
+  </script>
+</body>
+</html>

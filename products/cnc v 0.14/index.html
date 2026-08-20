@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>G-CODE // CNC VISUALIZER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ SCANLINE / NOISE OVERLAY (pure decoration) ============ -->
+<div class="crt-overlay"></div>
+
+<div class="app-shell">
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="brand-mark">&#9635;</span>
+      <div class="brand-text">
+        <h1 data-i18n="app.title">G-CODE VISUALIZER</h1>
+        <span class="brand-sub" data-i18n="app.subtitle">CNC TOOLPATH SIMULATION UNIT</span>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+
+      <!-- Language switcher -->
+      <div class="select-wrap select-wrap-lang">
+        <svg class="select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 4 6 4 9s-1.5 6.3-4 9c-2.5-2.7-4-6-4-9s1.5-6.3 4-9z" stroke-linecap="round"/>
+        </svg>
+        <select id="langSelect" aria-label="Interface language" data-i18n-title="lang.select"></select>
+      </div>
+
+      <!-- Theme toggle -->
+      <button class="theme-toggle" id="themeToggle" type="button" data-i18n-title="theme.toggle" title="Toggle theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <circle cx="12" cy="12" r="4.2"/>
+          <path stroke-linecap="round" d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/>
+        </svg>
+      </button>
+
+      <div class="status-pill" id="statusPill">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText" data-i18n="status.noFile">NO FILE LOADED</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ WEBGL-UNAVAILABLE FALLBACK (hidden unless needed) ============ -->
+  <div class="webgl-fallback hidden" id="webglFallback">
+    <div class="webgl-fallback-card">
+      <div class="webgl-fallback-icon">&#9888;</div>
+      <h2 data-i18n="webgl.title">3D VISUALIZATION UNAVAILABLE</h2>
+      <p data-i18n="webgl.message">This browser or device does not support WebGL.</p>
+      <p class="webgl-fallback-suggestion" data-i18n="webgl.suggestion">Try updating your browser or using a different computer.</p>
+    </div>
+  </div>
+
+  <!-- ============ MAIN GRID ============ -->
+  <main class="main-grid" id="mainGrid">
+
+    <!-- ======== LEFT SIDEBAR ======== -->
+    <aside class="sidebar">
+
+      <!-- Machine Setup Panel -->
+      <section class="panel" id="machinePanel">
+        <h2 class="panel-title"><span class="tag">01</span> <span data-i18n="panel.machine">MACHINE SETUP</span></h2>
+
+        <div class="field-group">
+          <label class="field-label" data-i18n="machine.typeLabel">MACHINE TYPE</label>
+          <select id="machineSelect" class="select-full"></select>
+        </div>
+
+        <div class="custom-size-row" id="customSizeRow" hidden>
+          <div class="field-group half">
+            <label class="field-label" data-i18n="machine.widthLabel">WIDTH X (mm)</label>
+            <input type="number" id="customX" class="input-full" min="10" max="5000" step="1" value="300">
+          </div>
+          <div class="field-group half">
+            <label class="field-label" data-i18n="machine.heightLabel">DEPTH Y (mm)</label>
+            <input type="number" id="customY" class="input-full" min="10" max="5000" step="1" value="180">
+          </div>
+        </div>
+
+        <button class="btn btn-apply" id="btnApplyMachine" hidden>
+          <span data-i18n="machine.apply">APPLY</span>
+        </button>
+      </section>
+
+      <!-- Upload Panel -->
+      <section class="panel" id="uploadPanel">
+        <h2 class="panel-title"><span class="tag">02</span> <span data-i18n="panel.upload">LOAD PROGRAM</span></h2>
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept=".gcode,.nc,.txt,.tap,.cnc" hidden>
+          <div class="dropzone-inner">
+            <svg class="dz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 3v12m0-12l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p class="dz-title" data-i18n="upload.dropTitle">DROP .GCODE / .NC FILE</p>
+            <p class="dz-sub" data-i18n="upload.dropSub">or click to browse</p>
+          </div>
+        </div>
+        <div class="file-meta" id="fileMeta">
+          <div class="file-meta-msg" id="fileMetaMsg"></div>
+          <div class="file-meta-name" id="fileMetaName"></div>
+          <div class="file-meta-details" id="fileMetaDetails"></div>
+          <div class="file-meta-warning" id="fileMetaWarning" hidden></div>
+        </div>
+      </section>
+
+      <!-- Control Panel -->
+      <section class="panel" id="controlPanel">
+        <h2 class="panel-title"><span class="tag">03</span> <span data-i18n="panel.control">SIMULATION CONTROL</span></h2>
+        <div class="btn-row">
+          <button class="btn btn-play" id="btnPlay" disabled>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <span data-i18n="controls.play">PLAY</span>
+          </button>
+          <button class="btn btn-pause" id="btnPause" disabled>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+            <span data-i18n="controls.pause">PAUSE</span>
+          </button>
+          <button class="btn btn-reset" id="btnReset" disabled>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V2L7 7l5 5V8a6 6 0 11-6 6H4a8 8 0 108-9z"/></svg>
+            <span data-i18n="controls.reset">RESET</span>
+          </button>
+        </div>
+
+        <div class="slider-group">
+          <label for="speedSlider"><span data-i18n="controls.speed">SPEED MULTIPLIER</span> <span id="speedValue">1x</span></label>
+          <input type="range" id="speedSlider" min="0" max="3" step="1" value="0">
+          <div class="slider-ticks">
+            <span>1x</span><span>2x</span><span>5x</span><span>10x</span>
+          </div>
+        </div>
+
+        <div class="checkbox-row">
+          <label class="chk">
+            <input type="checkbox" id="toggleRapids" checked>
+            <span data-i18n="controls.showRapids">Show rapid (G0) moves</span>
+          </label>
+          <label class="chk">
+            <input type="checkbox" id="toggleStock" checked>
+            <span data-i18n="controls.showStock">Show stock material</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Telemetry Panel -->
+      <section class="panel" id="telemetryPanel">
+        <h2 class="panel-title"><span class="tag">04</span> <span data-i18n="panel.telemetry">LIVE TELEMETRY</span></h2>
+
+        <div class="progress-wrap">
+          <div class="progress-bar-track" id="progressTrack" role="slider" tabindex="0"
+               aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="progress-bar-fill" id="progressFill"></div>
+            <div class="progress-bar-handle" id="progressHandle"></div>
+          </div>
+          <span class="progress-label" id="progressLabel">0.0%</span>
+        </div>
+
+        <div class="telemetry-grid">
+          <div class="tele-cell">
+            <span class="tele-key" data-i18n="tele.line">LINE</span>
+            <span class="tele-val" id="teleLine">0 / 0</span>
+          </div>
+          <div class="tele-cell">
+            <span class="tele-key" data-i18n="tele.command">COMMAND</span>
+            <span class="tele-val" id="teleCmd">--</span>
+          </div>
+          <div class="tele-cell axis-x">
+            <span class="tele-key" data-i18n="tele.x">X (mm)</span>
+            <span class="tele-val" id="teleX">0.000</span>
+          </div>
+          <div class="tele-cell axis-y">
+            <span class="tele-key" data-i18n="tele.y">Y (mm)</span>
+            <span class="tele-val" id="teleY">0.000</span>
+          </div>
+          <div class="tele-cell axis-z">
+            <span class="tele-key" data-i18n="tele.z">Z (mm)</span>
+            <span class="tele-val" id="teleZ">0.000</span>
+          </div>
+          <div class="tele-cell">
+            <span class="tele-key" data-i18n="tele.feed">FEED</span>
+            <span class="tele-val" id="teleFeed">0</span>
+          </div>
+          <div class="tele-cell">
+            <span class="tele-key" data-i18n="tele.elapsed">ELAPSED</span>
+            <span class="tele-val" id="teleElapsed">00:00</span>
+          </div>
+          <div class="tele-cell">
+            <span class="tele-key" data-i18n="tele.total">EST. TOTAL</span>
+            <span class="tele-val" id="teleTotal">00:00</span>
+          </div>
+        </div>
+
+        <div class="stat-strip">
+          <div><span class="tele-key" data-i18n="tele.cutLen">CUT LEN</span><span class="tele-val small" id="teleCutLen">0 mm</span></div>
+          <div><span class="tele-key" data-i18n="tele.rapidLen">RAPID LEN</span><span class="tele-val small" id="teleRapidLen">0 mm</span></div>
+          <div><span class="tele-key" data-i18n="tele.bounds">BOUNDS</span><span class="tele-val small" id="teleBounds">--</span></div>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- ======== 3D VIEWPORT ======== -->
+    <section class="viewport" id="viewport">
+      <div id="canvasHost"></div>
+
+      <div class="viewport-hud viewport-hud-tl" id="wasteboardHud">
+        <span>WASTEBOARD 300 &times; 180 mm</span>
+      </div>
+      <div class="viewport-hud viewport-hud-tr" id="axisHud">
+        <span class="legend-item"><i class="dot cut"></i><span data-i18n="hud.legendCut">CUT (G1/G2/G3)</span></span>
+        <span class="legend-item"><i class="dot rapid"></i><span data-i18n="hud.legendRapid">RAPID (G0)</span></span>
+      </div>
+      <div class="viewport-hud viewport-hud-bl" id="camHint" data-i18n="hud.camHint">
+        DRAG TO ORBIT &middot; SCROLL TO ZOOM &middot; RIGHT-DRAG TO PAN
+      </div>
+
+      <div class="empty-state" id="emptyState">
+        <div class="empty-glyph">&#9671;</div>
+        <p data-i18n="empty.title">AWAITING TOOLPATH DATA</p>
+        <span data-i18n="empty.sub">Load a .gcode or .nc file to begin simulation</span>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Three.js core + OrbitControls (r128, classic global build) -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<!-- i18n: language registry first, then each language file, then the app -->
+<script src="lang/languages.js"></script>
+<script src="lang/uk.js"></script>
+<script src="lang/en.js"></script>
+
+<script src="app.js"></script>
+</body>
+</html>

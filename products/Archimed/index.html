@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="uk" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Симулятор занурення тіл у рідину</title>
+  <meta name="description" content="Фізичний симулятор занурення тіл у рідину, закону Архімеда, гідростатичного тиску, коливань хвиль, багатошарових рідин та ефекту притискання до дна.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Navigation Bar -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Закон<span class="accent-text">Архімеда</span></h1>
+          <span class="brand-badge" data-i18n="appSubtitle">Симулятор закону Архімеда та гідростатики</span>
+        </div>
+      </div>
+
+      <!-- Quick Preset Scenarios -->
+      <div class="header-presets">
+        <span class="preset-label" data-i18n="presetsLabel">Сценарії:</span>
+        <div class="preset-buttons">
+          <button class="btn btn-preset active" data-preset="wood" data-i18n="presetWood">Дерево у воді</button>
+          <button class="btn btn-preset" data-preset="diver" data-i18n="presetDiver">🤿 Водолаз Декарта</button>
+          <button class="btn btn-preset" data-preset="steel" data-i18n="presetSteel">Сталь (тоне)</button>
+          <button class="btn btn-preset" data-preset="ice" data-i18n="presetIce">Айсберг</button>
+          <button class="btn btn-preset" data-preset="multi2" data-i18n="presetMulti2">2 шари: Олія + Вода</button>
+          <button class="btn btn-preset" data-preset="multi3" data-i18n="presetMulti3">3 шари: Олія + Вода + Ртуть</button>
+          <button class="btn btn-preset" data-preset="boat" data-i18n="presetBoat">Човен</button>
+          <button class="btn btn-preset" data-preset="mercury" data-i18n="presetMercury">Залізо в ртуті</button>
+          <button class="btn btn-preset" data-preset="suction" data-i18n="presetSuction">Притискання до дна</button>
+        </div>
+      </div>
+
+      <!-- Header Tools & Controls -->
+      <div class="header-actions">
+        <button id="btn-theory" class="btn btn-icon-text" title="Теорія та формули">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span data-i18n="theoryBtn">Теорія</span>
+        </button>
+
+        <button id="btn-lang" class="btn btn-pill" title="Змінити мову / Change language">
+          <span class="lang-flag">🇺🇦</span>
+          <span class="lang-text">UA</span>
+        </button>
+
+        <button id="btn-theme" class="btn btn-icon" title="Змінити тему">
+          <svg class="theme-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+          </svg>
+          <svg class="theme-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main App Split Layout -->
+    <main class="app-main">
+      <!-- 2D Physics Canvas Viewport -->
+      <section class="simulation-viewport" id="viewport-section">
+        <!-- Floating Stage Toolbar -->
+        <div class="stage-toolbar">
+          <div class="toolbar-group">
+            <button id="btn-play-pause" class="btn btn-sm btn-control" title="Пауза / Запуск">
+              <svg class="icon-pause" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+              </svg>
+              <svg class="icon-play" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="display:none;">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span id="play-pause-text" data-i18n="pause">Пауза</span>
+            </button>
+
+            <button id="btn-reset" class="btn btn-sm btn-control" title="Скинути положення">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+              </svg>
+              <span data-i18n="reset">Скидання</span>
+            </button>
+
+            <button id="btn-drop" class="btn btn-sm btn-control" title="Скинути з висоти">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 3v14"></path>
+                <path d="m19 10-7 7-7-7"></path>
+                <path d="M5 21h14"></path>
+              </svg>
+              <span data-i18n="drop">Кинути</span>
+            </button>
+          </div>
+
+          <!-- Multi-body quick toolbar controls -->
+          <div class="toolbar-group">
+            <button id="btn-add-body-quick" class="btn btn-sm btn-control" title="Додати нове тіло в колбу">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+              </svg>
+              <span data-i18n="addBodyQuick">+ Тіло</span>
+            </button>
+            <button id="btn-remove-body-quick" class="btn btn-sm btn-control" title="Видалити вибране тіло" disabled>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span data-i18n="removeBodyQuick">− Тіло</span>
+            </button>
+          </div>
+
+          <div class="toolbar-group">
+            <span class="speed-label" data-i18n="speedLabel">Швидкість:</span>
+            <div class="speed-toggle">
+              <button class="btn btn-xs speed-btn" data-speed="0.25">0.25x</button>
+              <button class="btn btn-xs speed-btn" data-speed="0.5">0.5x</button>
+              <button class="btn btn-xs speed-btn active" data-speed="1.0">1.0x</button>
+            </div>
+          </div>
+
+          <div class="toolbar-group">
+            <label class="toggle-switch-compact" title="Увімкнути/вимкнути динамічні хвилі та сплески на поверхні рідини">
+              <input type="checkbox" id="chk-waves" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-text" data-i18n="wavesToggle">Хвилі</span>
+            </label>
+          </div>
+
+          <div class="toolbar-group">
+            <label class="toggle-switch-compact" title="Увімкнути/вимкнути інформаційний банер умови плавання тіл">
+              <input type="checkbox" id="chk-flotation-rule" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-text" data-i18n="flotationBannerToggle">Умова плавання</span>
+            </label>
+          </div>
+
+          <div class="toolbar-group">
+            <label class="toggle-switch-compact" title="Відображати додаткову мірну мензурку з витісненою рідиною">
+              <input type="checkbox" id="chk-overflow-beaker" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-text" data-i18n="overflowBeaker">Витіснений об'єм</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="canvas-wrapper" id="canvas-wrapper">
+          <canvas id="sim-canvas"></canvas>
+
+          <!-- Interactive Hint Overlay -->
+          <div class="canvas-interactive-hint" id="canvas-hint">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h12a2 2 0 0 1 2 2v5Z"></path>
+              <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-2"></path>
+            </svg>
+            <span data-i18n="dragHint">Перетягуйте тіло мишкою або пальцем. Спробуйте опустити на саме дно!</span>
+          </div>
+
+          <!-- Bottom Suction Notification Badge -->
+          <div class="suction-alert" id="suction-alert">
+            <div class="suction-alert-icon">⚡</div>
+            <div class="suction-alert-text">
+              <strong data-i18n="suctionActiveTitle">Ефект притискання до дна активовано!</strong>
+              <p data-i18n="suctionActiveDesc">Рідини під дном немає: Архімедова сила Fa = 0! Тіло утримується тиском рідини та атмосфери зверху.</p>
+            </div>
+          </div>
+
+          <!-- Prominent Flotation Condition Live Visual Banner (Draggable & Closable) -->
+          <div class="flotation-rule-banner" id="flotation-rule-banner">
+            <div class="rule-banner-header">
+              <div class="rule-banner-left">
+                <div class="rule-drag-indicator" title="Перетягуйте для переміщення">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="6" r="1.5" fill="currentColor"></circle>
+                    <circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
+                    <circle cx="9" cy="18" r="1.5" fill="currentColor"></circle>
+                    <circle cx="15" cy="6" r="1.5" fill="currentColor"></circle>
+                    <circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
+                    <circle cx="15" cy="18" r="1.5" fill="currentColor"></circle>
+                  </svg>
+                </div>
+                <span class="rule-badge" id="rule-badge-state">ПЛАВАННЯ ТІЛА</span>
+              </div>
+              <span class="rule-math-condition" id="rule-math-condition">ρ_тіла &lt; ρ_рідини ⟹ Fg &lt; Fa,max</span>
+              <button class="rule-banner-close-btn" id="btn-close-flotation-banner" title="Сховати банер">✕</button>
+            </div>
+            <div class="rule-banner-body" id="rule-banner-body">
+              Густина тіла (550 кг/м³) менша за густину рідини (1000 кг/м³) → Тіло спливає і плаває у стані спокою, занурившись на 55.0%.
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Live Telemetry Cards on Viewport Bottom -->
+        <div class="viewport-telemetry-dock">
+          <div class="telemetry-card status-card">
+            <div class="telemetry-label" data-i18n="stateLabel">Стан тіла</div>
+            <div class="telemetry-value-wrap">
+              <span id="telemetry-state-badge" class="badge-status badge-float">Плавання</span>
+            </div>
+          </div>
+
+          <div class="telemetry-card">
+            <div class="telemetry-label" data-i18n="gravityForceLabel">Сила тяжіння (Fg)</div>
+            <div class="telemetry-value"><span id="val-fg">0.00</span> <span class="unit">Н</span></div>
+            <div class="telemetry-sub" id="val-fg-formula">m · g</div>
+          </div>
+
+          <div class="telemetry-card">
+            <div class="telemetry-label" data-i18n="archimedesForceLabel">Архімедова сила (Fa)</div>
+            <div class="telemetry-value highlight-cyan"><span id="val-fa">0.00</span> <span class="unit">Н</span></div>
+            <div class="telemetry-sub" id="val-fa-formula">Σ (ρ_р · V_зан · g)</div>
+          </div>
+
+          <div class="telemetry-card">
+            <div class="telemetry-label" data-i18n="netForceLabel">Рівнодійна сила (Fрез)</div>
+            <div class="telemetry-value" id="val-fnet-wrap"><span id="val-fnet">0.00</span> <span class="unit">Н</span></div>
+            <div class="telemetry-sub" id="val-fnet-dir">Врівноважено</div>
+          </div>
+
+          <div class="telemetry-card">
+            <div class="telemetry-label" data-i18n="submergedPercentLabel">Занурено</div>
+            <div class="telemetry-value"><span id="val-submerged-percent">0</span> <span class="unit">%</span></div>
+            <div class="telemetry-sub"><span id="val-vsub">0.00</span> <span class="unit">л</span> / <span id="val-vtotal">0.00</span> <span class="unit">л</span></div>
+          </div>
+
+          <div class="telemetry-card">
+            <div class="telemetry-label" data-i18n="liquidLevelRiseLabel">Підйом рівня (Δh)</div>
+            <div class="telemetry-value"><span id="val-deltah">+0.0</span> <span class="unit">см</span></div>
+            <div class="telemetry-sub">ΔV = <span id="val-displaced-v">0.00</span> л</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sidebar Controls & Analysis Panel -->
+      <aside class="sidebar-panel">
+        <!-- Sidebar Tab Navigation -->
+        <nav class="sidebar-tabs">
+          <button class="tab-btn active" data-tab="body" data-i18n="tabBody">Тіло</button>
+          <button class="tab-btn" data-tab="liquid" data-i18n="tabLiquid">Рідина</button>
+          <button class="tab-btn" data-tab="forces" data-i18n="tabForces">Вектори й Тиск</button>
+          <button class="tab-btn" data-tab="analysis" data-i18n="tabAnalysis">Аналітика</button>
+        </nav>
+
+        <div class="tab-content-area">
+          <!-- TAB 1: BODY SETTINGS -->
+          <div class="tab-pane active" id="pane-body">
+            <!-- Bodies Multi-Object Management Section -->
+            <div class="control-section body-management-section">
+              <div class="body-management-header">
+                <div class="section-title">
+                  <span class="section-title-icon">📦</span>
+                  <span data-i18n="bodiesManagementTitle">Тіла в експерименті</span>
+                  <span class="bodies-count-badge" id="bodies-count-badge">1 / 4</span>
+                </div>
+                <div class="body-action-btn-group">
+                  <button class="btn btn-xs btn-add-body-accent" id="btn-add-body" title="Додати ще одне тіло для одночасного дослідження">
+                    <span class="btn-icon">➕</span>
+                    <span data-i18n="addBodyBtn">Додати тіло</span>
+                  </button>
+                  <button class="btn btn-xs btn-remove-body-subtle" id="btn-remove-body" title="Видалити вибране тіло" disabled>
+                    <span class="btn-icon">🗑️</span>
+                    <span data-i18n="removeBodyBtn">Видалити</span>
+                  </button>
+                </div>
+              </div>
+              <div class="body-chips-container" id="body-chips-container">
+                <!-- Dynamically rendered body select chips -->
+              </div>
+            </div>
+
+            <!-- Shape Selection (4 distinct geometries) -->
+            <div class="control-section">
+              <h3 class="section-title">
+                <span class="section-title-icon">📐</span>
+                <span data-i18n="shapeTitle">Форма тіла</span>
+              </h3>
+              <div class="shape-grid">
+                <button class="shape-card active" data-shape="box">
+                  <div class="shape-icon box-icon"></div>
+                  <span data-i18n="shapeBox">Куб / Брусок</span>
+                </button>
+                <button class="shape-card" data-shape="sphere">
+                  <div class="shape-icon sphere-icon"></div>
+                  <span data-i18n="shapeSphere">Сфера / Овал</span>
+                </button>
+                <button class="shape-card" data-shape="boat">
+                  <div class="shape-icon boat-icon"></div>
+                  <span data-i18n="shapeBoat">Човен</span>
+                </button>
+                <button class="shape-card" data-shape="diver">
+                  <div class="shape-icon diver-icon"></div>
+                  <span data-i18n="shapeDiver">Водолаз Декарта</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Cartesian Diver Pressure Control (Visible when Diver is active) -->
+            <div class="control-section diver-pressure-card" id="diver-pressure-section" style="display:none;">
+              <div class="diver-card-header">
+                <div class="diver-badge">🤿 ЕКСПЕРИМЕНТ</div>
+                <h3 class="section-title">
+                  <span class="section-title-icon">🎚️</span>
+                  <span data-i18n="diverPressureTitle">Тиск на ємність (Водолаз)</span>
+                </h3>
+              </div>
+              <p class="diver-desc" data-i18n="diverDesc">
+                Збільшуйте зовнішній тиск (стискання ємності): повітря всередині водолаза стискається, у порожнину заходить вода, середня густина зростає і він тоне. При зниженні тиску повітря розширюється і виштовхує воду — водолаз спливає і плаває з зануренням на 2/3.
+              </p>
+
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label for="range-diver-pressure" data-i18n="diverPressureLabel">Зовнішній тиск (P):</label>
+                  <div class="slider-num-wrap">
+                    <span id="txt-diver-pressure" style="font-weight:700;color:var(--accent);">1.00</span>
+                    <span class="unit">атм (<span id="txt-diver-kpa">101</span> кПа)</span>
+                  </div>
+                </div>
+                <input type="range" id="range-diver-pressure" min="1.00" max="3.00" step="0.02" value="1.00" class="range-input range-diver">
+                <div class="slider-scale">
+                  <span>1.0 атм (Плаває 2/3)</span>
+                  <span>2.25 атм (Зависання)</span>
+                  <span>3.0 атм (Тоне)</span>
+                </div>
+              </div>
+
+              <div class="diver-quick-btns">
+                <button class="btn-diver-preset active" data-p="1.00" data-i18n="diverFloat">🟢 1.0 атм (Спливання 2/3)</button>
+                <button class="btn-diver-preset" data-p="2.25" data-i18n="diverNeutral">🟡 2.25 атм (Зависання)</button>
+                <button class="btn-diver-preset" data-p="2.90" data-i18n="diverSink">🔴 2.90 атм (Занурення)</button>
+              </div>
+
+              <div class="diver-telemetry-grid">
+                <div class="diver-telem-item">
+                  <span class="diver-telem-lbl" data-i18n="diverAirVol">Об'єм повітря:</span>
+                  <span class="diver-telem-val" id="diver-air-vol">1.50 л</span>
+                </div>
+                <div class="diver-telem-item">
+                  <span class="diver-telem-lbl" data-i18n="diverWaterVol">Вода всередині:</span>
+                  <span class="diver-telem-val" id="diver-water-vol">+0.00 л</span>
+                </div>
+                <div class="diver-telem-item">
+                  <span class="diver-telem-lbl" data-i18n="diverDensity">Густина:</span>
+                  <span class="diver-telem-val" id="diver-density-val">667 кг/м³</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Material Selection (Rich Palette) -->
+            <div class="control-section">
+              <h3 class="section-title">
+                <span class="section-title-icon">🪵</span>
+                <span data-i18n="materialTitle">Матеріал тіла</span>
+              </h3>
+              <div class="material-grid">
+                <button class="material-chip" data-material="styrofoam">
+                  <span class="mat-swatch mat-styrofoam"></span>
+                  <span class="mat-name" data-i18n="matStyrofoam">Пінопласт (50)</span>
+                </button>
+                <button class="material-chip" data-material="balsa">
+                  <span class="mat-swatch mat-balsa"></span>
+                  <span class="mat-name" data-i18n="matBalsa">Бальса (130)</span>
+                </button>
+                <button class="material-chip" data-material="cork">
+                  <span class="mat-swatch mat-cork"></span>
+                  <span class="mat-name" data-i18n="matCork">Корок (240)</span>
+                </button>
+                <button class="material-chip active" data-material="pine">
+                  <span class="mat-swatch mat-pine"></span>
+                  <span class="mat-name" data-i18n="matPine">Сосна (550)</span>
+                </button>
+                <button class="material-chip" data-material="oak">
+                  <span class="mat-swatch mat-oak"></span>
+                  <span class="mat-name" data-i18n="matOak">Дуб (800)</span>
+                </button>
+                <button class="material-chip" data-material="wax">
+                  <span class="mat-swatch mat-wax"></span>
+                  <span class="mat-name" data-i18n="matWax">Парафін/Віск (900)</span>
+                </button>
+                <button class="material-chip" data-material="ice">
+                  <span class="mat-swatch mat-ice"></span>
+                  <span class="mat-name" data-i18n="matIce">Лід (917)</span>
+                </button>
+                <button class="material-chip" data-material="plastic">
+                  <span class="mat-swatch mat-plastic"></span>
+                  <span class="mat-name" data-i18n="matPlastic">Пластик (950)</span>
+                </button>
+                <button class="material-chip" data-material="rubber">
+                  <span class="mat-swatch mat-rubber"></span>
+                  <span class="mat-name" data-i18n="matRubber">Гума (1100)</span>
+                </button>
+                <button class="material-chip" data-material="ebony">
+                  <span class="mat-swatch mat-ebony"></span>
+                  <span class="mat-name" data-i18n="matEbony">Чорне дерево (1200)</span>
+                </button>
+                <button class="material-chip" data-material="glass">
+                  <span class="mat-swatch mat-glass"></span>
+                  <span class="mat-name" data-i18n="matGlass">Скло (2500)</span>
+                </button>
+                <button class="material-chip" data-material="aluminum">
+                  <span class="mat-swatch mat-aluminum"></span>
+                  <span class="mat-name" data-i18n="matAluminum">Алюміній (2700)</span>
+                </button>
+                <button class="material-chip" data-material="iron">
+                  <span class="mat-swatch mat-iron"></span>
+                  <span class="mat-name" data-i18n="matIron">Сталь (7850)</span>
+                </button>
+                <button class="material-chip" data-material="copper">
+                  <span class="mat-swatch mat-copper"></span>
+                  <span class="mat-name" data-i18n="matCopper">Мідь (8900)</span>
+                </button>
+                <button class="material-chip" data-material="lead">
+                  <span class="mat-swatch mat-lead"></span>
+                  <span class="mat-name" data-i18n="matLead">Свинець (11340)</span>
+                </button>
+                <button class="material-chip" data-material="gold">
+                  <span class="mat-swatch mat-gold"></span>
+                  <span class="mat-name" data-i18n="matGold">Золото (19300)</span>
+                </button>
+                <button class="material-chip" data-material="custom">
+                  <span class="mat-swatch mat-custom"></span>
+                  <span class="mat-name" data-i18n="matCustom">Власний</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Interconnected Body Properties -->
+            <div class="control-section">
+              <h3 class="section-title">
+                <span class="section-title-icon">⚖️</span>
+                <span data-i18n="bodyPropsTitle">Характеристики тіла (m = ρ · V)</span>
+              </h3>
+
+              <!-- Density -->
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label for="num-density" data-i18n="densityLabel">Густина тіла (ρ):</label>
+                  <div class="slider-num-wrap">
+                    <input type="number" id="num-density" min="10" max="25000" step="10" value="550" class="input-num">
+                    <span class="unit">кг/м³</span>
+                  </div>
+                </div>
+                <input type="range" id="range-density" min="50" max="12000" step="10" value="550" class="range-input">
+                <div class="slider-scale">
+                  <span>50 (Пінопласт)</span>
+                  <span>1000 (Вода)</span>
+                  <span>12000 (Свинець)</span>
+                </div>
+              </div>
+
+              <!-- Volume -->
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label for="num-volume" data-i18n="volumeLabel">Об'єм тіла (V):</label>
+                  <div class="slider-num-wrap">
+                    <input type="number" id="num-volume" min="0.2" max="20" step="0.1" value="2.5" class="input-num">
+                    <span class="unit">л (дм³)</span>
+                  </div>
+                </div>
+                <input type="range" id="range-volume" min="0.2" max="10.0" step="0.1" value="2.5" class="range-input">
+              </div>
+
+              <!-- Mass -->
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label for="num-mass" data-i18n="massLabel">Маса тіла (m = ρ·V):</label>
+                  <div class="slider-num-wrap">
+                    <input type="number" id="num-mass" min="0.01" max="150" step="0.01" value="1.375" class="input-num">
+                    <span class="unit">кг</span>
+                  </div>
+                </div>
+                <input type="range" id="range-mass" min="0.05" max="30.0" step="0.05" value="1.375" class="range-input">
+              </div>
+
+              <!-- Additional cargo/weight on top -->
+              <div class="cargo-box">
+                <div class="cargo-header">
+                  <span data-i18n="cargoTitle">Додатковий вантаж зверху:</span>
+                  <span id="cargo-val">0.00 кг</span>
+                </div>
+                <div class="cargo-buttons">
+                  <button class="btn btn-xs btn-cargo" data-add="-1.0">-1 кг</button>
+                  <button class="btn btn-xs btn-cargo" data-add="-0.2">-0.2 кг</button>
+                  <button class="btn btn-xs btn-cargo" data-add="0" data-i18n="clearCargo">Зняти</button>
+                  <button class="btn btn-xs btn-cargo" data-add="0.2">+0.2 кг</button>
+                  <button class="btn btn-xs btn-cargo" data-add="1.0">+1.0 кг</button>
+                  <button class="btn btn-xs btn-cargo" data-add="2.5">+2.5 кг</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: LIQUID SETTINGS (1, 2, or 3 LIQUIDS) -->
+          <div class="tab-pane" id="pane-liquid">
+            <!-- Tank Layers Mode Selector -->
+            <div class="control-section">
+              <h3 class="section-title">
+                <span class="section-title-icon">🫗</span>
+                <span data-i18n="tankLayersModeTitle">Модель рідин у колбі</span>
+              </h3>
+              <div class="layers-mode-selector">
+                <button class="btn btn-sm btn-layer-mode active" data-layers="1" data-i18n="mode1Layer">1 Рідина</button>
+                <button class="btn btn-sm btn-layer-mode" data-layers="2" data-i18n="mode2Layers">2 Рідини (Шари)</button>
+                <button class="btn btn-sm btn-layer-mode" data-layers="3" data-i18n="mode3Layers">3 Рідини (Шари)</button>
+              </div>
+            </div>
+
+            <!-- Single Liquid Selection (Mode 1) -->
+            <div class="control-section" id="section-single-liquid">
+              <h3 class="section-title">
+                <span class="section-title-icon">💧</span>
+                <span data-i18n="liquidTypeTitle">Вибір рідини</span>
+              </h3>
+              <div class="liquid-grid">
+                <button class="liquid-card" data-liquid="gasoline">
+                  <div class="liquid-color" style="background: linear-gradient(135deg, #fdba74, #ea580c);"></div>
+                  <div class="liquid-meta">
+                    <span class="liq-name" data-i18n="liqGasoline">Бензин / Гас</span>
+                    <span class="liq-density">710 кг/м³</span>
+                  </div>
+                </button>
+                <button class="liquid-card" data-liquid="alcohol">
+                  <div class="liquid-color" style="background: linear-gradient(135deg, #c084fc, #9333ea);"></div>
+                  <div class="liquid-meta">
+                    <span class="liq-name" data-i18n="liqAlcohol">Спирт етиловий</span>
+                    <span class="liq-density">790 кг/м³</span>
+                  </div>
+                </button>
+                <button class="liquid-card" data-liquid="oil">
+                  <div class="liquid-color" style="background: linear-gradient(135deg, #facc15, #ca8a04);"></div>
+                  <div class="liquid-meta">
+                    <span class="liq-name" data-i18n="liqOil">Олія рослинна</span>
+                    <span class="liq-density">920 кг/м³</span>
+                  </div>
+                </button>
+                <button class="liquid-card active" data-liquid="water">
+                  <div class="liquid-color" style="background: linear-gradient(135deg, #38bdf8, #0284c7);"></div>
+                  <div class="liquid-meta">
+                    <span class="liq-name" data-i18n="liqWater">Чиста вода</span>
+                    <span class="liq-density">1000 кг/м³</span>
+                  </div>
+                </button>
+                <button class="liquid-card" data-liquid="seawater">
+                  <div class="liquid-color" style="background: linear-gradient(135deg, #0ea5e9, #0369a1);"></div>
+                  <div class="liquid-meta">
+                    <span class="liq-name" data-i18n="liqSeaWater">Морська вода</span>
+                    <span class="liq-density">1030 кг/м³</span>
+                  </div>
+                </button>
+                <button class="liquid-card" data-liquid="milk">
+                  <div class="liquid-color" style="background: linear-gradient(135deg, #f8fafc, #cbd5e1); border: 1px solid #94a3b8;"></div>
+                  <div class="liquid-meta">
+                    <span class="liq-name" data-i18n="liqMilk">Молоко</span>
+                    <span class="liq-density">1030 кг/м³</span>
+                  </div>
+                </button>
+                <button class="liquid-card" data-liquid="glycerin">
+                  <div class="liquid-color" style="background: linear-gradient(135deg, #fed7aa, #f97316);"></div>
+                  <div class="liquid-meta">
+                    <span class="liq-name" data-i18n="liqGlycerin">Гліцерин</span>
+                    <span class="liq-density">1260 кг/м³</span>
+                  </div>
+                </button>
+                <button class="liquid-card" data-liquid="honey">
+                  <div class="liquid-color" style="background: linear-gradient(135deg, #fbbf24, #b45309);"></div>
+                  <div class="liquid-meta">
+                    <span class="liq-name" data-i18n="liqHoney">Мед / Сироп</span>
+                    <span class="liq-density">1420 кг/м³</span>
+                  </div>
+                </button>
+                <button class="liquid-card" data-liquid="mercury">
+                  <div class="liquid-color" style="background: linear-gradient(135deg, #e2e8f0, #94a3b8); border: 1px solid #64748b;"></div>
+                  <div class="liquid-meta">
+                    <span class="liq-name" data-i18n="liqMercury">Ртуть</span>
+                    <span class="liq-density">13600 кг/м³</span>
+                  </div>
+                </button>
+                <button class="liquid-card" data-liquid="custom">
+                  <div class="liquid-color" style="background: linear-gradient(135deg, #38bdf8, #a855f7);"></div>
+                  <div class="liquid-meta">
+                    <span class="liq-name" data-i18n="liqCustom">Власна</span>
+                    <span class="liq-density" id="liq-custom-badge">1000 кг/м³</span>
+                  </div>
+                </button>
+              </div>
+
+              <!-- Custom Liquid Density Slider -->
+              <div class="slider-control" style="margin-top: 0.8rem;">
+                <div class="slider-header">
+                  <label for="num-liq-density" data-i18n="liquidDensityLabel">Густина рідини (ρ_р):</label>
+                  <div class="slider-num-wrap">
+                    <input type="number" id="num-liq-density" min="500" max="15000" step="10" value="1000" class="input-num">
+                    <span class="unit">кг/м³</span>
+                  </div>
+                </div>
+                <input type="range" id="range-liq-density" min="600" max="14000" step="10" value="1000" class="range-input">
+              </div>
+            </div>
+
+            <!-- Multi-Liquid Layer Config (Modes 2 and 3) -->
+            <div class="control-section" id="section-multi-liquid" style="display:none;">
+              <h3 class="section-title">
+                <span class="section-title-icon">🧪</span>
+                <span data-i18n="multiLayersConfigTitle">Налаштування шарів рідин</span>
+              </h3>
+
+              <!-- Layer 1 (Top) -->
+              <div class="multi-layer-row" id="layer-row-top">
+                <div class="layer-badge-label">
+                  <span class="layer-pos-tag tag-top" data-i18n="layerTop">1. Верхній шар:</span>
+                  <select id="select-layer-top" class="select-layer">
+                    <option value="gasoline">Бензин (710 кг/м³)</option>
+                    <option value="alcohol">Спирт (790 кг/м³)</option>
+                    <option value="oil" selected>Олія рослинна (920 кг/м³)</option>
+                    <option value="water">Чиста вода (1000 кг/м³)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Layer 2 (Middle - only in 3-layer mode) -->
+              <div class="multi-layer-row" id="layer-row-mid" style="display:none;">
+                <div class="layer-badge-label">
+                  <span class="layer-pos-tag tag-mid" data-i18n="layerMid">2. Середній шар:</span>
+                  <select id="select-layer-mid" class="select-layer">
+                    <option value="water" selected>Чиста вода (1000 кг/м³)</option>
+                    <option value="seawater">Морська вода (1030 кг/м³)</option>
+                    <option value="glycerin">Гліцерин (1260 кг/м³)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Layer 3 (Bottom) -->
+              <div class="multi-layer-row" id="layer-row-bot">
+                <div class="layer-badge-label">
+                  <span class="layer-pos-tag tag-bot" data-i18n="layerBot">Нижній шар (Дно):</span>
+                  <select id="select-layer-bot" class="select-layer">
+                    <option value="water" selected>Чиста вода (1000 кг/м³)</option>
+                    <option value="glycerin">Гліцерин (1260 кг/м³)</option>
+                    <option value="honey">Мед / Сироп (1420 кг/м³)</option>
+                    <option value="mercury">Ртуть (13600 кг/м³)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="layer-info-hint" data-i18n="multiLayerHint">
+                💡 Рідини автоматично розташовуються за густиною: легші спливають нагору, важчі осідають на дно. Тіло плаватиме на межі того шару, де його густина менша за нижню рідину!
+              </div>
+            </div>
+
+            <!-- Environmental Parameters -->
+            <div class="control-section">
+              <h3 class="section-title">
+                <span class="section-title-icon">🌐</span>
+                <span data-i18n="customLiquidTitle">Параметри середовища</span>
+              </h3>
+
+              <!-- Initial Liquid Depth in Tank -->
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label for="range-tank-depth" data-i18n="tankLevelLabel">Початковий рівень рідини:</label>
+                  <div class="slider-num-wrap">
+                    <span id="txt-tank-depth">40</span>
+                    <span class="unit">см</span>
+                  </div>
+                </div>
+                <input type="range" id="range-tank-depth" min="20" max="60" step="1" value="40" class="range-input">
+              </div>
+
+              <!-- Gravity g -->
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label for="num-gravity" data-i18n="gravityParamLabel">Прискорення вільного падіння (g):</label>
+                  <div class="slider-num-wrap">
+                    <input type="number" id="num-gravity" min="0" max="30" step="0.1" value="9.81" class="input-num">
+                    <span class="unit">м/с²</span>
+                  </div>
+                </div>
+                <input type="range" id="range-gravity" min="0" max="25" step="0.1" value="9.81" class="range-input">
+                <div class="slider-scale">
+                  <span>0g (Невагомість)</span>
+                  <span>1.6g (Місяць)</span>
+                  <span>9.8g (Земля)</span>
+                  <span>24.8g (Юпітер)</span>
+                </div>
+              </div>
+
+              <!-- Viscosity / Waves -->
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label data-i18n="viscosityLabel">В'язкість / Затухання хвиль:</label>
+                  <div class="slider-num-wrap">
+                    <span id="txt-viscosity">Середня</span>
+                  </div>
+                </div>
+                <input type="range" id="range-viscosity" min="0.95" max="0.995" step="0.005" value="0.98" class="range-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: FORCES & PRESSURE VECTORS -->
+          <div class="tab-pane" id="pane-forces">
+            <!-- Vector Visibility Toggles -->
+            <div class="control-section">
+              <h3 class="section-title">
+                <span class="section-title-icon">🏹</span>
+                <span data-i18n="vectorsTitle">Відображення векторів сил</span>
+              </h3>
+
+              <div class="toggles-list">
+                <label class="toggle-row">
+                  <div class="toggle-label-wrap">
+                    <span class="vector-dot dot-fg"></span>
+                    <div class="toggle-title">
+                      <span data-i18n="showFg">Сила тяжіння (Fg = m·g)</span>
+                      <small data-i18n="showFgDesc">Спрямована вниз із центра мас</small>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="chk-fg" checked>
+                  <span class="toggle-checkbox"></span>
+                </label>
+
+                <label class="toggle-row">
+                  <div class="toggle-label-wrap">
+                    <span class="vector-dot dot-fa"></span>
+                    <div class="toggle-title">
+                      <span data-i18n="showFa">Архімедова виштовхувальна сила (Fa)</span>
+                      <small data-i18n="showFaDesc">Спрямована вгору із центра зануреного об'єму</small>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="chk-fa" checked>
+                  <span class="toggle-checkbox"></span>
+                </label>
+
+                <label class="toggle-row">
+                  <div class="toggle-label-wrap">
+                    <span class="vector-dot dot-fnet"></span>
+                    <div class="toggle-title">
+                      <span data-i18n="showFnet">Рівнодійна сила (Fрез = Fa + Fg)</span>
+                      <small data-i18n="showFnetDesc">Вектор суми всіх діючих сил</small>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="chk-fnet" checked>
+                  <span class="toggle-checkbox"></span>
+                </label>
+
+                <label class="toggle-row">
+                  <div class="toggle-label-wrap">
+                    <span class="vector-dot dot-patm"></span>
+                    <div class="toggle-title">
+                      <span data-i18n="showPatm">Атмосферний тиск (P_атм)</span>
+                      <small data-i18n="showPatmDesc">Рівномірні стрілочки тиску повітря зверху</small>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="chk-patm" checked>
+                  <span class="toggle-checkbox"></span>
+                </label>
+
+                <label class="toggle-row">
+                  <div class="toggle-label-wrap">
+                    <span class="vector-dot dot-phydro"></span>
+                    <div class="toggle-title">
+                      <span data-i18n="showPhydro">Гідростатичний тиск рідини (P_гідро)</span>
+                      <small data-i18n="showPhydroDesc">Стрілочки по контуру тіла, пропорційні глибині (ρ·g·h)</small>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="chk-phydro" checked>
+                  <span class="toggle-checkbox"></span>
+                </label>
+
+                <label class="toggle-row">
+                  <div class="toggle-label-wrap">
+                    <span class="vector-dot dot-n"></span>
+                    <div class="toggle-title">
+                      <span data-i18n="showN">Сила реакції дна (N)</span>
+                      <small data-i18n="showNDesc">Виникає при контакті з дном резервуару</small>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="chk-n" checked>
+                  <span class="toggle-checkbox"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- SPECIAL EXPERIMENT: IDEAL BOTTOM SUCTION SEAL -->
+            <div class="control-section bottom-seal-card">
+              <div class="seal-header">
+                <div class="seal-badge">! ЕКСПЕРИМЕНТ !</div>
+                <h3 class="section-title">
+                  <span class="section-title-icon">🔒</span>
+                  <span data-i18n="suctionModeTitle">Ідеальне притискання до дна (Лише плоскі тіла)</span>
+                </h3>
+              </div>
+              <p class="seal-desc" data-i18n="suctionModeDesc">
+                Ефект притискання спостерігається ТІЛЬКИ у тіл з абсолютно плоскою нижньою гранню (Куб/Брусок). При усуненні прошарку рідини під плоскою гранню виштовхувальний тиск знизу зникає (Fa = 0), а тиск рідини та атмосфери зверху притискають тіло до дна. Для криволінійних тіл (сфера, конус, чаша) рідина завжди підтікає знизу, створюючи виштовхувальну силу Fa.
+              </p>
+
+              <label class="toggle-switch-card">
+                <input type="checkbox" id="chk-suction-mode">
+                <span class="toggle-switch-slider"></span>
+                <span class="toggle-switch-label" data-i18n="suctionToggleLabel">Увімкнути режим притискання (Bottom Seal)</span>
+              </label>
+
+              <div class="suction-status-box" id="suction-status-box">
+                <div class="status-indicator-dot" id="suction-dot"></div>
+                <span id="suction-status-text" data-i18n="suctionStatusReady">Готово. Опустіть плоске тіло (Куб/Брусок) на дно.</span>
+              </div>
+
+              <div class="suction-pull-action" id="suction-pull-area" style="display:none;">
+                <button id="btn-break-seal" class="btn btn-warning btn-sm" data-i18n="breakSealBtn">
+                  ⚡ Зірвати тіло з дна (Порушити герметичність)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: STEP-BY-STEP ANALYSIS & CALCULATIONS -->
+          <div class="tab-pane" id="pane-analysis">
+            <div class="control-section">
+              <h3 class="section-title">
+                <span class="section-title-icon">📝</span>
+                <span data-i18n="detailedCalcTitle">Покроковий фізичний розрахунок</span>
+              </h3>
+
+              <div class="calc-steps-list">
+                <div class="calc-step-item">
+                  <div class="calc-step-header">
+                    <span class="step-num">1</span>
+                    <strong data-i18n="step1Title">Об'єм та маса тіла:</strong>
+                  </div>
+                  <div class="calc-step-body">
+                    <div>V_тіла = <span id="calc-vtotal">2.50</span> л = <span id="calc-vtotal-m3">0.0025</span> м³</div>
+                    <div>m = ρ · V = <span id="calc-rho-body">550</span> кг/м³ · <span id="calc-v-m3">0.0025</span> м³ = <strong id="calc-mass">1.375</strong> кг</div>
+                  </div>
+                </div>
+
+                <div class="calc-step-item">
+                  <div class="calc-step-header">
+                    <span class="step-num">2</span>
+                    <strong data-i18n="step2Title">Сила тяжіння:</strong>
+                  </div>
+                  <div class="calc-step-body">
+                    <div>Fg = m · g = <span id="calc-m2">1.38</span> кг · <span id="calc-g2">9.81</span> м/с² = <strong class="text-red" id="calc-fg-res">13.49 Н</strong></div>
+                  </div>
+                </div>
+
+                <div class="calc-step-item">
+                  <div class="calc-step-header">
+                    <span class="step-num">3</span>
+                    <strong data-i18n="step3Title">Витіснений об'єм і Архімедова сила:</strong>
+                  </div>
+                  <div class="calc-step-body">
+                    <div>V_зан = <span id="calc-vsub-l">1.38</span> л (<span id="calc-sub-pct">55.0</span>% від об'єму тіла)</div>
+                    <div>Fa = Σ (ρ_р,i · V_зан,i · g)</div>
+                    <div>Fa = <span id="calc-rholiq">1000</span> · <span id="calc-vsub-m3">0.00138</span> · <span id="calc-g3">9.81</span> = <strong class="text-cyan" id="calc-fa-res">13.49 Н</strong></div>
+                  </div>
+                </div>
+
+                <div class="calc-step-item">
+                  <div class="calc-step-header">
+                    <span class="step-num">4</span>
+                    <strong data-i18n="step4Title">Гідростатичний тиск на гранях:</strong>
+                  </div>
+                  <div class="calc-step-body">
+                    <div>Глибина верху: h1 = <span id="calc-h-top">0.0</span> см → P1 = <span id="calc-p-top">101.30</span> кПа</div>
+                    <div>Глибина низу: h2 = <span id="calc-h-bot">12.5</span> см → P2 = <span id="calc-p-bot">102.53</span> кПа</div>
+                    <div>Різниця сил тиску (F2 - F1) = <strong id="calc-press-diff">13.49 Н</strong> (= Fa)</div>
+                  </div>
+                </div>
+
+                <div class="calc-step-item highlight-calc-step">
+                  <div class="calc-step-header">
+                    <span class="step-num">5</span>
+                    <strong data-i18n="step5Title">Умова плавання тіл:</strong>
+                  </div>
+                  <div class="calc-step-body">
+                    <div id="calc-condition-desc" class="calc-condition-highlight">Густина тіла (550 кг/м³) &lt; густини рідини (1000 кг/м³) → Тіло плаває, частково занурившись.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Interactive Theory & Guide Modal -->
+    <div class="modal-backdrop" id="theory-modal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <span class="modal-icon">📖</span>
+            <h2 data-i18n="theoryModalTitle">Фізичні закони та принципи гідростатики</h2>
+          </div>
+          <button class="modal-close" id="btn-close-theory" title="Закрити">&times;</button>
+        </div>
+        <div class="modal-body">
+          <section class="theory-article">
+            <h3 data-i18n="archimedesLawHead">1. Закон Архімеда</h3>
+            <p data-i18n="archimedesLawP1">
+              На будь-яке тіло, занурене в рідину або газ, діє виштовхувальна сила, яка дорівнює вазі рідини в об'ємі зануреної частини тіла:
+            </p>
+            <div class="formula-card">
+              <code>F_A = ρ_{р} · V_{зан} · g</code>
+            </div>
+            <p data-i18n="archimedesLawP2">
+              Виштовхувальна сила виникає через різницю гідростатичного тиску рідини на нижню та верхню грані зануреного тіла:
+              <strong>F_A = F_{ниж} - F_{верх} = (P_2 - P_1) · S = (ρ_{р} g h_2 - ρ_{р} g h_1) · S = ρ_{р} g Δh · S = ρ_{р} g V_{зан}</strong>.
+            </p>
+          </section>
+
+          <section class="theory-article">
+            <h3 data-i18n="flotationHead">2. Умови плавання тіл</h3>
+            <ul class="theory-list">
+              <li><strong>ρ_тіла &lt; ρ_рідини:</strong> Тіло спливає на поверхню і плаває у стані рівноваги, занурившись на частку <code>k = ρ_{тіла} / ρ_{рідини}</code> (Fa = Fg).</li>
+              <li><strong>ρ_тіла = ρ_рідини:</strong> Тіло зависає в середині рідини у будь-якій точці (нейтральна плавучість).</li>
+              <li><strong>ρ_тіла &gt; ρ_рідини:</strong> Сила тяжіння переважає максимальну Архімедову силу (<code>Fg &gt; Fa</code>), тіло тоне і лягає на дно (тиск на дно <code>N = Fg - Fa</code>).</li>
+            </ul>
+          </section>
+
+          <section class="theory-article">
+            <h3 data-i18n="multiLayerHead">3. Плавання в кількох рідинах (Шарувата колба)</h3>
+            <p data-i18n="multiLayerP1">
+              Якщо в одній посудині містяться кілька незмішуваних рідин різної густини (наприклад, Олія зверху, Вода посередині, Ртуть знизу), загальна виштовхувальна сила дорівнює сумі виштовхувальних сил кожного шару:
+            </p>
+            <div class="formula-card">
+              <code>F_A = \sum_{i=1}^{n} \rho_{i} \cdot g \cdot V_{зан, i}</code>
+            </div>
+            <p data-i18n="multiLayerP2">
+              Тіло з густиною <code>ρ_{тіла}</code> стабільно плаває на межі розділу двох шарів, якщо <code>ρ_{верх} &lt; ρ_{тіла} &lt; ρ_{ниж}</code>.
+            </p>
+          </section>
+
+          <section class="theory-article highlight-theory">
+            <h3 data-i18n="suctionHead">4. Парадокс притискання до дна (Чому зникає сила Архімеда?)</h3>
+            <p data-i18n="suctionP1">
+              Ефект притискання спостерігається <strong>виключно у тіл з абсолютно плоскою нижньою поверхнею</strong> (Куб / Брусок). Якщо плоске дно тіла ідеально щільно притиснути до гладкого дна резервуару так, що між ними <strong>повністю зникне прошарок рідини</strong>:
+            </p>
+            <ul class="theory-list">
+              <li>Знизу на тіло не тисне рідина (F_{ниж} = 0).</li>
+              <li>Зверху на тіло продовжує тиснути стовп рідини та атмосферне повітря: <code>F_{верх} = (P_0 + ρ_{р} g h) · S</code>.</li>
+              <li>Виштовхувальна сила <strong>F_A = 0</strong>! Тіло притискається до дна силою реакції <code>N = F_g + F_{тиску}</code>.</li>
+              <li><strong>Важливо:</strong> Для тіл з криволінійною або кутовою формою (сфера, конус вершиною вниз, чаша) дотик відбувається в окремих точках, рідина вільно підтікає під усю нижню поверхню, тому ефект притискання для них <strong>не виникає</strong> (сила Архімеда продовжує діяти в повному обсязі).</li>
+            </ul>
+          </section>
+
+          <section class="theory-article" style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.3);padding:1rem;border-radius:var(--radius-md);">
+            <h3 style="color:var(--accent);" data-i18n="diverTheoryHead">5. Картезіанський водолаз (Закон Бойля-Маріотта і плавучість)</h3>
+            <p data-i18n="diverTheoryP1">
+              Водолаз Декарта — класичний прилад, що наочно поєднує закон Архімеда та закон Бойля-Маріотта (<code>P · V = const</code>):
+            </p>
+            <ul class="theory-list">
+              <li><strong>Початковий стан (P = 1.0 атм):</strong> Всередині ампули міститься достатній об'єм повітря, тому середня густина водолаза менша за густину рідини (<code>ρ_{сер} = (2/3) · ρ_{р}</code>). Водолаз стабільно плаває на поверхні, занурившись на 2/3 свого об'єму.</li>
+              <li><strong>Збільшення тиску (P &gt; 1.0 атм):</strong> При стисканні посудини підвищений тиск стискає повітряну бульбашку всередині ампули (<code>V_{пов} = V_0 / P</code>). Через нижній отвір у порожнину заходить додаткова вода. Маса водолаза зростає, середня густина перевищує густину рідини (<code>ρ_{сер} &gt; ρ_{р}</code>), сила тяжіння переважає Архімедову силу і водолаз <strong>тоне на дно</strong>.</li>
+              <li><strong>Зниження тиску:</strong> Повітря розширюється, виштовхує зайву воду назовні, маса водолаза зменшується, і він <strong>підіймається на поверхню</strong>, повертаючись до стану плавання з зануренням на 2/3.</li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

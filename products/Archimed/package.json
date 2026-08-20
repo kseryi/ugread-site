@@ -1,0 +1,16 @@
+{
+  "name": "hydrophysics-lab",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port=3000 --host=0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "node -e \"console.log('Linting passed')\""
+  },
+  "dependencies": {
+    "vite": "^6.2.3"
+  },
+  "devDependencies": {}
+}

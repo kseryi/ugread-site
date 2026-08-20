@@ -1,0 +1,6 @@
+{
+  "name": "HydroPhysics Lab - Fluid Immersion Simulator",
+  "description": "Interactive physical simulation of body immersion in fluids, Archimedes force, surface waves, hydrostatic pressure vectors, and bottom suction seal phenomenon.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

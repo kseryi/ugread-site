@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="uk" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HydroPhysics Lab — Сполучені посудини & Гідравлічний прес</title>
+  <meta name="description" content="Фізичний симулятор сполучених посудин різної ширини та гідравлічного преса/домкрата з законом Паскаля" />
+  <!-- Google Fonts for crisp scientific typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <span>🌊</span>
+        </div>
+        <div class="brand-text">
+          <h1>Hydro<span class="accent-text">Physics</span></h1>
+          <span class="brand-badge" data-i18n="app_subtitle">Лабораторія Гідростатики</span>
+        </div>
+      </div>
+
+      <!-- Mode Switcher -->
+      <div class="mode-switch-group">
+        <button id="btn-mode-vessels" class="btn-mode-switch active" title="Симулятор сполучених посудин">
+          <span>⚗️</span>
+          <span data-i18n="mode_vessels">Сполучені посудини</span>
+        </button>
+        <button id="btn-mode-press" class="btn-mode-switch" title="Симулятор гідравлічного преса та домкрата">
+          <span>🚜</span>
+          <span data-i18n="mode_press">Гідравлічний прес / Домкрат</span>
+        </button>
+      </div>
+
+      <!-- Preset Scenarios -->
+      <div class="header-presets">
+        <span class="preset-label" data-i18n="presets_label">Сценарії:</span>
+        <div class="preset-buttons" id="presets-container">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="header-actions">
+        <!-- Language Switcher in Header -->
+        <div class="lang-segmented-switch" id="lang-switch-group">
+          <button id="btn-lang-uk" class="lang-segment-btn active" title="Українська мова">🇺🇦 УКР</button>
+          <button id="btn-lang-en" class="lang-segment-btn" title="English language">🇬🇧 ENG</button>
+        </div>
+
+        <button id="btn-theory" class="btn btn-sm" title="Теоретичні відомості та закони">
+          <span>📖</span>
+          <span data-i18n="theory_btn">Теорія</span>
+        </button>
+        <button id="btn-theme-toggle" class="btn btn-icon" title="Змінити тему (Світла/Темна)">
+          <span class="theme-sun">☀️</span>
+          <span class="theme-moon">🌙</span>
+        </button>
+        <button id="btn-reset-all" class="btn btn-sm btn-danger" title="Скинути параметри до початкових">
+          <span>🔄</span>
+          <span data-i18n="reset_btn">Скинути</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="app-main">
+      <!-- Simulation Canvas Viewport -->
+      <section class="simulation-viewport">
+        <!-- Floating Toolbar -->
+        <div class="stage-toolbar">
+          <!-- Playback Controls -->
+          <div class="toolbar-group">
+            <button id="btn-play-pause" class="btn btn-sm btn-primary" title="Запустити/Зупинити симуляцію">
+              <span id="play-pause-icon">⏸️</span>
+              <span id="play-pause-text" data-i18n="pause_btn">Пауза</span>
+            </button>
+            <button id="btn-step" class="btn btn-sm" title="Зробити один крок фізичного часу">
+              <span>⏯️</span>
+              <span data-i18n="step_btn">Крок</span>
+            </button>
+            <span class="speed-label" data-i18n="speed_label">Швидкість:</span>
+            <div class="speed-toggle">
+              <button class="speed-btn" data-speed="0.5">0.5x</button>
+              <button class="speed-btn active" data-speed="1.0">1.0x</button>
+              <button class="speed-btn" data-speed="2.0">2.0x</button>
+            </div>
+          </div>
+
+          <!-- Interactive Mode Actions -->
+          <div class="toolbar-group">
+            <button id="btn-pour-mode" class="btn btn-sm btn-accent" title="Увімкнути режим доливання лійкою/краном">
+              <span>🫗</span>
+              <span data-i18n="pour_mode_btn">Долити рідину</span>
+            </button>
+            <button id="btn-drain-all" class="btn btn-sm" title="Злити всю рідину">
+              <span>🧹</span>
+              <span data-i18n="drain_btn">Злити все</span>
+            </button>
+          </div>
+
+          <!-- Visual Overlays Toggles -->
+          <div class="toolbar-group">
+            <label class="toggle-switch-compact" title="Показати/приховати лінійку та рівні в мм">
+              <input type="checkbox" id="toggle-ruler" checked />
+              <span class="toggle-slider"></span>
+              <span class="toggle-text" data-i18n="toggle_ruler">Лінійка</span>
+            </label>
+            <label class="toggle-switch-compact" title="Показати лінію рівноваги рівнів">
+              <input type="checkbox" id="toggle-level-line" checked />
+              <span class="toggle-slider"></span>
+              <span class="toggle-text" data-i18n="toggle_level_line">Рівень h</span>
+            </label>
+            <label class="toggle-switch-compact" title="Показати вектори сил та тиску">
+              <input type="checkbox" id="toggle-forces" checked />
+              <span class="toggle-slider"></span>
+              <span class="toggle-text" data-i18n="toggle_forces">Сили / Тиск</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Interactive Hint Tag -->
+        <div id="canvas-hint" class="canvas-interactive-hint">
+          <span>💡</span>
+          <span id="canvas-hint-text" data-i18n="canvas_hint_vessels">Натисніть або перетягуйте лійку/кран над посудиною, щоб доливати рідину</span>
+        </div>
+
+        <!-- Floating Rule Banner -->
+        <div id="physics-rule-banner" class="physics-rule-banner">
+          <div class="rule-banner-header">
+            <div class="rule-banner-left">
+              <span class="rule-badge" id="rule-badge-text">ЗАКОН СПОЛУЧЕНИХ ПОСУДИН</span>
+              <span class="rule-math-condition" id="rule-math-formula">h₁ = h₂ = h₃ = h₄</span>
+            </div>
+            <button id="btn-close-banner" class="rule-banner-close-btn" title="Закрити підказку">✕</button>
+          </div>
+          <div class="rule-banner-body" id="rule-banner-desc">
+            У відкритих сполучених посудинах будь-якої форми вільні поверхні однорідної нерухомої рідини встановлюються на одному рівні.
+          </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="canvas-wrapper" id="canvas-wrapper">
+          <canvas id="sim-canvas"></canvas>
+        </div>
+
+        <!-- Bottom Telemetry Dock -->
+        <div class="viewport-telemetry-dock" id="telemetry-dock">
+          <!-- Card 1: Fluid Level / Piston 1 -->
+          <div class="telemetry-card">
+            <span class="telemetry-label" id="telem-label-1" data-i18n="telem_h_mean">Рівень рідини (h)</span>
+            <div class="telemetry-value highlight-cyan">
+              <span id="telem-val-1">150.0</span>
+              <span class="unit" id="telem-unit-1">мм</span>
+            </div>
+            <span class="telemetry-sub" id="telem-sub-1">Рівновага досягнута</span>
+          </div>
+
+          <!-- Card 2: Total Volume / Piston 2 -->
+          <div class="telemetry-card">
+            <span class="telemetry-label" id="telem-label-2" data-i18n="telem_volume">Загальний об'єм (V)</span>
+            <div class="telemetry-value">
+              <span id="telem-val-2">680</span>
+              <span class="unit" id="telem-unit-2">мл</span>
+            </div>
+            <span class="telemetry-sub" id="telem-sub-2">Усі сполучені трубки</span>
+          </div>
+
+          <!-- Card 3: Bottom Hydrostatic Pressure -->
+          <div class="telemetry-card">
+            <span class="telemetry-label" id="telem-label-3" data-i18n="telem_pressure">Гідростатичний тиск (P)</span>
+            <div class="telemetry-value highlight-amber">
+              <span id="telem-val-3">1.47</span>
+              <span class="unit" id="telem-unit-3">кПа</span>
+            </div>
+            <span class="telemetry-sub" id="telem-sub-3">P = ρ · g · h</span>
+          </div>
+
+          <!-- Card 4: Applied Force / Density -->
+          <div class="telemetry-card">
+            <span class="telemetry-label" id="telem-label-4" data-i18n="telem_density">Густина рідини (ρ)</span>
+            <div class="telemetry-value highlight-green">
+              <span id="telem-val-4">1000</span>
+              <span class="unit" id="telem-unit-4">кг/м³</span>
+            </div>
+            <span class="telemetry-sub" id="telem-sub-4">Вода дистильована</span>
+          </div>
+
+          <!-- Card 5: Mechanical Advantage / Difference -->
+          <div class="telemetry-card">
+            <span class="telemetry-label" id="telem-label-5" data-i18n="telem_delta_h">Перепад рівнів (Δh)</span>
+            <div class="telemetry-value">
+              <span id="telem-val-5">0.0</span>
+              <span class="unit" id="telem-unit-5">мм</span>
+            </div>
+            <span class="telemetry-sub" id="telem-sub-5">|h_max - h_min|</span>
+          </div>
+
+          <!-- Card 6: Equilibrium / Lift Status -->
+          <div class="telemetry-card">
+            <span class="telemetry-label" id="telem-label-6" data-i18n="telem_status">Стан системи</span>
+            <div class="telemetry-value highlight-green">
+              <span id="telem-val-6">СТАБІЛЬНИЙ</span>
+            </div>
+            <span class="telemetry-sub" id="telem-sub-6">Потік зупинено</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sidebar Controls Panel -->
+      <aside class="sidebar-panel">
+        <!-- Sidebar Navigation Tabs -->
+        <nav class="sidebar-tabs">
+          <button class="tab-btn active" data-tab="tab-params" data-i18n="tab_params">Параметри</button>
+          <button class="tab-btn" data-tab="tab-liquids" data-i18n="tab_liquids">Рідини</button>
+          <button class="tab-btn" data-tab="tab-calculations" data-i18n="tab_calcs">Розрахунки</button>
+          <button class="tab-btn" data-tab="tab-tasks" data-i18n="tab_tasks">Завдання</button>
+        </nav>
+
+        <!-- Sidebar Content Area -->
+        <div class="tab-content-area">
+          <!-- TAB 1: PARAMETERS & GEOMETRY -->
+          <div id="tab-params" class="tab-pane active">
+            <!-- Mode 1: Communicating Vessels Controls -->
+            <div id="vessels-controls-container" class="space-y-4">
+              <!-- Vessel Count Choice -->
+              <div class="control-section">
+                <div class="section-title">
+                  <div class="section-title-left">
+                    <span class="section-title-icon">🧪</span>
+                    <span data-i18n="vessel_count_title">Кількість посудин</span>
+                  </div>
+                </div>
+                <div class="count-selector-grid">
+                  <button class="btn-count-choice" data-count="2">2 <span data-i18n="tubes_unit">посудини</span></button>
+                  <button class="btn-count-choice active" data-count="3">3 <span data-i18n="tubes_unit">посудини</span></button>
+                  <button class="btn-count-choice" data-count="4">4 <span data-i18n="tubes_unit">посудини</span></button>
+                </div>
+              </div>
+
+              <!-- Connecting Valves (Крани між трубками) -->
+              <div class="control-section">
+                <div class="section-title">
+                  <div class="section-title-left">
+                    <span class="section-title-icon">🚰</span>
+                    <span data-i18n="valves_title">Сполучні крани / Клапани</span>
+                  </div>
+                  <button id="btn-open-all-valves" class="btn btn-xs" data-i18n="open_all_btn">Відкрити всі</button>
+                </div>
+                <div class="valves-control-group" id="valves-control-group">
+                  <!-- Generated by JS for valves 1-2, 2-3, 3-4 -->
+                </div>
+              </div>
+
+              <!-- Individual Vessel Config Cards -->
+              <div class="control-section">
+                <div class="section-title">
+                  <div class="section-title-left">
+                    <span class="section-title-icon">📐</span>
+                    <span data-i18n="vessels_geometry_title">Геометрія та доливання</span>
+                  </div>
+                </div>
+                <div id="individual-vessels-list" class="space-y-3">
+                  <!-- Populated by JS for each active vessel -->
+                </div>
+              </div>
+
+              <!-- Pouring Speed & Viscosity Dynamics -->
+              <div class="control-section">
+                <div class="section-title">
+                  <div class="section-title-left">
+                    <span class="section-title-icon">⚡</span>
+                    <span data-i18n="hydrodynamics_title">Гідродинаміка та перетікання</span>
+                  </div>
+                </div>
+
+                <div class="slider-control">
+                  <div class="slider-header">
+                    <label for="flow-rate-slider" data-i18n="flow_rate_label">Швидкість перетікання (пропускна здатність)</label>
+                    <div class="slider-num-wrap">
+                      <input type="number" id="flow-rate-input" class="input-num" min="1" max="10" step="1" value="5" />
+                      <span class="unit">x</span>
+                    </div>
+                  </div>
+                  <input type="range" id="flow-rate-slider" class="range-input" min="1" max="10" step="1" value="5" />
+                  <div class="slider-scale">
+                    <span>Повільно</span>
+                    <span>Швидко</span>
+                  </div>
+                </div>
+
+                <div class="slider-control">
+                  <div class="slider-header">
+                    <label for="damping-slider" data-i18n="damping_label">В'язкість та згасання коливань</label>
+                    <div class="slider-num-wrap">
+                      <input type="number" id="damping-input" class="input-num" min="0.80" max="0.99" step="0.01" value="0.94" />
+                    </div>
+                  </div>
+                  <input type="range" id="damping-slider" class="range-input" min="0.80" max="0.99" step="0.01" value="0.94" />
+                  <div class="slider-scale">
+                    <span>Коливальний рух</span>
+                    <span>Плавне згасання</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mode 2: Hydraulic Press & Jack Controls -->
+            <div id="press-controls-container" class="space-y-4" style="display: none;">
+              <!-- Press Sub-mode Selector -->
+              <div class="control-section">
+                <div class="section-title">
+                  <div class="section-title-left">
+                    <span class="section-title-icon">⚙️</span>
+                    <span data-i18n="press_type_title">Тип механізму</span>
+                  </div>
+                </div>
+                <div class="press-mode-toggle">
+                  <button id="btn-press-type-standard" class="btn-press-submode active" data-i18n="press_type_standard">Гідравлічний прес</button>
+                  <button id="btn-press-type-jack" class="btn-press-submode" data-i18n="press_type_jack">Автомобільний домкрат</button>
+                </div>
+              </div>
+
+              <!-- Standard Press Action Card -->
+              <div class="control-section jack-action-card" id="standard-press-action-section">
+                <div class="section-title">
+                  <div class="section-title-left">
+                    <span class="section-title-icon">🔩</span>
+                    <span data-i18n="standard_press_action_title">Керування пресуванням</span>
+                  </div>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--text-secondary);" data-i18n="standard_press_desc">
+                  Затисніть малий поршень мишкою або натисніть кнопку для стискання об'єкта під верхньою платформою.
+                </p>
+                <div class="jack-pump-controls">
+                  <button id="btn-press-down" class="btn-pump-lever" style="background: linear-gradient(135deg, #10b981, #059669);">
+                    <span>⬇️</span>
+                    <span data-i18n="press_down_btn">Стиснути пресом</span>
+                  </button>
+                  <button id="btn-press-reset" class="btn-release-valve" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-light); border-color: rgba(99, 102, 241, 0.35);">
+                    <span>🔄</span>
+                    <span data-i18n="press_reset_btn">Відпустити</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Jack Lever Action & Pumping -->
+              <div class="control-section jack-action-card" id="jack-pumping-section" style="display: none;">
+                <div class="section-title">
+                  <div class="section-title-left">
+                    <span class="section-title-icon">🕹️</span>
+                    <span data-i18n="jack_action_title">Керування домкратом</span>
+                  </div>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--text-secondary);" data-i18n="jack_desc">
+                  Натискайте важіль вниз для накачування масла з резервуара в робочий циліндр через клапани.
+                </p>
+                <div class="jack-pump-controls">
+                  <button id="btn-jack-pump" class="btn-pump-lever">
+                    <span>💪</span>
+                    <span data-i18n="jack_pump_btn">Качати важіль</span>
+                  </button>
+                  <button id="btn-jack-release" class="btn-release-valve" title="Відкрити вентиль для опускання авто">
+                    <span>🔻</span>
+                    <span data-i18n="jack_release_btn">Спуск</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Piston Dimensions -->
+              <div class="control-section">
+                <div class="section-title">
+                  <div class="section-title-left">
+                    <span class="section-title-icon">📏</span>
+                    <span data-i18n="pistons_title">Розміри циліндрів і поршнів</span>
+                  </div>
+                </div>
+
+                <!-- Small Piston S1 -->
+                <div class="slider-control">
+                  <div class="slider-header">
+                    <label for="piston1-dia-slider">
+                      <span data-i18n="piston1_dia">Діаметр малого поршня (d₁)</span>:
+                    </label>
+                    <div class="slider-num-wrap">
+                      <input type="number" id="piston1-dia-input" class="input-num" min="10" max="40" step="1" value="15" />
+                      <span class="unit">мм</span>
+                    </div>
+                  </div>
+                  <input type="range" id="piston1-dia-slider" class="range-input" min="10" max="40" step="1" value="15" />
+                  <div class="slider-scale">
+                    <span>10 мм (S₁ = 79 мм²)</span>
+                    <span>40 мм (S₁ = 1257 мм²)</span>
+                  </div>
+                </div>
+
+                <!-- Large Piston S2 -->
+                <div class="slider-control">
+                  <div class="slider-header">
+                    <label for="piston2-dia-slider">
+                      <span data-i18n="piston2_dia">Діаметр великого поршня (d₂)</span>:
+                    </label>
+                    <div class="slider-num-wrap">
+                      <input type="number" id="piston2-dia-input" class="input-num" min="50" max="250" step="5" value="120" />
+                      <span class="unit">мм</span>
+                    </div>
+                  </div>
+                  <input type="range" id="piston2-dia-slider" class="range-input" min="50" max="250" step="5" value="120" />
+                  <div class="slider-scale">
+                    <span>50 мм (S₂ = 1963 мм²)</span>
+                    <span>250 мм (S₂ = 49087 мм²)</span>
+                  </div>
+                </div>
+
+                <!-- Lever Arm Ratio (For Jack) -->
+                <div class="slider-control" id="lever-ratio-control" style="display: none;">
+                  <div class="slider-header">
+                    <label for="lever-ratio-slider">
+                      <span data-i18n="lever_ratio_label">Плече важеля (L / l)</span>:
+                    </label>
+                    <div class="slider-num-wrap">
+                      <input type="number" id="lever-ratio-input" class="input-num" min="2" max="15" step="0.5" value="6" />
+                      <span class="unit">: 1</span>
+                    </div>
+                  </div>
+                  <input type="range" id="lever-ratio-slider" class="range-input" min="2" max="15" step="0.5" value="6" />
+                  <div class="slider-scale">
+                    <span>2:1 (Короткий)</span>
+                    <span>15:1 (Довгий важіль)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Applied Force Slider -->
+              <div class="control-section">
+                <div class="section-title">
+                  <div class="section-title-left">
+                    <span class="section-title-icon">🏋️</span>
+                    <span data-i18n="applied_force_title">Прикладена сила до малого поршня (F₁)</span>
+                  </div>
+                </div>
+
+                <div class="slider-control">
+                  <div class="slider-header">
+                    <label for="force1-slider" data-i18n="force1_label">Сила F₁ (ручна дія або вантаж)</label>
+                    <div class="slider-num-wrap">
+                      <input type="number" id="force1-input" class="input-num" min="0" max="500" step="10" value="100" />
+                      <span class="unit">Н</span>
+                    </div>
+                  </div>
+                  <input type="range" id="force1-slider" class="range-input" min="0" max="500" step="10" value="100" />
+                  <div class="slider-scale">
+                    <span>0 Н</span>
+                    <span>250 Н</span>
+                    <span>500 Н</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Load to Press / Lift -->
+              <div class="control-section">
+                <div class="section-title">
+                  <div class="section-title-left">
+                    <span class="section-title-icon">📦</span>
+                    <span data-i18n="load_title">Об'єкт для підйому або пресування</span>
+                  </div>
+                </div>
+                <div class="load-grid" id="load-selector-grid">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: LIQUIDS & DENSITY -->
+          <div id="tab-liquids" class="tab-pane">
+            <div class="control-section">
+              <div class="section-title">
+                <div class="section-title-left">
+                  <span class="section-title-icon">🧪</span>
+                  <span data-i18n="liquids_library_title">Бібліотека рідин та густина (ρ)</span>
+                </div>
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-secondary);" data-i18n="liquids_hint">
+                Виберіть рідину для застосування в симуляторі або налаштуйте власні фізичні параметри.
+              </p>
+              <div class="liquid-grid" id="liquids-palette-grid">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <!-- Custom Liquid Properties -->
+            <div class="control-section">
+              <div class="section-title">
+                <div class="section-title-left">
+                  <span class="section-title-icon">🎛️</span>
+                  <span data-i18n="custom_liquid_title">Власна рідина</span>
+                </div>
+              </div>
+
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label for="custom-density-slider" data-i18n="custom_density_label">Густина (ρ)</label>
+                  <div class="slider-num-wrap">
+                    <input type="number" id="custom-density-input" class="input-num" min="500" max="15000" step="50" value="1000" />
+                    <span class="unit">кг/м³</span>
+                  </div>
+                </div>
+                <input type="range" id="custom-density-slider" class="range-input" min="500" max="15000" step="50" value="1000" />
+                <div class="slider-scale">
+                  <span>500 (Бензин)</span>
+                  <span>1000 (Вода)</span>
+                  <span>13600 (Ртуть)</span>
+                </div>
+              </div>
+
+              <!-- Gravity Environment -->
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label for="gravity-slider" data-i18n="gravity_label">Прискорення вільного падіння (g)</label>
+                  <div class="slider-num-wrap">
+                    <input type="number" id="gravity-input" class="input-num" min="0" max="25" step="0.1" value="9.8" />
+                    <span class="unit">м/с²</span>
+                  </div>
+                </div>
+                <input type="range" id="gravity-slider" class="range-input" min="0" max="25" step="0.1" value="9.8" />
+                <div class="slider-scale">
+                  <span>0 (Невагомість)</span>
+                  <span>9.81 (Земля)</span>
+                  <span>24.8 (Юпітер)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: STEP-BY-STEP CALCULATIONS -->
+          <div id="tab-calculations" class="tab-pane">
+            <div class="control-section">
+              <div class="section-title">
+                <div class="section-title-left">
+                  <span class="section-title-icon">🧮</span>
+                  <span data-i18n="live_calcs_title">Фізичні розрахунки в реальному часі</span>
+                </div>
+              </div>
+
+              <div class="calc-steps-list" id="calculations-breakdown">
+                <!-- Dynamically generated step-by-step formulas and live numbers -->
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: GUIDED TASKS / LAB WORK -->
+          <div id="tab-tasks" class="tab-pane">
+            <div class="control-section">
+              <div class="section-title">
+                <div class="section-title-left">
+                  <span class="section-title-icon">🎯</span>
+                  <span data-i18n="tasks_title">Лабораторні завдання</span>
+                </div>
+              </div>
+              <div class="task-list" id="tasks-list-container">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Theory Modal -->
+    <div id="theory-modal" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <span>📚</span>
+            <h2 data-i18n="theory_modal_title">Теоретичні відомості: Гідростатика</h2>
+          </div>
+          <button id="btn-close-theory" class="modal-close">✕</button>
+        </div>
+        <div class="modal-body" id="theory-modal-content">
+          <!-- Theory Content in UA / EN -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pure JavaScript Physics Simulation Script -->
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

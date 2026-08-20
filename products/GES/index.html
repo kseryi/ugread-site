@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Симулятор Гідроелектростанції (ГЕС) • Hydro Power Station Simulation</title>
+  <meta name="description" content="Інтерактивна фізична симуляція роботи гідроелектростанції з візуалізацією турбіни, потоку води та динамічними графіками потужності в реальному часі." />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+  <!-- ВЕРХНЯ ПАНЕЛЬ СТАНУ ТА ТЕЛЕМЕТРІЇ (SCADA HEADER) -->
+  <header class="app-header">
+    <div class="logo-container">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          <circle cx="12" cy="12" r="4"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <h1 id="appHeaderTitle">ГЕС-СИМУЛЯТОР • <span>АСУ ТП</span></h1>
+        <span id="appHeaderBadge" class="badge">HYDRO POWER DIGITAL TWIN • 50 Hz</span>
+      </div>
+    </div>
+
+    <div class="header-status-strip">
+      <div class="status-pill">
+        <div id="gridStatusDot" class="status-indicator-dot"></div>
+        <span id="lblStatusGrid" class="label">МЕРЕЖА:</span>
+        <span id="gridStatusText" class="value">НОРМА</span>
+      </div>
+      <div class="status-pill">
+        <span id="lblStatusGen" class="label">ГЕНЕРАЦІЯ:</span>
+        <span id="hudPower" class="value">0.0 МВт</span>
+      </div>
+      <div class="status-pill">
+        <span id="lblStatusFreq" class="label">ЧАСТОТА:</span>
+        <span id="hudFrequency" class="value">50.00 Гц</span>
+      </div>
+      <div class="status-pill">
+        <span id="lblStatusHead" class="label">НАПІР H:</span>
+        <span id="hudHead" class="value">0.0 м</span>
+      </div>
+      <div class="status-pill">
+        <span id="lblStatusLevel" class="label">РІВЕНЬ:</span>
+        <span id="hudWaterLevel" class="value">75.0 м</span>
+        <span id="hudLevelTrend" class="level-trend-badge stable">⏸️ 0.00</span>
+      </div>
+      <div class="status-pill">
+        <span id="lblStatusClock" class="label">ЧАС:</span>
+        <span id="hudClock" class="value" style="color: var(--primary-cyan);">12:00:00</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Перемикач мови UA / EN -->
+      <div class="lang-switcher">
+        <button id="btnLangUA" class="lang-btn active" title="Українська версія">UA</button>
+        <button id="btnLangEN" class="lang-btn" title="English version">EN</button>
+      </div>
+
+      <button id="btnToggleSound" class="btn" title="Звукові ефекти води та турбіни">
+        🔇 Звук: Вимк
+      </button>
+      <button id="btnOpenTheory" class="btn btn-primary" title="Повний гайд, інструкції та теорія ГЕС">
+        📖 Довідка & Гайд
+      </button>
+    </div>
+  </header>
+
+  <!-- ГОЛОВНА РОБОЧА ЗОНА -->
+  <main class="app-container">
+    
+    <!-- ЛІВА КОЛОНКА: ВІЗУАЛІЗАЦІЯ РОЗРІЗУ ГЕС, ТЕЛЕМЕТРІЯ ТА ГРАФІКИ -->
+    <div class="main-column">
+      
+      <!-- Повідомлення про аварії або тривоги (Інтерактивне з (i) та швидким виправленням) -->
+      <div id="alarmBanner" class="alert-banner" style="display: none;">
+        <div class="alert-content">
+          <span id="alarmIcon" class="alert-icon">🚨</span>
+          <div class="alert-text-block">
+            <span id="alarmTitle" class="alert-title">АВАРІЙНИЙ СТАН: БЛЕКАУТ МЕРЕЖІ</span>
+            <span id="alarmDesc" class="alert-desc">Частота вийшла за межі норми (46.5–54.0 Гц). Генерація відключена від енергосистеми.</span>
+          </div>
+        </div>
+        <div class="alert-actions">
+          <button id="btnAlarmInfo" class="alert-btn-info" title="Покрокова інструкція оператора">
+            ℹ️ Що робити?
+          </button>
+          <button id="btnAlarmQuickFix" class="alert-btn-fix" title="Автоматично ліквідувати цю аварію">
+            ⚡ Виправити
+          </button>
+        </div>
+      </div>
+
+      <!-- ІНТЕРАКТИВНИЙ НАВЧАЛЬНИЙ ДИСПЕТЧЕР-НАСТАВНИК ТА СТАТУС СВІТЛА В МІСТІ -->
+      <div id="dispatcherCoachPanel" class="dispatcher-coach-panel">
+        <div class="coach-left-col">
+          <div id="coachAvatar" class="coach-avatar">🧑‍🏫</div>
+          <div class="coach-text-block">
+            <div class="coach-title-row">
+              <span id="coachTitle" class="coach-title">Помічник Диспетчера ГЕС</span>
+              <span id="coachMissionBadge" class="coach-mission-badge">🎯 Вільний режим</span>
+            </div>
+            <div id="coachTipText" class="coach-tip-text">
+              🟢 <strong>Місто повністю забезпечене світлом (100%).</strong> Частота 50.00 Гц у нормі, генерація покриває навантаження.
+            </div>
+          </div>
+        </div>
+        <div class="coach-right-col">
+          <div class="city-power-card">
+            <span id="cityPowerLabel" class="city-power-title">Електропостачання міста</span>
+            <span id="cityPowerStatus" class="city-power-status">
+              <span class="status-indicator-dot"></span> 100% Світло
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Інтерактивне вікно розрізу станції (Canvas) -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <div class="panel-title" id="canvasPanelTitle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            2D Фізичний Розріз Гідроелектростанції
+          </div>
+          <div class="header-actions">
+            <div class="hud-group">
+              <span id="lblSpeedBadge" class="hud-badge">Швидкість:</span>
+              <button class="tool-btn speed-btn" data-speed="0.5">0.5x</button>
+              <button class="tool-btn speed-btn active" data-speed="1">1.0x</button>
+              <button class="tool-btn speed-btn" data-speed="2">2.0x</button>
+              <button class="tool-btn speed-btn" data-speed="5">5.0x</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="canvas-wrapper">
+          <canvas id="simulationCanvas"></canvas>
+
+          <!-- Підказка при наведенні на інтерактивні елементи станції -->
+          <div id="infoTooltip"></div>
+
+          <!-- Нижній тулбар Canvas -->
+          <div class="canvas-hud-bottom">
+            <div class="canvas-toolbar">
+              <span id="canvasHintText" style="font-size: 0.72rem; color: #94a3b8; padding: 0.2rem 0.4rem;">💡 Наведіть курсор на будь-яку частину станції (водосховище, затвор, турбіна, генератор, ЛЕП)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ТЕЛЕМЕТРИЧНІ КАРТКИ ПОКАЗНИКІВ -->
+      <div class="telemetry-grid">
+        
+        <!-- Картка Рівня Водосховища та Динаміки Наповнення/Спрацювання -->
+        <div class="metric-card highlight-cyan">
+          <div class="metric-header">
+            <span id="cardTitleLevel">Рівень Водосховища</span>
+            <span id="valLevelTrend" class="level-trend-badge stable">⏸️ Баланс</span>
+          </div>
+          <div class="metric-value-row">
+            <span id="valWaterLevel" class="metric-value">75.0</span>
+            <span class="metric-unit" id="unitWaterLevel">м</span>
+          </div>
+          <div class="level-bar-container">
+            <div class="level-bar-track">
+              <div id="levelBarFill" class="level-bar-fill" style="width: 72%;"></div>
+            </div>
+            <div class="level-bar-labels">
+              <span>Мін 25м</span>
+              <span id="lblNominalLevel">Номінал 75м</span>
+              <span>Гребінь 90м</span>
+            </div>
+          </div>
+          <div class="metric-sub" style="margin-top: 0.35rem;">
+            <span id="cardSubLevelRate">Швидкість: <strong id="valLevelRate">0.00</strong> м/хв</span>
+            <span id="cardSubLevelBalance">ΔQ: <strong id="valWaterBalance">+0.0</strong> м³/с</span>
+          </div>
+        </div>
+
+        <div class="metric-card highlight-green">
+          <div class="metric-header">
+            <span id="cardTitlePower">Електрична Потужність</span>
+            <span>⚡ P_gen</span>
+          </div>
+          <div class="metric-value-row">
+            <span id="valPowerGen" class="metric-value">0.0</span>
+            <span class="metric-unit" id="unitPowerGen">МВт</span>
+          </div>
+          <div class="metric-sub">
+            <span id="cardSubPower1">Напруга: 15.75 / 330 кВ</span>
+            <span>cos φ: 0.92</span>
+          </div>
+        </div>
+
+        <div class="metric-card highlight-amber">
+          <div class="metric-header">
+            <span id="cardTitleDemand">Споживання Мережі</span>
+            <span>🏭 P_load</span>
+          </div>
+          <div class="metric-value-row">
+            <span id="valGridDemand" class="metric-value">0.0</span>
+            <span class="metric-unit" id="unitGridDemand">МВт</span>
+          </div>
+          <div class="metric-sub">
+            <span id="cardSubDemand1">Цільовий баланс</span>
+            <span>f₀ = 50.00 Hz</span>
+          </div>
+        </div>
+
+        <div class="metric-card highlight-blue">
+          <div class="metric-header">
+            <span id="cardTitleFlow">Витрата через Турбіну</span>
+            <span>🌊 Q_turb</span>
+          </div>
+          <div class="metric-value-row">
+            <span id="valFlowTurbine" class="metric-value">0.0</span>
+            <span class="metric-unit" id="unitFlowTurbine">м³/с</span>
+          </div>
+          <div class="metric-sub">
+            <span id="cardSubFlow1">Холостий скид: <strong id="valFlowSpillway">0.0</strong> м³/с</span>
+          </div>
+        </div>
+
+        <div class="metric-card highlight-blue">
+          <div class="metric-header">
+            <span id="cardTitleRpm">Швидкість Турбіни</span>
+            <span>⚙️ RPM</span>
+          </div>
+          <div class="metric-value-row">
+            <span id="valTurbineRpm" class="metric-value">0</span>
+            <span class="metric-unit" id="unitTurbineRpm">об/хв</span>
+          </div>
+          <div class="metric-sub">
+            <span id="cardSubRpm1">Номінал: 150 об/хв</span>
+            <span id="cardSubRpm2">20 пар полюсів</span>
+          </div>
+        </div>
+
+        <div class="metric-card highlight-purple">
+          <div class="metric-header">
+            <span id="cardTitleHead">Корисний Напір & ККД</span>
+            <span>📐 H_net / η</span>
+          </div>
+          <div class="metric-value-row">
+            <span id="valHeadNet" class="metric-value">0.0</span>
+            <span class="metric-unit" id="unitHeadNet">м</span>
+          </div>
+          <div class="metric-sub">
+            <span id="cardSubHead1">ККД: <strong id="valEfficiency">0.0</strong>%</span>
+            <span id="cardSubHead2">Тиск: <strong id="valPressure">0.0</strong> МПа</span>
+          </div>
+        </div>
+
+        <div class="metric-card highlight-green">
+          <div class="metric-header">
+            <span id="cardTitleEnergy">Вироблена Енергія</span>
+            <span>🌿 Екологія</span>
+          </div>
+          <div class="metric-value-row">
+            <span id="valTotalEnergy" class="metric-value">0.0</span>
+            <span class="metric-unit" id="unitTotalEnergy">МВт·год</span>
+          </div>
+          <div class="metric-sub">
+            <span id="cardSubEnergy1">Збережено CO₂: <strong id="valCo2Saved">0</strong> т</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ДИНАМІЧНІ ГРАФІКИ В РЕАЛЬНОМУ ЧАСІ -->
+      <div class="charts-grid">
+        
+        <!-- Графік 1: Потужність vs Споживання -->
+        <div class="chart-box">
+          <div class="chart-header">
+            <div class="chart-title">
+              <span class="legend-color" style="background:#22d3ee;"></span>
+              <span id="chartTitle1">Потужність генерації vs Споживання мережі</span>
+            </div>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-color" style="background:#22d3ee;"></span><span id="legendGen">Генерація (МВт)</span></span>
+              <span class="legend-item"><span class="legend-color" style="background:#f59e0b;"></span><span id="legendLoad">Споживання (МВт)</span></span>
+            </div>
+          </div>
+          <div class="chart-canvas-holder">
+            <canvas id="chartPower" width="460" height="140"></canvas>
+          </div>
+        </div>
+
+        <!-- Графік 2: Гідравліка та Частота -->
+        <div class="chart-box">
+          <div class="chart-header">
+            <div class="chart-title">
+              <span class="legend-color" style="background:#06b6d4;"></span>
+              <span id="chartTitle2">Витрата води (м³/с) та Частота мережі (Гц)</span>
+            </div>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-color" style="background:#06b6d4;"></span><span id="legendFlow">Витрата Q</span></span>
+              <span class="legend-item"><span class="legend-color" style="background:#c084fc;"></span><span id="legendFreq">Частота f (50 Гц)</span></span>
+            </div>
+          </div>
+          <div class="chart-canvas-holder">
+            <canvas id="chartHydraulics" width="460" height="140"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ПРАВА КОЛОНКА: ПАНЕЛЬ КЕРУВАННЯ, РЕЖИМИ ТА СЦЕНАРІЇ -->
+    <div class="sidebar-column">
+      
+      <div class="card-panel">
+        <div class="panel-header">
+          <div class="panel-title" id="ctrlPanelTitle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Панель Керування ГЕС
+          </div>
+          
+          <!-- Перемикач показу кнопок (i) -->
+          <button id="btnToggleInfoBadges" class="info-toggle-btn active" title="Увімкнути/вимкнути кружечки підказок (i)">
+            ℹ️ Підказки (i): Увімк
+          </button>
+        </div>
+
+        <!-- КНОПКА АВТОНАЛАШТУВАННЯ ТА СКИДАННЯ ДО ОПТИМАЛЬНИХ ПАРАМЕТРІВ -->
+        <div style="margin-bottom: 1.1rem;">
+          <button id="btnAutoTune" class="btn btn-autotune" style="width: 100%; justify-content: center; padding: 0.65rem 1rem; font-size: 0.85rem;" title="Скинути параметри до збалансованого номінального стану (50 Гц, баланс води та навантаження)">
+            🎯 Автоналаштування та Скид
+          </button>
+        </div>
+
+        <!-- 1. КЕРУВАННЯ ГІДРАВЛІКОЮ ТА ВОДОЙМОЮ -->
+        <div class="control-section">
+          <div class="section-label">
+            <div class="section-label-left">
+              <span id="secTitleHydraulics">🌊 Гідравліка та Водозабір</span>
+            </div>
+          </div>
+          
+          <!-- Повзунок 1: Затвор водоводу -->
+          <div class="control-item">
+            <div class="control-header-row">
+              <div class="control-name-wrap">
+                <span id="labelSliderGate" class="control-name">Головний Затвор Водоводу:</span>
+                <button class="info-circle-btn" data-slider-info="gate" title="Пояснення функції затвора">i</button>
+              </div>
+              <span id="readoutGate" class="control-readout">70%</span>
+            </div>
+            <div class="slider-container">
+              <input id="sliderGate" type="range" min="0" max="100" value="70" />
+            </div>
+          </div>
+
+          <!-- Повзунок 2: Приплив річки -->
+          <div class="control-item">
+            <div class="control-header-row">
+              <div class="control-name-wrap">
+                <span id="labelSliderInflow" class="control-name">Приплив Річки (Q_in):</span>
+                <button class="info-circle-btn" data-slider-info="inflow" title="Пояснення функції припливу">i</button>
+              </div>
+              <span id="readoutInflow" class="control-readout">220 м³/с</span>
+            </div>
+            <div class="slider-container">
+              <input id="sliderInflow" type="range" min="20" max="1200" value="220" />
+            </div>
+          </div>
+
+          <!-- Повзунок 3: Холостий водоскид -->
+          <div class="control-item">
+            <div class="control-header-row">
+              <div class="control-name-wrap">
+                <span id="labelSliderSpillway" class="control-name">Холостий Водоскид:</span>
+                <button class="info-circle-btn" data-slider-info="spillway" title="Пояснення функції водоскиду">i</button>
+              </div>
+              <span id="readoutSpillway" class="control-readout">0%</span>
+            </div>
+            <div class="slider-container">
+              <input id="sliderSpillway" type="range" min="0" max="100" value="0" />
+            </div>
+          </div>
+
+          <!-- Погодні умови -->
+          <div class="control-item" style="margin-top: 0.6rem;">
+            <div class="control-header-row">
+              <span id="labelWeather" class="control-name" style="font-size:0.75rem; color:#94a3b8;">Погода у басейні річки:</span>
+            </div>
+            <div class="button-grid">
+              <button class="choice-btn weather-btn active" data-weather="sunny" id="btnWeatherSunny">☀️ Ясно</button>
+              <button class="choice-btn weather-btn" data-weather="rain" id="btnWeatherRain">🌧️ Дощ</button>
+              <button class="choice-btn weather-btn" data-weather="storm" id="btnWeatherStorm">⛈️ Злива</button>
+              <button class="choice-btn weather-btn" data-weather="flood" id="btnWeatherFlood">🌊 Паводок</button>
+              <button class="choice-btn weather-btn" data-weather="drought" id="btnWeatherDrought">🏜️ Посуха</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. КЕРУВАННЯ ТУРБІНОЮ ТА НАПРЯМНИМ АПАРАТОМ -->
+        <div class="control-section">
+          <div class="section-label">
+            <div class="section-label-left">
+              <span id="secTitleTurbine">⚙️ Гідротурбіна</span>
+            </div>
+          </div>
+
+          <div class="control-item">
+            <div class="control-header-row">
+              <span id="labelTurbineType" class="control-name" style="font-size:0.75rem; color:#94a3b8;">Тип робочого колеса:</span>
+            </div>
+            <div class="button-grid">
+              <button class="choice-btn turbine-type-btn active" data-type="francis" id="btnTurbineFrancis">🌀 Френсіса</button>
+              <button class="choice-btn turbine-type-btn" data-type="kaplan" id="btnTurbineKaplan">🌿 Каплана</button>
+              <button class="choice-btn turbine-type-btn" data-type="pelton" id="btnTurbinePelton">🎯 Пельтона</button>
+            </div>
+          </div>
+
+          <!-- Повзунок 4: Напрямний апарат -->
+          <div class="control-item">
+            <div class="control-header-row">
+              <div class="control-name-wrap">
+                <span id="labelSliderVanes" class="control-name">Напрямний Апарат (Лопатки):</span>
+                <button class="info-circle-btn" data-slider-info="vanes" title="Пояснення лопаток напрямного апарату">i</button>
+              </div>
+              <span id="readoutVanes" class="control-readout">72%</span>
+            </div>
+            <div class="slider-container">
+              <input id="sliderVanes" type="range" min="5" max="100" value="72" />
+            </div>
+          </div>
+
+          <!-- Збільшене динамічне прев'ю турбіни -->
+          <div class="turbine-detail-box">
+            <canvas id="turbinePreviewCanvas" class="turbine-preview-canvas" width="340" height="120"></canvas>
+          </div>
+        </div>
+
+        <!-- 3. ЕНЕРГОСИСТЕМА ТА АВТОМАТИКА -->
+        <div class="control-section">
+          <div class="section-label">
+            <div class="section-label-left">
+              <span id="secTitleGrid">⚡ Енергомережа & АСУ ТП</span>
+            </div>
+          </div>
+
+          <!-- Повзунок 5: Споживання мережі -->
+          <div class="control-item">
+            <div class="control-header-row">
+              <div class="control-name-wrap">
+                <span id="labelSliderDemand" class="control-name">Споживання Мережі (Попит):</span>
+                <button class="info-circle-btn" data-slider-info="demand" title="Пояснення споживання мережі">i</button>
+              </div>
+              <span id="readoutDemand" class="control-readout">140 МВт</span>
+            </div>
+            <div class="slider-container">
+              <input id="sliderDemand" type="range" min="20" max="400" value="140" />
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <span id="labelAutoGovernor">🤖 Автоматичний регулятор потужності (AGC)</span>
+            <label class="toggle-switch">
+              <input id="toggleAutoGovernor" type="checkbox" checked />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+            <button id="btnEmergencyStop" class="btn btn-danger" style="flex:1;" title="Миттєве перекриття затворів">
+              🛑 Аварійний Стоп
+            </button>
+            <button id="btnResetSystem" class="btn btn-success" style="flex:1;" title="Синхронізувати генератор з мережею 50.00 Гц">
+              🔄 Синхронізація 50 Гц
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- НАВЧАЛЬНІ СЦЕНАРІЇ ТА ЧЕЛЕНДЖІ -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <div class="panel-title" id="scenarioPanelTitle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Оперативні Сценарії
+          </div>
+        </div>
+
+        <div class="scenarios-list">
+          
+          <div class="scenario-card active" data-scenario="sandbox">
+            <div class="scenario-icon">🕹️</div>
+            <div class="scenario-info">
+              <h5 id="scenTitleSandbox">🕹️ Вільне Регулювання (Sandbox)</h5>
+              <p id="scenDescSandbox">Вільне ознайомлення зі станцією без обмежень, часових рамок та аварійних умов.</p>
+            </div>
+          </div>
+
+          <div class="scenario-card" data-scenario="flood">
+            <div class="scenario-icon">🌊</div>
+            <div class="scenario-info">
+              <h5 id="scenTitleFlood">🌊 1. Захист від Паводку (85 м)</h5>
+              <p id="scenDescFlood">Рівень води сягає 85 метрів! Терміново відкрийте водоскид (65–85%), скиньте паводок на 3 м нижче 82 м та збережіть світло в місті.</p>
+            </div>
+          </div>
+
+          <div class="scenario-card" data-scenario="peak_demand">
+            <div class="scenario-icon">⚡</div>
+            <div class="scenario-info">
+              <h5 id="scenTitlePeak">⚡ 2. Вечірній Пік Міста (320 МВт)</h5>
+              <p id="scenDescPeak">Стрибок споживання до 320 МВт! Відкрийте затвор водоводу та лопатки турбіни (90–95%), щоб витримати 50.00 Гц.</p>
+            </div>
+          </div>
+
+          <div class="scenario-card" data-scenario="blackout_drill">
+            <div class="scenario-icon">🚨</div>
+            <div class="scenario-info">
+              <h5 id="scenTitleBlackout">🚨 3. Блекаут & Відновлення Системи</h5>
+              <p id="scenDescBlackout">Місто знеструмлене! Відкрийте затвор, розженіть турбіну до 150 об/хв та синхронізуйте 50 Гц для пуску.</p>
+            </div>
+          </div>
+
+          <div class="scenario-card" data-scenario="drought">
+            <div class="scenario-icon">🏜️</div>
+            <div class="scenario-info">
+              <h5 id="scenTitleDrought">🏜️ 4. Економія Води при Посусі</h5>
+              <p id="scenDescDrought">Приплив впав до 35 м³/с. Закрийте водоскид (0%), оптимізуйте лопатки та навантаження для збереження водойми.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- МОДАЛЬНЕ ВІКНО ПІДКАЗКИ ДО ПОВЗУНКА (I) -->
+  <div id="sliderInfoModal" class="slider-info-modal">
+    <div class="slider-info-card">
+      <div class="slider-info-header">
+        <h3 id="sliderInfoTitle">ℹ️ Головний Затвор Водоводу</h3>
+        <button id="btnCloseSliderInfo" class="btn btn-icon">✕</button>
+      </div>
+      <div class="slider-info-body">
+        <div class="slider-info-item">
+          <strong id="sliderInfoPurposeLbl">🎯 Призначення:</strong>
+          <span id="sliderInfoPurpose">Регулює впуск води з водосховища у напірний сталевий трубопровід.</span>
+        </div>
+        <div class="slider-info-item">
+          <strong id="sliderInfoImpactLbl">⚙️ Вплив на ГЕС:</strong>
+          <span id="sliderInfoImpact">Визначає доступну витрату води та тиск перед турбіною. При закритті зупиняє генерацію.</span>
+        </div>
+        <div class="slider-info-item">
+          <strong id="sliderInfoOptimumLbl">💡 Оптимальний режим:</strong>
+          <span id="sliderInfoOptimum">Для номінальної генерації тримайте відкритим на 65–85%.</span>
+        </div>
+      </div>
+      <div class="slider-info-footer">
+        <button id="btnGotSliderInfo" class="btn btn-primary">Зрозуміло</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНЕ ВІКНО ТЕОРІЇ, ФІЗИКИ ТА ПОВНОГО ГАЙДУ ПО КЕРУВАННЮ ГЕС -->
+  <div id="theoryModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalHeaderTitle">📘 Довідник Оператора ГЕС: Фізика, Будова та Повний Гайд</h3>
+        <button id="btnCloseModal" class="btn btn-icon">✕</button>
+      </div>
+      <div class="modal-body" id="modalTheoryBody">
+        
+        <!-- Контент генерується динамічно відповідно до обраної мови (UA/EN) -->
+        
+      </div>
+      <div class="modal-footer">
+        <button id="btnCloseModalBottom" class="btn btn-primary">Зрозуміло / Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНЕ ВІКНО ЛІКВІДАЦІЇ АВАРІЙНИХ СТАНІВ (EMERGENCY TROUBLESHOOTING) -->
+  <div id="emergencyModal" class="modal-backdrop">
+    <div class="emergency-modal-card">
+      <div class="emergency-header">
+        <h3 id="emrgModalTitle">🚨 Інструкція з Ліквідації Аварії</h3>
+        <button id="btnCloseEmergencyModal" class="btn btn-icon">✕</button>
+      </div>
+      <div class="emergency-body" id="emergencyModalBody">
+        <!-- Контент генерується динамічно відповідно до поточної аварії -->
+      </div>
+      <div class="emergency-footer">
+        <button id="btnEmergencyFixNow" class="btn btn-success">
+          ⚡ Виправити Ситуацію
+        </button>
+        <button id="btnCloseEmergencyBottom" class="btn">
+          Закрити
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- СКРИПТ ДОДАТКУ (Чистий автономний JS) -->
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

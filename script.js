@@ -59,6 +59,7 @@ const CATEGORIES_DATA = {
     desc: 'Періодичний закон, будова атомів, хімічні реакції, розчини та органічні сполуки.',
     topics: [
       { name: 'Періодична система хімічних елементів', link: './products/periodic/periodic.html' },
+      { name: 'Будова атома', link: './products/atom/index.html' },
       
     ]
   },

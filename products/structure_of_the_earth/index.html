@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Внутрішня будова Землі — 3D модель</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Three.js та OrbitControls (локальні файли для повної офлайн-роботи) -->
+  <script src="three.min.js"></script>
+  <script src="OrbitControls.js"></script>
+</head>
+<body>
+
+  <!-- Контейнер для canvas Three.js -->
+  <div id="scene-container"></div>
+
+  <!-- Екран завантаження текстури -->
+  <div id="loading-overlay">
+    <div class="loading-text">Завантаження планети…</div>
+  </div>
+
+  <!-- Бічна інформаційна панель праворуч (за замовчуванням прихована) -->
+  <div id="info-panel">
+    <button id="info-close-btn" aria-label="Закрити">✕</button>
+    <div id="info-content">
+      <h2 id="info-title">Оберіть шар</h2>
+      <div id="info-description">
+        Розсуньте повзунок знизу (або натисніть кнопку), а потім клікніть
+        на будь-який шар зрізу — кору, мантію, зовнішнє чи внутрішнє ядро —
+        щоб побачити детальну інформацію про нього.
+      </div>
+    </div>
+  </div>
+
+  <!-- Нижня панель керування: кнопки та повзунки -->
+  <div id="ui-panel">
+    <button id="toggle-btn">
+      <span class="btn-icon">🌍</span>
+      <span class="btn-text">Розкрити Землю</span>
+    </button>
+
+    <!-- Повзунок виймання 1/8 частини Землі -->
+    <div id="slider-block" class="slider-control-block">
+      <span class="slider-label">0% (Земля зібрана)</span>
+      <input type="range" min="0" max="100" value="0" id="distance-slider" title="Вийняти 1/8 частину" />
+      <span class="slider-label">100% (1/8 вийнято)</span>
+    </div>
+
+    <!-- Додатковий повзунок розділення шарів вийнятої 1/8 частини -->
+    <div id="layers-slider-block" class="slider-control-block">
+      <span class="slider-label">Шари разом</span>
+      <input type="range" min="0" max="100" value="0" id="layers-slider" title="Розділити шари 1/8 частини" />
+      <span class="slider-label">Шари розділені</span>
+    </div>
+
+    <div id="hint-text">Обертання — ЛКМ · Переміщення — СКМ (коліщатко) / ПКМ · Масштаб — прокрутка</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

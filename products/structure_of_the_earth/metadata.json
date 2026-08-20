@@ -1,0 +1,6 @@
+{
+  "name": "Earth Layers 3D Simulation",
+  "description": "Interactive 3D simulation of Earth's internal structure with separable 1/8 sector and individual layer division for inner core, outer core, mantle, and crust.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

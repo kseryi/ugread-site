@@ -20,7 +20,8 @@ const COLOR_MANTLE = 0xcc3300;
 const COLOR_OUTER_CORE = 0xffaa00;
 const COLOR_INNER_CORE = 0xffffff;
 
-const EARTH_TEXTURE_URL = 'earth_atmos_2048.jpg';
+const EARTH_TEXTURE_URL =
+  'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg';
 
 const LAYER_INFO = {
   crust: {

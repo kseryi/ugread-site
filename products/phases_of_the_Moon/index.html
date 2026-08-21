@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Фази Місяця — 3D симуляція</title>
+  <style>
+    :root {
+      --bg: #05060c;
+      --panel: #10121c;
+      --panel-border: #252a3d;
+      --text: #e8eaf5;
+      --muted: #8891ab;
+      --accent: #ffd166;
+      --accent2: #6ea8fe;
+      --success: #70e000;
+      --danger: #f87171;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; height: 100%; width: 100%;
+      background: radial-gradient(ellipse at 50% 0%, #0c1024 0%, #05060c 60%);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+      overflow: hidden;
+    }
+    #scene-container {
+      position: absolute; inset: 0;
+    }
+    #scene-container canvas { display: block; }
+
+    .panel {
+      position: absolute;
+      background: rgba(16, 18, 28, 0.86);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+      z-index: 10;
+    }
+
+    #title-panel {
+      top: 16px; left: 16px;
+      padding: 14px 18px;
+      max-width: 360px;
+    }
+    #title-panel h1 {
+      margin: 0 0 4px 0;
+      font-size: 18px;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #title-panel p {
+      margin: 0 0 10px 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .badge-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 11px;
+      color: var(--accent2);
+    }
+
+    #phase-panel {
+      top: 16px; right: 16px;
+      padding: 16px 20px;
+      width: 240px;
+      text-align: center;
+    }
+    #phase-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 8px;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.25;
+    }
+    #moon-view-canvas {
+      width: 130px; height: 130px;
+      border-radius: 50%;
+      background: #090a10;
+      margin: 0 auto 10px auto;
+      display: block;
+      box-shadow: 0 0 0 1px #2a2e40, 0 0 25px rgba(110, 168, 254, 0.18);
+    }
+    #illum-text {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    #moon-altitude-text {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .btn-action-sm {
+      width: 100%;
+      background: rgba(110, 168, 254, 0.12);
+      border: 1px solid rgba(110, 168, 254, 0.3);
+      color: var(--accent2);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11.5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .btn-action-sm:hover {
+      background: rgba(110, 168, 254, 0.22);
+      border-color: var(--accent2);
+      color: #fff;
+    }
+
+    #controls-panel {
+      bottom: 16px; left: 50%;
+      transform: translateX(-50%);
+      padding: 14px 20px 16px 20px;
+      width: min(780px, 95vw);
+      max-height: 48vh;
+      overflow-y: auto;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 9px;
+      flex-wrap: wrap;
+    }
+    .row:last-child { margin-bottom: 0; }
+    .row label {
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 135px;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent2);
+      height: 4px;
+      background: #252a3d;
+      border-radius: 2px;
+      cursor: pointer;
+      min-width: 100px;
+    }
+    .val-badge {
+      min-width: 95px;
+      text-align: right;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .btn-group-mini {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-mini {
+      background: #1c2135;
+      border: 1px solid #333a54;
+      color: var(--text);
+      border-radius: 5px;
+      padding: 3px 7px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .btn-mini:hover {
+      background: #2b3350;
+      border-color: var(--accent2);
+    }
+    .btn {
+      background: linear-gradient(180deg, #2b3350, #1c2135);
+      border: 1px solid #3a4160;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.15s;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn:hover { background: linear-gradient(180deg, #374063, #242a44); border-color: #55628f; }
+    .btn.active {
+      background: linear-gradient(180deg, #4a5a9e, #2c3660);
+      border-color: var(--accent2);
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(110, 168, 254, 0.25);
+    }
+    #btn-row { justify-content: center; gap: 8px; margin-top: 6px; }
+
+    #help-toggle {
+      position: absolute;
+      bottom: 16px; right: 16px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--muted);
+      user-select: none;
+      transition: 0.2s;
+    }
+    #help-toggle:hover { color: var(--text); border-color: var(--accent2); }
+
+    #legend {
+      position: absolute;
+      bottom: 64px; right: 16px;
+      padding: 14px 16px;
+      font-size: 12px;
+      color: var(--muted);
+      width: 290px;
+      display: none;
+      line-height: 1.5;
+    }
+    #legend b { color: var(--text); }
+    #legend .dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    /* Journal Modal */
+    #journal-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 4, 8, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-content {
+      background: #101322;
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      width: min(720px, 96vw);
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+    }
+    .modal-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 16px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .obs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+    .obs-table th {
+      color: var(--muted);
+      border-bottom: 1px solid #2a3148;
+      padding: 8px 10px;
+      font-weight: 500;
+    }
+    .obs-table td {
+      border-bottom: 1px solid #1a1e2f;
+    }
+
+    @media (max-width: 640px) {
+      #title-panel { max-width: 220px; padding: 10px 12px; }
+      #title-panel p { display: none; }
+      #phase-panel { width: 160px; padding: 10px 12px; }
+      #moon-view-canvas { width: 90px; height: 90px; }
+      .row label { min-width: 90px; font-size: 11px; }
+      #controls-panel { width: 95vw; padding: 10px 12px 14px 12px; }
+      .val-badge { min-width: 70px; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="scene-container"></div>
+
+<!-- Top Left: Title and Astronomical Info -->
+<div class="panel" id="title-panel">
+  <h1>🌙 Фази Місяця та Обертання</h1>
+  <p>3D-симуляція системи Земля–Місяць–Сонце з синхронізованими періодами обертання та спостереженням із довільної широти.</p>
+  <div class="badge-bar">
+    <span class="badge" title="Синодичний цикл фаз">🗓 29.53 доби</span>
+    <span class="badge" title="Співвідношення обертів">⚙️ 1 : 29.53</span>
+    <button class="btn-mini" id="open-journal-btn" title="Локальний журнал спостережень">📔 Журнал дій</button>
+  </div>
+</div>
+
+<!-- Top Right: 2D Phase View & Local Horizon Data -->
+<div class="panel" id="phase-panel">
+  <div id="phase-name">—</div>
+  <canvas id="moon-view-canvas" width="260" height="260"></canvas>
+  <div id="illum-text">Освітленість: —</div>
+  <div id="moon-altitude-text">Горизонт: —</div>
+  <button class="btn-action-sm" id="save-obs-btn" title="Записати поточну фазу й координати в офлайн-базу">
+    💾 Зафіксувати в базі
+  </button>
+</div>
+
+<!-- Bottom: Controls Panel -->
+<div class="panel" id="controls-panel">
+  <!-- Row 1: Synodic Month Day Control -->
+  <div class="row">
+    <label for="day-slider">🗓 День циклу</label>
+    <input type="range" id="day-slider" min="0" max="1000" value="0" step="1">
+    <span class="val-badge" id="day-val">0.00 / 29.53</span>
+    <div class="btn-group-mini">
+      <button class="btn-mini" id="step-minus-day" title="Назад на 1 день">-1д</button>
+      <button class="btn-mini" id="step-plus-day" title="Вперед на 1 день">+1д</button>
+      <button class="btn-mini" id="step-minus-hour" title="Назад на 1 годину">-1г</button>
+      <button class="btn-mini" id="step-plus-hour" title="Вперед на 1 годину">+1г</button>
+    </div>
+  </div>
+
+  <!-- Row 2: Observer Latitude Control (Replaces fixed Kyiv) -->
+  <div class="row">
+    <label for="lat-slider">🌐 Широта спостереження</label>
+    <input type="range" id="lat-slider" min="-90" max="90" value="50.45" step="0.5">
+    <span class="val-badge" id="lat-val">50.5° Пн. ш.</span>
+    <div class="btn-group-mini">
+      <button class="btn-mini" data-lat="50.45" title="Київ (50.45° N)">Київ</button>
+      <button class="btn-mini" data-lat="0.0" title="Екватор (0°)">Екватор</button>
+      <button class="btn-mini" data-lat="51.5" title="Лондон (51.5° N)">Лондон</button>
+      <button class="btn-mini" data-lat="-33.86" title="Сідней (33.9° S)">Сідней</button>
+      <button class="btn-mini" data-lat="90.0" title="Північний полюс (+90°)">Пн. полюс</button>
+    </div>
+  </div>
+
+  <!-- Row 3: Simulation Speed (0.05x to 10x range slider) -->
+  <div class="row">
+    <label for="speed-slider">⚡ Швидкість часу</label>
+    <input type="range" id="speed-slider" min="0.05" max="10" value="1.0" step="0.05">
+    <span class="val-badge" id="speed-val">1.00×</span>
+    <div class="btn-group-mini">
+      <button class="btn-mini" data-speed="0.1">0.1×</button>
+      <button class="btn-mini" data-speed="0.5">0.5×</button>
+      <button class="btn-mini" data-speed="1.0">1×</button>
+      <button class="btn-mini" data-speed="2.0">2×</button>
+      <button class="btn-mini" data-speed="5.0">5×</button>
+      <button class="btn-mini" data-speed="10.0">10×</button>
+    </div>
+  </div>
+
+  <!-- Row 4: Earth-Moon Rotation Synchronization & Solar Time -->
+  <div class="row">
+    <label>⏳ Обертання Землі</label>
+    <button class="btn-mini" id="sync-mode-btn" style="color:var(--accent);">Синхронізація: Астрономічна (1:29.53)</button>
+    <span style="font-size:11px; color:var(--muted); margin-left:auto;">
+      Обертів: <b id="earth-rot-count" style="color:var(--text);">0.00</b> | Час: <b id="time-of-day-val" style="color:var(--text);">12:00</b>
+    </span>
+  </div>
+
+  <!-- Row 5: Playback and Camera Modes -->
+  <div class="row" id="btn-row">
+    <button class="btn" id="play-btn">▶ Старт</button>
+    <button class="btn" id="cam-earth-btn">Вид з Землі (полюс)</button>
+    <button class="btn" id="cam-surface-btn">Вид з поверхні (50° N)</button>
+    <button class="btn active" id="cam-free-btn">Вільна камера</button>
+  </div>
+</div>
+
+<!-- Legend / Information Panel -->
+<div class="panel" id="legend">
+  <div><span class="dot" style="background:#ffd166;"></span><b>Сонце</b> — джерело світла (+X), завжди освітлює 50% сфери Місяця.</div>
+  <div style="margin-top:6px;"><span class="dot" style="background:#6ea8fe;"></span><b>Земля</b> — обертається навколо нахиленої осі (23.44°) зі швидкістю 1 оберт/добу.</div>
+  <div style="margin-top:6px;"><span class="dot" style="background:#c9c9c9;"></span><b>Місяць</b> — орбітальний період ≈29.53 доби (синодичний місяць) з нахилом орбіти 5.14°.</div>
+  <div style="margin-top:6px;"><span class="dot" style="background:#6ea8fe;"></span><b>Точка спостереження</b> — розташована на вибраній широті (від -90° до +90°).</div>
+  <div style="margin-top:8px; font-size:11px; border-top:1px solid #2a3148; padding-top:6px;">
+    💾 Усі налаштування та журнали зберігаються локально в IndexedDB без потреби в інтернеті.
+  </div>
+</div>
+
+<!-- Toggle Help Button -->
+<div class="panel" id="help-toggle" title="Пояснення">?</div>
+
+<!-- Journal Offline Modal -->
+<div id="journal-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>📔 Локальний журнал астрономічних спостережень</h2>
+      <button class="btn-mini" id="close-journal-btn" style="font-size:14px; padding:2px 8px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <table class="obs-table">
+        <thead>
+          <tr>
+            <th>Дата запису</th>
+            <th>Фаза Місяця</th>
+            <th>Освітленість</th>
+            <th>День циклу</th>
+            <th>Широта (висота)</th>
+            <th style="text-align:right;">Дії</th>
+          </tr>
+        </thead>
+        <tbody id="journal-table-body">
+          <!-- Populated from IndexedDB -->
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-mini" id="export-json-btn">📥 Експорт у JSON</button>
+        <button class="btn btn-mini" id="clear-db-btn" style="color:var(--danger); border-color:#5c2424;">🗑 Очистити базу</button>
+      </div>
+      <span style="font-size:11px; color:var(--muted);">Автономна база даних: IndexedDB</span>
+    </div>
+  </div>
+</div>
+
+<!-- 1. Standalone Three.js (Local offline library + CDN fallback) -->
+<script src="assets/three.min.js"></script>
+<script>
+  if (typeof THREE === 'undefined') {
+    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+  }
+</script>
+
+<!-- 2. Pure Vanilla Application Scripts (Zero Node.js / Zero Bundler needed) -->
+<script src="src/db.js"></script>
+<script src="src/app.js"></script>
+
+</body>
+</html>

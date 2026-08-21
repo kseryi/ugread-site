@@ -16,45 +16,91 @@
       --success: #70e000;
       --danger: #f87171;
     }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
       margin: 0; padding: 0; height: 100%; width: 100%;
       background: radial-gradient(ellipse at 50% 0%, #0c1024 0%, #05060c 60%);
       color: var(--text);
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
       overflow: hidden;
+      touch-action: none; /* Prevent browser pinch-to-zoom on body */
+      user-select: none;
+      -webkit-user-select: none;
     }
     #scene-container {
       position: absolute; inset: 0;
+      touch-action: none;
     }
-    #scene-container canvas { display: block; }
+    #scene-container canvas {
+      display: block;
+      touch-action: none;
+      width: 100%;
+      height: 100%;
+    }
 
     .panel {
       position: absolute;
-      background: rgba(16, 18, 28, 0.86);
+      background: rgba(16, 18, 28, 0.88);
       border: 1px solid var(--panel-border);
       border-radius: 14px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
       z-index: 10;
+      touch-action: auto;
     }
 
     #title-panel {
       top: 16px; left: 16px;
       padding: 14px 18px;
       max-width: 360px;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .panel-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
     }
     #title-panel h1 {
-      margin: 0 0 4px 0;
-      font-size: 18px;
+      margin: 0;
+      font-size: 17px;
       letter-spacing: 0.3px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+    }
+    .lang-switcher {
+      display: inline-flex;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+    }
+    .lang-btn:hover {
+      color: var(--text);
+    }
+    .lang-btn.active {
+      background: var(--accent2);
+      color: #0b0e1b;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
     #title-panel p {
-      margin: 0 0 10px 0;
+      margin: 4px 0 10px 0;
       font-size: 12px;
       color: var(--muted);
       line-height: 1.45;
@@ -69,7 +115,7 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 3px 8px;
+      padding: 4px 8px;
       border-radius: 6px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -79,57 +125,60 @@
 
     #phase-panel {
       top: 16px; right: 16px;
-      padding: 16px 20px;
-      width: 240px;
+      padding: 14px 16px;
+      width: 220px;
       text-align: center;
+      transition: transform 0.2s ease;
     }
     #phase-name {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--accent);
-      margin-bottom: 8px;
-      min-height: 38px;
+      margin-bottom: 6px;
+      min-height: 34px;
       display: flex;
       align-items: center;
       justify-content: center;
-      line-height: 1.25;
+      line-height: 1.2;
     }
     #moon-view-canvas {
-      width: 130px; height: 130px;
+      width: 120px; height: 120px;
       border-radius: 50%;
       background: #090a10;
-      margin: 0 auto 10px auto;
+      margin: 0 auto 8px auto;
       display: block;
       box-shadow: 0 0 0 1px #2a2e40, 0 0 25px rgba(110, 168, 254, 0.18);
     }
     #illum-text {
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 500;
       color: var(--text);
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
     #moon-altitude-text {
-      font-size: 11.5px;
+      font-size: 11px;
       color: var(--muted);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .btn-action-sm {
       width: 100%;
       background: rgba(110, 168, 254, 0.12);
       border: 1px solid rgba(110, 168, 254, 0.3);
       color: var(--accent2);
-      border-radius: 8px;
-      padding: 6px 10px;
+      border-radius: 6px;
+      padding: 4px 8px;
       font-size: 11.5px;
+      font-weight: 500;
       cursor: pointer;
+      min-height: 26px;
       transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 5px;
     }
-    .btn-action-sm:hover {
-      background: rgba(110, 168, 254, 0.22);
+    .btn-action-sm:active, .btn-action-sm:hover {
+      background: rgba(110, 168, 254, 0.25);
       border-color: var(--accent2);
       color: #fff;
     }
@@ -137,23 +186,128 @@
     #controls-panel {
       bottom: 16px; left: 50%;
       transform: translateX(-50%);
-      padding: 14px 20px 16px 20px;
-      width: min(780px, 95vw);
-      max-height: 48vh;
+      padding: 8px 16px 10px 16px;
+      width: min(840px, 96vw);
+      max-height: 42vh;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.25s ease, max-height 0.25s ease;
     }
+    #controls-panel.panel-hidden {
+      transform: translateX(-50%) translateY(140%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Floating Toggle Button for Bottom Controls */
+    #toggle-controls-btn {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 12;
+      background: rgba(16, 20, 34, 0.92);
+      border: 1px solid rgba(110, 168, 254, 0.4);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 6px 15px;
+      font-size: 12px;
+      font-weight: 600;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5), 0 0 12px rgba(110, 168, 254, 0.2);
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      touch-action: manipulation;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    #toggle-controls-btn:hover, #toggle-controls-btn:active {
+      background: rgba(30, 38, 65, 0.95);
+      border-color: var(--accent2);
+      color: #fff;
+      transform: translateX(-50%) scale(1.04);
+    }
+    #toggle-controls-btn.visible {
+      display: inline-flex;
+    }
+
+    .panel-header-ctrl {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+    .panel-header-ctrl span {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .panel-close-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--muted);
+      font-size: 11px;
+      border-radius: 5px;
+      cursor: pointer;
+      padding: 2px 8px;
+      min-height: 22px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: 0.15s;
+    }
+    .panel-close-btn:hover, .panel-close-btn:active {
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--text);
+      border-color: var(--accent2);
+    }
+
+    .panel-header-mobile {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--panel-border);
+      cursor: pointer;
+    }
+    .panel-header-mobile span {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .panel-header-mobile button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 2px;
+    }
+
     .row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 9px;
+      gap: 8px;
+      margin-bottom: 4px;
       flex-wrap: wrap;
     }
     .row:last-child { margin-bottom: 0; }
     .row label {
-      font-size: 12px;
+      font-size: 11.5px;
       color: var(--muted);
-      min-width: 135px;
+      min-width: 125px;
       white-space: nowrap;
       display: flex;
       align-items: center;
@@ -162,16 +316,36 @@
     input[type="range"] {
       flex: 1;
       accent-color: var(--accent2);
-      height: 4px;
+      height: 5px;
       background: #252a3d;
-      border-radius: 2px;
+      border-radius: 3px;
       cursor: pointer;
-      min-width: 100px;
+      min-width: 90px;
+      margin: 3px 0;
+      touch-action: pan-x;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent2);
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent2);
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      cursor: pointer;
     }
     .val-badge {
-      min-width: 95px;
+      min-width: 80px;
       text-align: right;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 500;
       color: var(--accent);
       font-variant-numeric: tabular-nums;
@@ -179,7 +353,8 @@
     .btn-group-mini {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
+      flex-wrap: wrap;
     }
     .btn-mini {
       background: #1c2135;
@@ -189,9 +364,15 @@
       padding: 3px 7px;
       font-size: 11px;
       cursor: pointer;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       transition: 0.15s;
+      user-select: none;
+      touch-action: manipulation;
     }
-    .btn-mini:hover {
+    .btn-mini:active, .btn-mini:hover {
       background: #2b3350;
       border-color: var(--accent2);
     }
@@ -199,46 +380,85 @@
       background: linear-gradient(180deg, #2b3350, #1c2135);
       border: 1px solid #3a4160;
       color: var(--text);
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 12px;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11.5px;
       cursor: pointer;
+      min-height: 28px;
       transition: 0.15s;
       white-space: nowrap;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 5px;
+      user-select: none;
+      touch-action: manipulation;
     }
-    .btn:hover { background: linear-gradient(180deg, #374063, #242a44); border-color: #55628f; }
+    .btn:active, .btn:hover { background: linear-gradient(180deg, #374063, #242a44); border-color: #55628f; }
     .btn.active {
       background: linear-gradient(180deg, #4a5a9e, #2c3660);
       border-color: var(--accent2);
       color: #ffffff;
-      box-shadow: 0 0 10px rgba(110, 168, 254, 0.25);
+      box-shadow: 0 0 8px rgba(110, 168, 254, 0.25);
     }
-    #btn-row { justify-content: center; gap: 8px; margin-top: 6px; }
+    #btn-row { justify-content: center; gap: 6px; margin-top: 4px; }
+
+    /* Touch On-Screen Camera Floating Action Buttons */
+    #touch-nav-overlay {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 15;
+      pointer-events: auto;
+    }
+    .touch-pill-btn {
+      background: rgba(16, 20, 34, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 11.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .touch-pill-btn:active {
+      background: var(--accent2);
+      color: #000;
+    }
 
     #help-toggle {
       position: absolute;
       bottom: 16px; right: 16px;
-      width: 36px; height: 36px;
+      width: 42px; height: 42px;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
       font-weight: 700;
+      font-size: 16px;
       color: var(--muted);
       user-select: none;
+      touch-action: manipulation;
       transition: 0.2s;
     }
-    #help-toggle:hover { color: var(--text); border-color: var(--accent2); }
+    #help-toggle:active, #help-toggle:hover { color: var(--text); border-color: var(--accent2); }
 
     #legend {
       position: absolute;
-      bottom: 64px; right: 16px;
+      bottom: 68px; right: 16px;
       padding: 14px 16px;
       font-size: 12px;
       color: var(--muted);
-      width: 290px;
+      width: min(300px, 85vw);
+      max-height: 60vh;
+      overflow-y: auto;
       display: none;
       line-height: 1.5;
     }
@@ -252,26 +472,26 @@
     #journal-modal {
       position: fixed;
       inset: 0;
-      background: rgba(3, 4, 8, 0.8);
+      background: rgba(3, 4, 8, 0.85);
       backdrop-filter: blur(8px);
       z-index: 100;
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 12px;
     }
     .modal-content {
       background: #101322;
       border: 1px solid var(--panel-border);
       border-radius: 16px;
-      width: min(720px, 96vw);
-      max-height: 80vh;
+      width: min(720px, 98vw);
+      max-height: 85vh;
       display: flex;
       flex-direction: column;
       box-shadow: 0 16px 40px rgba(0,0,0,0.6);
     }
     .modal-header {
-      padding: 14px 20px;
+      padding: 12px 18px;
       border-bottom: 1px solid var(--panel-border);
       display: flex;
       align-items: center;
@@ -279,23 +499,26 @@
     }
     .modal-header h2 {
       margin: 0;
-      font-size: 16px;
+      font-size: 15px;
       color: var(--accent);
       display: flex;
       align-items: center;
       gap: 8px;
     }
     .modal-body {
-      padding: 16px 20px;
+      padding: 14px 16px;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       flex: 1;
     }
     .modal-footer {
-      padding: 12px 20px;
+      padding: 12px 16px;
       border-top: 1px solid var(--panel-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
     }
     .obs-table {
       width: 100%;
@@ -306,21 +529,103 @@
     .obs-table th {
       color: var(--muted);
       border-bottom: 1px solid #2a3148;
-      padding: 8px 10px;
+      padding: 8px 6px;
       font-weight: 500;
     }
     .obs-table td {
       border-bottom: 1px solid #1a1e2f;
+      padding: 8px 6px;
     }
 
-    @media (max-width: 640px) {
-      #title-panel { max-width: 220px; padding: 10px 12px; }
+    /* Mobile and Touch Responsive Rules */
+    @media (max-width: 768px) {
+      #title-panel {
+        top: 10px; left: 10px;
+        max-width: 200px;
+        padding: 8px 10px;
+      }
+      #title-panel h1 { font-size: 13px; }
       #title-panel p { display: none; }
-      #phase-panel { width: 160px; padding: 10px 12px; }
-      #moon-view-canvas { width: 90px; height: 90px; }
-      .row label { min-width: 90px; font-size: 11px; }
-      #controls-panel { width: 95vw; padding: 10px 12px 14px 12px; }
-      .val-badge { min-width: 70px; font-size: 11px; }
+      #title-panel .badge-bar { gap: 4px; }
+      #title-panel .badge { font-size: 10px; padding: 2px 6px; }
+
+      #phase-panel {
+        top: 10px; right: 10px;
+        width: 130px;
+        padding: 8px 8px;
+      }
+      #phase-name { font-size: 11px; min-height: 26px; margin-bottom: 4px; }
+      #moon-view-canvas { width: 75px; height: 75px; margin-bottom: 4px; }
+      #illum-text { font-size: 10.5px; }
+      #moon-altitude-text { font-size: 10px; margin-bottom: 6px; }
+      .btn-action-sm { font-size: 10px; padding: 5px 6px; min-height: 30px; }
+
+      #controls-panel {
+        bottom: 8px;
+        width: 98vw;
+        padding: 6px 10px;
+        max-height: 36vh;
+        border-radius: 10px;
+      }
+      #toggle-controls-btn {
+        bottom: 6px;
+        padding: 5px 12px;
+        font-size: 11px;
+      }
+      
+      .row {
+        gap: 4px;
+        margin-bottom: 3px;
+      }
+      .row label {
+        min-width: 90px;
+        font-size: 10.5px;
+      }
+      .val-badge {
+        min-width: 60px;
+        font-size: 10.5px;
+      }
+      .btn {
+        padding: 3px 8px;
+        font-size: 10.5px;
+        min-height: 24px;
+        border-radius: 5px;
+      }
+      .btn-mini {
+        padding: 2px 6px;
+        font-size: 10px;
+        min-height: 20px;
+        border-radius: 4px;
+      }
+      #help-toggle {
+        bottom: 8px;
+        right: 8px;
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+      }
+      #touch-nav-overlay {
+        top: 8px;
+      }
+      .touch-pill-btn {
+        padding: 4px 9px;
+        font-size: 10.5px;
+      }
+    }
+
+    @media (max-height: 500px) and (orientation: landscape) {
+      #controls-panel {
+        max-height: 50vh;
+        overflow-y: auto;
+      }
+      #title-panel {
+        max-width: 180px;
+      }
+      #phase-panel {
+        width: 120px;
+        padding: 6px;
+      }
+      #moon-view-canvas { width: 60px; height: 60px; }
     }
   </style>
 </head>
@@ -328,14 +633,29 @@
 
 <div id="scene-container"></div>
 
+<!-- Top Quick Touch Camera Switch & Zoom Overlay -->
+<div id="touch-nav-overlay">
+  <button class="touch-pill-btn" id="touch-cam-free" data-i18n-title="touchCamFree" data-i18n="touchCamFree">🌐 3D Огляд</button>
+  <button class="touch-pill-btn" id="touch-cam-earth" data-i18n-title="touchCamEarth" data-i18n="touchCamEarth">🌍 Земля</button>
+  <button class="touch-pill-btn" id="touch-cam-surface" data-i18n-title="touchCamSurface" data-i18n="touchCamSurface">🔭 Поверхня</button>
+  <button class="touch-pill-btn" id="touch-zoom-in" data-i18n-title="touchZoomIn" data-i18n="touchZoomIn">🔍+</button>
+  <button class="touch-pill-btn" id="touch-zoom-out" data-i18n-title="touchZoomOut" data-i18n="touchZoomOut">🔍−</button>
+</div>
+
 <!-- Top Left: Title and Astronomical Info -->
 <div class="panel" id="title-panel">
-  <h1>🌙 Фази Місяця та Обертання</h1>
-  <p>3D-симуляція системи Земля–Місяць–Сонце з синхронізованими періодами обертання та спостереженням із довільної широти.</p>
+  <div class="panel-header-row">
+    <h1 data-i18n="appTitle">🌙 Фази Місяця та Обертання</h1>
+    <div class="lang-switcher" aria-label="Language Selector">
+      <button class="lang-btn active" data-lang="uk">УКР</button>
+      <button class="lang-btn" data-lang="en">ENG</button>
+    </div>
+  </div>
+  <p data-i18n="appDesc">3D-симуляція системи Земля–Місяць–Сонце з синхронізованими періодами обертання та спостереженням із довільної широти.</p>
   <div class="badge-bar">
-    <span class="badge" title="Синодичний цикл фаз">🗓 29.53 доби</span>
-    <span class="badge" title="Співвідношення обертів">⚙️ 1 : 29.53</span>
-    <button class="btn-mini" id="open-journal-btn" title="Локальний журнал спостережень">📔 Журнал дій</button>
+    <span class="badge" data-i18n-title="badgeSynodic" data-i18n="badgeSynodic">🗓 29.53 доби</span>
+    <span class="badge" data-i18n-title="badgeRatio" data-i18n="badgeRatio">⚙️ 1 : 29.53</span>
+    <button class="btn-mini" id="open-journal-btn" data-i18n-title="journalBtn" data-i18n="journalBtn">📔 Журнал дій</button>
   </div>
 </div>
 
@@ -345,104 +665,119 @@
   <canvas id="moon-view-canvas" width="260" height="260"></canvas>
   <div id="illum-text">Освітленість: —</div>
   <div id="moon-altitude-text">Горизонт: —</div>
-  <button class="btn-action-sm" id="save-obs-btn" title="Записати поточну фазу й координати в офлайн-базу">
+  <button class="btn-action-sm" id="save-obs-btn" data-i18n-title="saveObsBtn" data-i18n="saveObsBtn">
     💾 Зафіксувати в базі
   </button>
 </div>
 
+<!-- Bottom Floating Button to Show Controls Panel when hidden -->
+<button id="toggle-controls-btn" data-i18n-title="togglePanelTitle">
+  <span data-i18n="showPanelBtn">⬆ Панель керування</span>
+</button>
+
 <!-- Bottom: Controls Panel -->
 <div class="panel" id="controls-panel">
-  <!-- Row 1: Synodic Month Day Control -->
-  <div class="row">
-    <label for="day-slider">🗓 День циклу</label>
-    <input type="range" id="day-slider" min="0" max="1000" value="0" step="1">
-    <span class="val-badge" id="day-val">0.00 / 29.53</span>
-    <div class="btn-group-mini">
-      <button class="btn-mini" id="step-minus-day" title="Назад на 1 день">-1д</button>
-      <button class="btn-mini" id="step-plus-day" title="Вперед на 1 день">+1д</button>
-      <button class="btn-mini" id="step-minus-hour" title="Назад на 1 годину">-1г</button>
-      <button class="btn-mini" id="step-plus-hour" title="Вперед на 1 годину">+1г</button>
+  <!-- Desktop / Tablet Panel Header with Hide button -->
+  <div class="panel-header-ctrl">
+    <span data-i18n="ctrlPanelTitle">🎛 Панель керування симуляцією</span>
+    <button class="panel-close-btn" id="hide-controls-btn" data-i18n-title="togglePanelTitle" data-i18n="hidePanelBtn">
+      ⬇ Сховати панель
+    </button>
+  </div>
+
+  <div id="controls-content">
+    <!-- Row 1: Synodic Month Day Control -->
+    <div class="row">
+      <label for="day-slider" data-i18n="dayCycleLabel">🗓 День циклу</label>
+      <input type="range" id="day-slider" min="0" max="1000" value="0" step="1">
+      <span class="val-badge" id="day-val">0.00 / 29.53 діб</span>
+      <div class="btn-group-mini">
+        <button class="btn-mini" id="step-minus-day" data-i18n-title="stepMinus1dTitle" data-i18n="stepMinus1d">-1д</button>
+        <button class="btn-mini" id="step-plus-day" data-i18n-title="stepPlus1dTitle" data-i18n="stepPlus1d">+1д</button>
+        <button class="btn-mini" id="step-minus-hour" data-i18n-title="stepMinus1hTitle" data-i18n="stepMinus1h">-1г</button>
+        <button class="btn-mini" id="step-plus-hour" data-i18n-title="stepPlus1hTitle" data-i18n="stepPlus1h">+1г</button>
+      </div>
     </div>
-  </div>
 
-  <!-- Row 2: Observer Latitude Control (Replaces fixed Kyiv) -->
-  <div class="row">
-    <label for="lat-slider">🌐 Широта спостереження</label>
-    <input type="range" id="lat-slider" min="-90" max="90" value="50.45" step="0.5">
-    <span class="val-badge" id="lat-val">50.5° Пн. ш.</span>
-    <div class="btn-group-mini">
-      <button class="btn-mini" data-lat="50.45" title="Київ (50.45° N)">Київ</button>
-      <button class="btn-mini" data-lat="0.0" title="Екватор (0°)">Екватор</button>
-      <button class="btn-mini" data-lat="51.5" title="Лондон (51.5° N)">Лондон</button>
-      <button class="btn-mini" data-lat="-33.86" title="Сідней (33.9° S)">Сідней</button>
-      <button class="btn-mini" data-lat="90.0" title="Північний полюс (+90°)">Пн. полюс</button>
+    <!-- Row 2: Observer Latitude Control (Replaces fixed Kyiv) -->
+    <div class="row">
+      <label for="lat-slider" data-i18n="latLabel">🌐 Широта спостереження</label>
+      <input type="range" id="lat-slider" min="-90" max="90" value="50.45" step="0.5">
+      <span class="val-badge" id="lat-val">50.5° Пн. ш.</span>
+      <div class="btn-group-mini">
+        <button class="btn-mini" data-lat="50.45" data-i18n="presetKyiv">Київ</button>
+        <button class="btn-mini" data-lat="0.0" data-i18n="presetEquator">Екватор</button>
+        <button class="btn-mini" data-lat="51.5" data-i18n="presetLondon">Лондон</button>
+        <button class="btn-mini" data-lat="-33.86" data-i18n="presetSydney">Сідней</button>
+        <button class="btn-mini" data-lat="90.0" data-i18n="presetNorthPole">Пн. полюс</button>
+      </div>
     </div>
-  </div>
 
-  <!-- Row 3: Simulation Speed (0.05x to 10x range slider) -->
-  <div class="row">
-    <label for="speed-slider">⚡ Швидкість часу</label>
-    <input type="range" id="speed-slider" min="0.05" max="10" value="1.0" step="0.05">
-    <span class="val-badge" id="speed-val">1.00×</span>
-    <div class="btn-group-mini">
-      <button class="btn-mini" data-speed="0.1">0.1×</button>
-      <button class="btn-mini" data-speed="0.5">0.5×</button>
-      <button class="btn-mini" data-speed="1.0">1×</button>
-      <button class="btn-mini" data-speed="2.0">2×</button>
-      <button class="btn-mini" data-speed="5.0">5×</button>
-      <button class="btn-mini" data-speed="10.0">10×</button>
+    <!-- Row 3: Simulation Speed (0.05x to 10x range slider) -->
+    <div class="row">
+      <label for="speed-slider" data-i18n="speedLabel">⚡ Швидкість часу</label>
+      <input type="range" id="speed-slider" min="0.05" max="10" value="1.0" step="0.05">
+      <span class="val-badge" id="speed-val">1.00×</span>
+      <div class="btn-group-mini">
+        <button class="btn-mini" data-speed="0.1">0.1×</button>
+        <button class="btn-mini" data-speed="0.5">0.5×</button>
+        <button class="btn-mini" data-speed="1.0">1×</button>
+        <button class="btn-mini" data-speed="2.0">2×</button>
+        <button class="btn-mini" data-speed="5.0">5×</button>
+        <button class="btn-mini" data-speed="10.0">10×</button>
+      </div>
     </div>
-  </div>
 
-  <!-- Row 4: Earth-Moon Rotation Synchronization & Solar Time -->
-  <div class="row">
-    <label>⏳ Обертання Землі</label>
-    <button class="btn-mini" id="sync-mode-btn" style="color:var(--accent);">Синхронізація: Астрономічна (1:29.53)</button>
-    <span style="font-size:11px; color:var(--muted); margin-left:auto;">
-      Обертів: <b id="earth-rot-count" style="color:var(--text);">0.00</b> | Час: <b id="time-of-day-val" style="color:var(--text);">12:00</b>
-    </span>
-  </div>
+    <!-- Row 4: Earth-Moon Rotation Synchronization & Solar Time -->
+    <div class="row">
+      <label data-i18n="earthRotationLabel">⏳ Обертання Землі</label>
+      <button class="btn-mini" id="sync-mode-btn" style="color:var(--accent);">Синхронізація: Астрономічна (1:29.53)</button>
+      <span style="font-size:11px; color:var(--muted); margin-left:auto;">
+        <span data-i18n="earthRotationLabel">Обертів</span>: <b id="earth-rot-count" style="color:var(--text);">0.00</b> | <span data-i18n="timeLabel">Час</span>: <b id="time-of-day-val" style="color:var(--text);">12:00</b>
+      </span>
+    </div>
 
-  <!-- Row 5: Playback and Camera Modes -->
-  <div class="row" id="btn-row">
-    <button class="btn" id="play-btn">▶ Старт</button>
-    <button class="btn" id="cam-earth-btn">Вид з Землі (полюс)</button>
-    <button class="btn" id="cam-surface-btn">Вид з поверхні (50° N)</button>
-    <button class="btn active" id="cam-free-btn">Вільна камера</button>
+    <!-- Row 5: Playback and Camera Modes -->
+    <div class="row" id="btn-row">
+      <button class="btn" id="play-btn" data-i18n="playStart">▶ Старт</button>
+      <button class="btn" id="cam-earth-btn" data-i18n="camEarthBtn">Вид з Землі (полюс)</button>
+      <button class="btn" id="cam-surface-btn" data-i18n="camSurfaceBtn">Вид з поверхні</button>
+      <button class="btn active" id="cam-free-btn" data-i18n="camFreeBtn">Вільна камера</button>
+    </div>
   </div>
 </div>
 
 <!-- Legend / Information Panel -->
 <div class="panel" id="legend">
-  <div><span class="dot" style="background:#ffd166;"></span><b>Сонце</b> — джерело світла (+X), завжди освітлює 50% сфери Місяця.</div>
-  <div style="margin-top:6px;"><span class="dot" style="background:#6ea8fe;"></span><b>Земля</b> — обертається навколо нахиленої осі (23.44°) зі швидкістю 1 оберт/добу.</div>
-  <div style="margin-top:6px;"><span class="dot" style="background:#c9c9c9;"></span><b>Місяць</b> — орбітальний період ≈29.53 доби (синодичний місяць) з нахилом орбіти 5.14°.</div>
-  <div style="margin-top:6px;"><span class="dot" style="background:#6ea8fe;"></span><b>Точка спостереження</b> — розташована на вибраній широті (від -90° до +90°).</div>
-  <div style="margin-top:8px; font-size:11px; border-top:1px solid #2a3148; padding-top:6px;">
+  <div data-i18n-html="legendSun"><span class="dot" style="background:#ffd166;"></span><b>Сонце</b> — джерело світла (+X), завжди освітлює 50% сфери Місяця.</div>
+  <div style="margin-top:6px;" data-i18n-html="legendEarth"><span class="dot" style="background:#6ea8fe;"></span><b>Земля</b> — обертається навколо нахиленої осі (23.44°) зі швидкістю 1 оберт/добу.</div>
+  <div style="margin-top:6px;" data-i18n-html="legendMoon"><span class="dot" style="background:#c9c9c9;"></span><b>Місяць</b> — орбітальний період ≈29.53 доби (синодичний місяць) з нахилом орбіти 5.14°.</div>
+  <div style="margin-top:6px;" data-i18n-html="legendObserver"><span class="dot" style="background:#6ea8fe;"></span><b>Точка спостереження</b> — розташована на вибраній широті (від -90° до +90°).</div>
+  <div style="margin-top:8px; font-size:11px; border-top:1px solid #2a3148; padding-top:6px;" data-i18n="legendOfflineNotice">
     💾 Усі налаштування та журнали зберігаються локально в IndexedDB без потреби в інтернеті.
   </div>
 </div>
 
 <!-- Toggle Help Button -->
-<div class="panel" id="help-toggle" title="Пояснення">?</div>
+<div class="panel" id="help-toggle" data-i18n-title="helpTitle">?</div>
 
 <!-- Journal Offline Modal -->
 <div id="journal-modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h2>📔 Локальний журнал астрономічних спостережень</h2>
+      <h2 data-i18n="journalTitle">📔 Локальний журнал астрономічних спостережень</h2>
       <button class="btn-mini" id="close-journal-btn" style="font-size:14px; padding:2px 8px;">✕</button>
     </div>
     <div class="modal-body">
       <table class="obs-table">
         <thead>
           <tr>
-            <th>Дата запису</th>
-            <th>Фаза Місяця</th>
-            <th>Освітленість</th>
-            <th>День циклу</th>
-            <th>Широта (висота)</th>
-            <th style="text-align:right;">Дії</th>
+            <th data-i18n="journalThDate">Дата запису</th>
+            <th data-i18n="journalThPhase">Фаза Місяця</th>
+            <th data-i18n="journalThIllum">Освітленість</th>
+            <th data-i18n="journalThDay">День циклу</th>
+            <th data-i18n="journalThLat">Широта (висота)</th>
+            <th style="text-align:right;" data-i18n="journalThActions">Дії</th>
           </tr>
         </thead>
         <tbody id="journal-table-body">
@@ -452,10 +787,10 @@
     </div>
     <div class="modal-footer">
       <div style="display:flex; gap:8px;">
-        <button class="btn btn-mini" id="export-json-btn">📥 Експорт у JSON</button>
-        <button class="btn btn-mini" id="clear-db-btn" style="color:var(--danger); border-color:#5c2424;">🗑 Очистити базу</button>
+        <button class="btn btn-mini" id="export-json-btn" data-i18n="journalExportBtn">📥 Експорт у JSON</button>
+        <button class="btn btn-mini" id="clear-db-btn" style="color:var(--danger); border-color:#5c2424;" data-i18n="journalClearBtn">🗑 Очистити базу</button>
       </div>
-      <span style="font-size:11px; color:var(--muted);">Автономна база даних: IndexedDB</span>
+      <span style="font-size:11px; color:var(--muted);" data-i18n="journalDbFooter">Автономна база даних: IndexedDB</span>
     </div>
   </div>
 </div>
@@ -469,6 +804,7 @@
 </script>
 
 <!-- 2. Pure Vanilla Application Scripts (Zero Node.js / Zero Bundler needed) -->
+<script src="src/i18n.js"></script>
 <script src="src/db.js"></script>
 <script src="src/app.js"></script>
 

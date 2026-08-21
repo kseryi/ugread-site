@@ -16,6 +16,15 @@
   const saveSetting = MoonDB.saveSetting || (async () => true);
   const getSetting = MoonDB.getSetting || (async (k, d) => d);
 
+  // Localization
+  const MoonI18n = global.MoonI18n || {
+    t: (k) => k,
+    getLanguage: () => 'uk',
+    setLanguage: () => {},
+    applyTranslations: () => {}
+  };
+  const t = MoonI18n.t;
+
   // ==================== CONSTANTS & ASTRONOMY ====================
   const SYNODIC_MONTH = 29.530588; // Mean synodic month (days)
   const SIDEREAL_MONTH = 27.321661; // Orbital period relative to stars
@@ -674,14 +683,14 @@ function initApp() {
 
   function getPhaseName(frac) {
     const f = ((frac % 1) + 1) % 1;
-    if (f < 0.02 || f > 0.98) return 'Новий місяць (Молодик)';
-    if (f < 0.23) return 'Молодий місяць (зростаючий серп)';
-    if (f <= 0.27) return 'Перша чверть';
-    if (f < 0.48) return 'Зростаючий Місяць (опуклий)';
-    if (f <= 0.52) return 'Повний місяць (Повня)';
-    if (f < 0.73) return 'Спадний Місяць (опуклий)';
-    if (f <= 0.77) return 'Остання чверть';
-    return 'Старий місяць (спадний серп)';
+    if (f < 0.02 || f > 0.98) return t('phaseNewMoon');
+    if (f < 0.23) return t('phaseWaxingCrescent');
+    if (f <= 0.27) return t('phaseFirstQuarter');
+    if (f < 0.48) return t('phaseWaxingGibbous');
+    if (f <= 0.52) return t('phaseFullMoon');
+    if (f < 0.73) return t('phaseWaningGibbous');
+    if (f <= 0.77) return t('phaseLastQuarter');
+    return t('phaseWaningCrescent');
   }
 
   // ==================== SIMULATION STATE & ROTATION SYNC ====================
@@ -716,24 +725,72 @@ function initApp() {
   }
   updateCameraFromSpherical();
 
-  // Mouse / Pointer Controls for 3D Scene
+  // Pointer & Multi-Touch Controls for 3D Scene
+  const activePointers = new Map();
+  let initialPinchDistance = null;
+  let initialPinchCamDist = null;
+
   renderer.domElement.addEventListener('pointerdown', (e) => {
-    isDragging = true;
-    lastX = e.clientX;
-    lastY = e.clientY;
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (activePointers.size === 1) {
+      isDragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+    } else if (activePointers.size === 2) {
+      // Begin 2-finger Pinch to Zoom
+      isDragging = false;
+      const pts = Array.from(activePointers.values());
+      const dx = pts[0].x - pts[1].x;
+      const dy = pts[0].y - pts[1].y;
+      initialPinchDistance = Math.hypot(dx, dy);
+      initialPinchCamDist = camDist;
+    }
   });
-  window.addEventListener('pointerup', () => isDragging = false);
+
+  const onPointerUpOrCancel = (e) => {
+    activePointers.delete(e.pointerId);
+    if (activePointers.size === 1) {
+      isDragging = true;
+      const remaining = activePointers.values().next().value;
+      lastX = remaining.x;
+      lastY = remaining.y;
+    } else if (activePointers.size === 0) {
+      isDragging = false;
+      initialPinchDistance = null;
+    }
+  };
+
+  window.addEventListener('pointerup', onPointerUpOrCancel);
+  window.addEventListener('pointercancel', onPointerUpOrCancel);
+
   window.addEventListener('pointermove', (e) => {
+    if (activePointers.has(e.pointerId)) {
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    if (activePointers.size === 2 && initialPinchDistance && cameraMode === 'free') {
+      // Handle Multi-Touch Pinch Zooming
+      const pts = Array.from(activePointers.values());
+      const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      if (currentDist > 5 && initialPinchDistance > 5) {
+        const factor = initialPinchDistance / currentDist;
+        camDist = Math.max(80, Math.min(1400, initialPinchCamDist * factor));
+        updateCameraFromSpherical();
+      }
+      return;
+    }
+
     if (!isDragging || cameraMode !== 'free') return;
     const dx = e.clientX - lastX;
     const dy = e.clientY - lastY;
     lastX = e.clientX;
     lastY = e.clientY;
-    camAzimuth -= dx * 0.005;
-    camPolar -= dy * 0.005;
+    camAzimuth -= dx * 0.006;
+    camPolar -= dy * 0.006;
     camPolar = Math.max(0.12, Math.min(Math.PI - 0.12, camPolar));
     updateCameraFromSpherical();
   });
+
   renderer.domElement.addEventListener('wheel', (e) => {
     e.preventDefault();
     camDist *= (1 + e.deltaY * 0.001);
@@ -792,11 +849,11 @@ function initApp() {
   function updateLatitudeFromUI(lat) {
     updateObserverPosition(lat, currentLongitudeDeg);
     if (latValEl) {
-      const hemisphere = lat >= 0 ? 'Пн. ш.' : 'Пд. ш.';
+      const hemisphere = lat >= 0 ? t('northHemisphere') : t('southHemisphere');
       latValEl.textContent = `${Math.abs(lat).toFixed(1)}° ${hemisphere}`;
     }
     if (camSurfaceBtn) {
-      camSurfaceBtn.textContent = `Вид з поверхні (${Math.abs(lat).toFixed(0)}° ${lat >= 0 ? 'N' : 'S'})`;
+      camSurfaceBtn.textContent = `${t('camSurfaceBtn')} (${Math.abs(lat).toFixed(0)}° ${lat >= 0 ? 'N' : 'S'})`;
     }
     updateScene();
     saveSetting('last_latitude', lat);
@@ -849,13 +906,13 @@ function initApp() {
     const phaseName = getPhaseName(phaseFrac);
 
     if (phaseNameEl) phaseNameEl.textContent = phaseName;
-    if (illumTextEl) illumTextEl.textContent = `Освітленість: ${Math.round(illum * 100)}%`;
-    if (dayValEl) dayValEl.textContent = `${dayValue.toFixed(2)} / ${SYNODIC_MONTH.toFixed(2)} діб`;
+    if (illumTextEl) illumTextEl.textContent = `${t('illumText')}: ${Math.round(illum * 100)}%`;
+    if (dayValEl) dayValEl.textContent = `${dayValue.toFixed(2)} / ${SYNODIC_MONTH.toFixed(2)} ${t('daysUnit')}`;
 
     // Rotation counter & Local time of day calculation
     const totalEarthRotations = dayValue; // Each day is 1 rotation
     if (earthRotCountEl) {
-      earthRotCountEl.textContent = `${totalEarthRotations.toFixed(2)} обертів`;
+      earthRotCountEl.textContent = `${totalEarthRotations.toFixed(2)} ${t('rotationsCount')}`;
     }
 
     // Local solar time calculation on the observer's meridian
@@ -864,7 +921,7 @@ function initApp() {
     const mm = Math.floor((hoursInDay % 1) * 60).toString().padStart(2, '0');
     if (timeOfDayEl) {
       const isNight = hoursInDay < 6 || hoursInDay > 18;
-      timeOfDayEl.textContent = `${hh}:${mm} (${isNight ? '🌙 Ніч' : '☀️ День'})`;
+      timeOfDayEl.textContent = `${hh}:${mm} (${isNight ? t('nightLabel') : t('dayLabel')})`;
     }
 
     // Calculate whether Moon is above or below observer's local horizon
@@ -875,9 +932,9 @@ function initApp() {
 
     if (moonAltitudeEl) {
       if (elevationDeg > 0) {
-        moonAltitudeEl.innerHTML = `<span style="color:#70e000;">🟢 Над горизонтом</span> (+${elevationDeg.toFixed(1)}°)`;
+        moonAltitudeEl.innerHTML = `<span style="color:#70e000;">${t('aboveHorizon')}</span> (+${elevationDeg.toFixed(1)}°)`;
       } else {
-        moonAltitudeEl.innerHTML = `<span style="color:#f87171;">🔴 Під горизонтом</span> (${elevationDeg.toFixed(1)}°)`;
+        moonAltitudeEl.innerHTML = `<span style="color:#f87171;">${t('belowHorizon')}</span> (${elevationDeg.toFixed(1)}°)`;
       }
     }
 
@@ -926,25 +983,79 @@ function initApp() {
   camSurfaceBtn?.addEventListener('click', () => setCameraMode('surface'));
   camFreeBtn?.addEventListener('click', () => setCameraMode('free'));
 
-  // ---------- ROTATION SYNCHRONIZATION CONTROLS ----------
-  syncModeBtn?.addEventListener('click', () => {
-    if (syncMode === 'astronomical') {
-      syncMode = 'slow';
-      syncModeBtn.textContent = 'Синхронізація: Оглядова';
-      syncModeBtn.title = 'Уповільнене обертання Землі для детального огляду карти';
+  // Quick Touch Navigation Overlay Buttons
+  document.getElementById('touch-cam-free')?.addEventListener('click', () => setCameraMode('free'));
+  document.getElementById('touch-cam-earth')?.addEventListener('click', () => setCameraMode('earth'));
+  document.getElementById('touch-cam-surface')?.addEventListener('click', () => setCameraMode('surface'));
+  document.getElementById('touch-zoom-in')?.addEventListener('click', () => {
+    camDist = Math.max(80, camDist * 0.8);
+    if (cameraMode === 'free') updateCameraFromSpherical();
+  });
+  document.getElementById('touch-zoom-out')?.addEventListener('click', () => {
+    camDist = Math.min(1400, camDist * 1.25);
+    if (cameraMode === 'free') updateCameraFromSpherical();
+  });
+
+  // Controls Panel Hide / Show functionality
+  const controlsPanel = document.getElementById('controls-panel');
+  const hideControlsBtn = document.getElementById('hide-controls-btn');
+  const toggleControlsBtn = document.getElementById('toggle-controls-btn');
+
+  function setPanelVisibility(visible) {
+    if (!controlsPanel) return;
+    if (visible) {
+      controlsPanel.classList.remove('panel-hidden');
+      toggleControlsBtn?.classList.remove('visible');
     } else {
-      syncMode = 'astronomical';
-      syncModeBtn.textContent = 'Синхронізація: Астрономічна (1:29.53)';
-      syncModeBtn.title = 'Реальне астрономічне співвідношення: 29.53 обертів Землі за 1 синодичний місяць';
+      controlsPanel.classList.add('panel-hidden');
+      toggleControlsBtn?.classList.add('visible');
     }
+  }
+
+  hideControlsBtn?.addEventListener('click', () => {
+    setPanelVisibility(false);
+  });
+
+  toggleControlsBtn?.addEventListener('click', () => {
+    setPanelVisibility(true);
+  });
+
+  // Keyboard shortcut 'H' or 'Escape' to toggle panel visibility
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'h' || e.key === 'H') {
+      const isHidden = controlsPanel?.classList.contains('panel-hidden');
+      setPanelVisibility(isHidden);
+    }
+  });
+
+  // ---------- ROTATION SYNCHRONIZATION CONTROLS ----------
+  function updateSyncBtnText() {
+    if (!syncModeBtn) return;
+    if (syncMode === 'astronomical') {
+      syncModeBtn.textContent = t('syncAstronomical');
+      syncModeBtn.title = t('syncAstronomicalTitle');
+    } else {
+      syncModeBtn.textContent = t('syncSlow');
+      syncModeBtn.title = t('syncSlowTitle');
+    }
+  }
+
+  syncModeBtn?.addEventListener('click', () => {
+    syncMode = syncMode === 'astronomical' ? 'slow' : 'astronomical';
+    updateSyncBtnText();
     saveSetting('sync_mode', syncMode);
     updateScene();
   });
 
   // ---------- PLAYBACK & SPEED CONTROLS ----------
+  function updatePlayBtnText() {
+    if (!playBtn) return;
+    playBtn.textContent = playing ? t('playPause') : t('playStart');
+  }
+
   playBtn?.addEventListener('click', () => {
     playing = !playing;
-    playBtn.textContent = playing ? '⏸ Пауза' : '▶ Старт';
+    updatePlayBtnText();
     playBtn.classList.toggle('active', playing);
   });
 
@@ -990,14 +1101,14 @@ function initApp() {
       illumination: illum,
       latitude: currentLatitudeDeg,
       elevation: parseFloat(elev),
-      note: `Спостереження на широті ${Math.abs(currentLatitudeDeg).toFixed(1)}° (${currentLatitudeDeg >= 0 ? 'Пн' : 'Пд'})`
+      note: `${t('obsNotePrefix')} ${Math.abs(currentLatitudeDeg).toFixed(1)}° (${currentLatitudeDeg >= 0 ? t('northHemisphere') : t('southHemisphere')})`
     };
 
     try {
       await saveObservation(data);
-      saveObsBtn.textContent = '✓ Збережено!';
+      saveObsBtn.textContent = t('savedNotice');
       setTimeout(() => {
-        saveObsBtn.textContent = '💾 Зафіксувати в базі';
+        saveObsBtn.textContent = t('saveObsBtn');
       }, 1500);
       loadJournalData();
     } catch (err) {
@@ -1017,7 +1128,7 @@ function initApp() {
   });
 
   clearDbBtn?.addEventListener('click', async () => {
-    if (confirm('Очистити всі збережені астрономічні спостереження з локальної бази даних?')) {
+    if (confirm(t('journalConfirmClear'))) {
       await clearAllObservations();
       loadJournalData();
     }
@@ -1042,7 +1153,7 @@ function initApp() {
       journalTableBody.innerHTML = `
         <tr>
           <td colspan="6" style="text-align:center; padding:24px; color:var(--muted);">
-            Немає збережених спостережень. Натисніть «💾 Зафіксувати в базі», щоб зберегти поточний стан Місяця та Землі.
+            ${t('journalEmpty')}
           </td>
         </tr>
       `;
@@ -1054,10 +1165,10 @@ function initApp() {
         <td style="padding:8px 10px; font-size:12px; color:var(--muted);">${item.dateStr || '—'}</td>
         <td style="padding:8px 10px; font-weight:600; color:var(--accent);">${item.phaseName}</td>
         <td style="padding:8px 10px;">${item.illumination}%</td>
-        <td style="padding:8px 10px;">День ${item.dayValue}</td>
+        <td style="padding:8px 10px;">${item.dayValue}</td>
         <td style="padding:8px 10px;">${item.latitude >= 0 ? '+' : ''}${item.latitude}° (${item.elevation > 0 ? '🟢 +' + item.elevation + '°' : '🔴 ' + item.elevation + '°'})</td>
         <td style="padding:8px 10px; text-align:right;">
-          <button class="btn btn-sm restore-btn" data-day="${item.dayValue}" data-lat="${item.latitude}" style="padding:3px 8px; font-size:11px; margin-right:4px;">Відкрити</button>
+          <button class="btn btn-sm restore-btn" data-day="${item.dayValue}" data-lat="${item.latitude}" style="padding:3px 8px; font-size:11px; margin-right:4px;">${t('journalRestoreBtn')}</button>
           <button class="btn btn-sm delete-btn" data-id="${item.id}" style="padding:3px 8px; font-size:11px; color:#f87171; border-color:#5c2424;">✕</button>
         </td>
       </tr>
@@ -1085,6 +1196,22 @@ function initApp() {
       });
     });
   }
+
+  // Language switcher event listeners
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const lang = e.currentTarget.getAttribute('data-lang');
+      MoonI18n.setLanguage(lang);
+    });
+  });
+
+  global.onLanguageChanged = function() {
+    updateSyncBtnText();
+    updatePlayBtnText();
+    updateLatitudeFromUI(currentLatitudeDeg);
+    updateScene();
+    loadJournalData();
+  };
 
   // Restore saved settings on startup
   async function restoreSettings() {
@@ -1142,4 +1269,3 @@ function initApp() {
 
   global.initMoonSimApp = initApp;
 })(typeof window !== 'undefined' ? window : this);
-

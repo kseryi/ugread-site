@@ -7,10 +7,13 @@
 
 import { state } from '../core/state.js';
 import { openSimulation } from '../core/simulations.js';
+import { renderSimulationCatalog } from '../core/simulationCatalog.js';
 
 export function renderInformaticsPanel(container) {
   container.innerHTML = `
-    <!-- Поле введення URL для відображення будь-якого сайту на дошці -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 1] Відобразити сайт на дошці за URL (Web Browser & закладки) -->
+    <!-- ===================================================================== -->
     <div class="module-card" style="border: 2px solid #3b82f6; background: #f0f7ff;">
       <div class="module-card-title" style="color: #1d4ed8;">
         <span>🌐 Відобразити сайт на дошці (URL)</span>
@@ -44,7 +47,7 @@ export function renderInformaticsPanel(container) {
       <div style="margin-top:10px;">
         <span style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Швидкі посилання:</span>
         <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
-          <button class="quick-url-btn" data-url="https://scratch.mit.edu/projects/editor/" style="padding:4px 8px; font-size:11px; background:white; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer; color:#1e40af; font-weight:600;">🐱 Scratch</button>
+          <button class="quick-url-btn" data-url="https://snap.berkeley.edu/snap/snap.html" style="padding:4px 8px; font-size:11px; background:white; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer; color:#1e40af; font-weight:600;">🐱 Snap!</button>
           <button class="quick-url-btn" data-url="https://code.org" style="padding:4px 8px; font-size:11px; background:white; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer; color:#1e40af; font-weight:600;">💻 Code.org</button>
           <button class="quick-url-btn" data-url="https://www.w3schools.com/html/tryit.asp?filename=tryhtml_default" style="padding:4px 8px; font-size:11px; background:white; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer; color:#1e40af; font-weight:600;">🌐 HTML Editor</button>
           <button class="quick-url-btn" data-url="https://e-olymp.com" style="padding:4px 8px; font-size:11px; background:white; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer; color:#1e40af; font-weight:600;">🏆 E-Olymp</button>
@@ -57,8 +60,11 @@ export function renderInformaticsPanel(container) {
         💡 <i>Примітка:</i> Деякі зовнішні веб-сервери (наприклад, окремі комерційні сайти) забороняють вбудовування у фрейм з міркувань безпеки (заголовок <code>X-Frame-Options: SAMEORIGIN</code>). Для таких ресурсів у верхній панелі з'являється кнопка <b>«↗️ Відкрити в новій вкладці»</b>.
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 1: Web Browser] ====== -->
 
-    <!-- Елементи алгоритмів та блок-схем -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 2] Блок-схеми алгоритмів (Flowcharts)                         -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🔄 Блок-схеми алгоритмів</span>
@@ -73,8 +79,11 @@ export function renderInformaticsPanel(container) {
         <button class="module-btn" data-flowchart="arrow">➔ Стрілка потоку</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 2: Блок-схеми] ====== -->
 
-    <!-- Комп'ютерна графіка & Кодування інформації -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 3] Двійковий та шістнадцятковий конвертер (Binary & Hex)       -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🔢 Двійковий & Шістнадцятковий конвертер</span>
@@ -94,8 +103,11 @@ export function renderInformaticsPanel(container) {
         <button id="btnInsertCodeToBoard" class="module-btn btn-accent" style="display:none; background:#2563eb; color:white;">➕ Додати код на дошку</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 3: Конвертер Bin/Hex] ====== -->
 
-    <!-- Комп'ютерні схеми та піктограми -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 4] Складові комп'ютера та мережі (Hardware / Networks)        -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🖥️ Складові комп'ютера & Мережі</span>
@@ -109,9 +121,30 @@ export function renderInformaticsPanel(container) {
         <button class="module-btn" data-cs-icon="user">👤 Користувач (Клієнт)</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 4: Складові ПК] ====== -->
+
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 5] Каталог симуляцій та онлайн-ресурсів з інформатики         -->
+    <!-- ===================================================================== -->
+    <div id="infoSimCatalogContainer"></div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 5: Каталог симуляцій] ====== -->
   `;
 
-  // Обробка форми завантаження сайту за URL
+  // ==========================================================================
+  // ⚙️ ОБРОБНИКИ ПОДІЙ (EVENT LISTENERS)
+  // ==========================================================================
+
+  // --------------------------------------------------------------------------
+  // [БЛОК 5 - Логіка] Ініціалізація каталогу симуляцій
+  // --------------------------------------------------------------------------
+  const simWrap = container.querySelector('#infoSimCatalogContainer');
+  if (simWrap) {
+    renderSimulationCatalog(simWrap, 'informatics');
+  }
+
+  // --------------------------------------------------------------------------
+  // [БЛОК 1 - Логіка] Завантаження сайту за введеним URL
+  // --------------------------------------------------------------------------
   const form = container.querySelector('#informaticsUrlForm');
   const inputUrl = container.querySelector('#informaticsSiteUrl');
 
@@ -138,7 +171,7 @@ export function renderInformaticsPanel(container) {
     });
   }
 
-  // Швидкі кнопки сайтів
+  // [БЛОК 1 - Логіка] Швидкі кнопки закладів популярних сайтів
   container.querySelectorAll('.quick-url-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const url = btn.dataset.url;
@@ -147,14 +180,18 @@ export function renderInformaticsPanel(container) {
     });
   });
 
-  // Блок-схеми
+  // --------------------------------------------------------------------------
+  // [БЛОК 2 - Логіка] Клік по кнопках блок-схем алгоритмів
+  // --------------------------------------------------------------------------
   container.querySelectorAll('[data-flowchart]').forEach(btn => {
     btn.addEventListener('click', () => {
       insertFlowchartBlock(btn.dataset.flowchart);
     });
   });
 
-  // Конвертер двійкового/HEX коду
+  // --------------------------------------------------------------------------
+  // [БЛОК 3 - Логіка] Конвертер тексту/чисел у двійковий та HEX код
+  // --------------------------------------------------------------------------
   const convertInput = container.querySelector('#infoConvertInput');
   const btnBin = container.querySelector('#btnConvertToBin');
   const btnHex = container.querySelector('#btnConvertToHex');
@@ -200,7 +237,9 @@ export function renderInformaticsPanel(container) {
     });
   }
 
-  // Піктограми інформатики
+  // --------------------------------------------------------------------------
+  // [БЛОК 4 - Логіка] Вставка піктограм складових ПК і мереж
+  // --------------------------------------------------------------------------
   container.querySelectorAll('[data-cs-icon]').forEach(btn => {
     btn.addEventListener('click', () => {
       insertCsIcon(btn.dataset.csIcon);
@@ -208,6 +247,13 @@ export function renderInformaticsPanel(container) {
   });
 }
 
+// ============================================================================
+// 🛠️ ДОПОМІЖНІ ФУНКЦІЇ ДЛЯ СТВОРЕННЯ ВЕКТОРНИХ ОБ'ЄКТІВ НА ДОШЦІ
+// ============================================================================
+
+/**
+ * [БЛОК 2 - Функція] Вставка елемента блок-схеми (початок, процес, умова, введення, стрілка, цикл)
+ */
 function insertFlowchartBlock(type) {
   const drawingLayer = document.getElementById('drawingLayer');
   if (!drawingLayer) return;
@@ -336,6 +382,9 @@ function insertFlowchartBlock(type) {
   drawingLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 3 - Функція] Вставка тексту результату конвертації коду (двійкового/HEX) на дошку
+ */
 function insertTextToBoard(textString) {
   const drawingLayer = document.getElementById('drawingLayer');
   if (!drawingLayer) return;
@@ -366,6 +415,9 @@ function insertTextToBoard(textString) {
   drawingLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 4 - Функція] Вставка піктограм комп'ютерних пристроїв та мереж
+ */
 function insertCsIcon(type) {
   const drawingLayer = document.getElementById('drawingLayer');
   if (!drawingLayer) return;

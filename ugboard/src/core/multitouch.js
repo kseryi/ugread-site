@@ -4,6 +4,8 @@
  */
 
 import { state, getCurrentSlide, events } from './state.js';
+import { findShapeAtPoint } from './board.js';
+import { startRasterStroke, moveRasterStroke, endRasterStroke, restoreRasterSnapshot, getRasterSnapshot } from './rasterEngine.js';
 
 // Map of active pointer tracks: pointerId -> TrackObject
 const activePointers = new Map();
@@ -13,17 +15,17 @@ const laserTrails = [];
 
 export function initMultiTouchEngine(svgElement) {
   svgElement.addEventListener('pointerdown', handlePointerDown);
-  svgElement.addEventListener('pointermove', handlePointerMove);
-  svgElement.addEventListener('pointerup', handlePointerUp);
-  svgElement.addEventListener('pointercancel', handlePointerCancel);
-  svgElement.addEventListener('pointerleave', handlePointerUp);
+  window.addEventListener('pointermove', handlePointerMove, { passive: false });
+  window.addEventListener('pointerup', handlePointerUp);
+  window.addEventListener('pointercancel', handlePointerCancel);
 }
 
 /**
  * Перетворює координати події у координати viewBox полотна з урахуванням Zoom та Pan
  */
 export function getBoardPoint(evt, svgElement) {
-  const rect = svgElement.getBoundingClientRect();
+  const targetSvg = svgElement || document.getElementById('boardSvg');
+  const rect = targetSvg ? targetSvg.getBoundingClientRect() : { left: 0, top: 0 };
   const clientX = evt.clientX;
   const clientY = evt.clientY;
 
@@ -35,15 +37,27 @@ export function getBoardPoint(evt, svgElement) {
 }
 
 function handlePointerDown(e) {
-  // Ігноруємо кліки по шару виділення, маркерах, плаваючих панелях, інструментах
-  // та по фігурах на дошці для вибору та редагування (якщо це не гумка)
+  const svg = document.getElementById('boardSvg');
+  const pt = getBoardPoint(e, svg);
+
+  // 1. Якщо активний інструмент вибору, або клікнуто по маркерах/панелі/віджетах
   if (
     state.tool === 'select' ||
     e.target.closest('#selectionLayer') ||
     e.target.closest('.floating-shape-toolbar') ||
-    e.target.closest('.instrument-widget') ||
-    (state.tool !== 'eraser' && e.target.closest('#drawingLayer > *'))
+    e.target.closest('.instrument-widget')
   ) {
+    return;
+  }
+
+  try {
+    svg?.setPointerCapture(e.pointerId);
+  } catch (_) {}
+
+  // 2. Растровий режим (R) — малювання, пензлі, аерограф, піксельна гумка, заливка, піпетка, растрові фігури
+  if (state.drawMode === 'raster' && ['pencil', 'brush', 'highlighter', 'spray', 'eraser', 'bucket', 'eyedropper', 'shape', 'raster_shape'].includes(state.tool)) {
+    startRasterStroke(pt);
+    activePointers.set(e.pointerId, { id: e.pointerId, isRaster: true, tool: state.tool });
     return;
   }
 
@@ -52,8 +66,6 @@ function handlePointerDown(e) {
     return;
   }
 
-  const svg = document.getElementById('boardSvg');
-  const pt = getBoardPoint(e, svg);
   const pointerId = e.pointerId;
 
   // Створюємо трек для цього пальця/стилуса
@@ -110,6 +122,11 @@ function handlePointerMove(e) {
   const svg = document.getElementById('boardSvg');
   const pt = getBoardPoint(e, svg);
 
+  if (track.isRaster) {
+    moveRasterStroke(pt);
+    return;
+  }
+
   track.points.push(pt);
 
   if (track.tool === 'pencil' || track.tool === 'highlighter') {
@@ -142,6 +159,11 @@ function handlePointerUp(e) {
   const track = activePointers.get(pointerId);
   activePointers.delete(pointerId);
 
+  if (track.isRaster) {
+    endRasterStroke();
+    return;
+  }
+
   const drawLayer = document.getElementById('drawingLayer');
 
   if (track.tool === 'pencil' || track.tool === 'highlighter' || track.tool === 'calligraphy') {
@@ -165,15 +187,20 @@ function handlePointerUp(e) {
     track.previewEl.remove();
     const finalShape = createFinalShape(track, track.points[track.points.length - 1]);
     if (finalShape) {
+      finalShape.setAttribute('data-shape', track.shape);
       drawLayer.appendChild(finalShape);
       registerUndoAction('add', finalShape);
 
-      // Миттєвий вибір створеної фігури (зміна розміру, поворот, колір, заливка, видалення)
-      import('./board.js').then(m => {
-        if (m.selectObject) {
-          m.selectObject(finalShape);
-        }
-      });
+      // Для синтаксичного розбору речень (підкреслення) виділення та верхню плаваючу панель НЕ відкриваємо
+      const isSyntaxShape = track.shape && (track.shape.startsWith('syntax_') || track.shape.includes('syntax'));
+      if (!isSyntaxShape) {
+        // Миттєвий вибір створеної звичайної геометричної фігури
+        import('./board.js').then(m => {
+          if (m.selectObject) {
+            m.selectObject(finalShape);
+          }
+        });
+      }
     }
   } else if (track.tool === 'laser') {
     if (track.element) track.element.remove();
@@ -375,6 +402,7 @@ function createShapePreview(track, pt) {
   }
 
   applyStrokeStyles(el, track);
+  el.setAttribute('data-shape', shape);
   if (track.fillEnabled && !['line','arrow','double_arrow','wavy_line','double_line','dash_dot_line','dashed_line','syntax_subject','syntax_predicate','syntax_attribute','syntax_object','syntax_adverbial'].includes(shape)) {
     el.setAttribute('fill', track.fillColor);
   }
@@ -609,15 +637,29 @@ export function registerUndoAction(type, element) {
 
 export function undo() {
   const slide = getCurrentSlide();
-  if (slide.undoStack.length === 0) return;
+  if (!slide || slide.undoStack.length === 0) return;
 
   const action = slide.undoStack.pop();
   if (action.type === 'add') {
     action.element.remove();
     slide.redoStack.push(action);
   } else if (action.type === 'remove') {
-    const layer = document.getElementById('drawingLayer');
+    const layer = action.parent || document.getElementById('drawingLayer');
     if (layer) layer.appendChild(action.element);
+    slide.redoStack.push(action);
+  } else if (action.type === 'batch_remove') {
+    if (action.items && Array.isArray(action.items)) {
+      action.items.forEach(item => {
+        const p = item.parent || document.getElementById('drawingLayer');
+        if (p && item.element) p.appendChild(item.element);
+      });
+    }
+    if (action.rasterBefore) {
+      restoreRasterSnapshot(action.rasterBefore);
+    }
+    slide.redoStack.push(action);
+  } else if (action.type === 'raster_snapshot') {
+    restoreRasterSnapshot(action.before);
     slide.redoStack.push(action);
   }
   updateUndoRedoButtons();
@@ -625,25 +667,40 @@ export function undo() {
 
 export function redo() {
   const slide = getCurrentSlide();
-  if (slide.redoStack.length === 0) return;
+  if (!slide || slide.redoStack.length === 0) return;
 
   const action = slide.redoStack.pop();
   if (action.type === 'add') {
-    const layer = document.getElementById('drawingLayer');
+    const layer = action.parent || document.getElementById('drawingLayer');
     if (layer) layer.appendChild(action.element);
     slide.undoStack.push(action);
   } else if (action.type === 'remove') {
     action.element.remove();
+    slide.undoStack.push(action);
+  } else if (action.type === 'batch_remove') {
+    if (action.items && Array.isArray(action.items)) {
+      action.items.forEach(item => {
+        if (item.element) item.element.remove();
+      });
+    }
+    import('./rasterEngine.js').then(m => {
+      if (m.clearRasterCanvas) m.clearRasterCanvas();
+    });
+    slide.undoStack.push(action);
+  } else if (action.type === 'raster_snapshot') {
+    restoreRasterSnapshot(action.after);
     slide.undoStack.push(action);
   }
   updateUndoRedoButtons();
 }
 
 /**
- * Миттєве та надійне очищення дошки з підтримкою скасування (Ctrl+Z)
+ * Миттєве та надійне очищення всієї активної дошки (фігури, картки, малюнки, фон)
+ * з підтримкою скасування (Ctrl+Z / Undo)
  */
 export function clearBoard() {
   const drawLayer = document.getElementById('drawingLayer');
+  const bgLayer = document.getElementById('backgroundLayer');
   const activeLayer = document.getElementById('activeStrokesLayer');
   const selLayer = document.getElementById('selectionLayer');
 
@@ -655,15 +712,42 @@ export function clearBoard() {
     if (m.deselectObject) m.deselectObject();
   });
 
+  const removedItems = [];
+
+  // Очищаємо всі елементи з шару малювання
   if (drawLayer) {
     const elements = Array.from(drawLayer.children);
-    if (elements.length > 0) {
-      elements.forEach(el => {
-        registerUndoAction('remove', el);
-        el.remove();
-      });
-    }
+    elements.forEach(el => {
+      removedItems.push({ element: el, parent: drawLayer });
+      el.remove();
+    });
   }
+
+  // Очищаємо всі елементи з фонового шару (картки вправ, завантажені сторінки)
+  if (bgLayer) {
+    const bgElements = Array.from(bgLayer.children);
+    bgElements.forEach(el => {
+      removedItems.push({ element: el, parent: bgLayer });
+      el.remove();
+    });
+    bgLayer.innerHTML = '';
+  }
+
+  // Отримуємо знімок растрового полотна перед очищенням
+  const rasterBefore = getRasterSnapshot();
+
+  // Реєструємо єдину пакетну дію в Undo стеку
+  if (removedItems.length > 0 || rasterBefore) {
+    const slide = getCurrentSlide();
+    slide.undoStack.push({ type: 'batch_remove', items: removedItems, rasterBefore });
+    slide.redoStack = [];
+    updateUndoRedoButtons();
+  }
+
+  // Очищаємо растрове полотно
+  import('./rasterEngine.js').then(m => {
+    if (m.clearRasterCanvas) m.clearRasterCanvas();
+  });
 
   const slide = getCurrentSlide();
   if (slide) {

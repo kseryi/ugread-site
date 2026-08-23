@@ -8,10 +8,13 @@
 
 import { state, setRuling } from '../core/state.js';
 import { insertTextBox } from '../core/board.js';
+import { renderSimulationCatalog } from '../core/simulationCatalog.js';
 
 export function renderPrimarySchoolPanel(container) {
   container.innerHTML = `
-    <!-- Каліграфічні зразки літер -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 1] Каліграфічні зразки літер (Абетка МОН та коса лінія)       -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>✍️ Каліграфія (Абетка МОН)</span>
@@ -26,8 +29,11 @@ export function renderPrimarySchoolPanel(container) {
           .join('')}
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 1: Каліграфія] ====== -->
 
-    <!-- Звуковий аналіз слів -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 2] Звуковий аналіз слів (Голосний, твердий, м'який приголосний)-->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🔊 Звуковий аналіз слів</span>
@@ -51,8 +57,11 @@ export function renderPrimarySchoolPanel(container) {
         <span style="color:#16a34a; font-weight:bold;">М'який</span>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 2: Звуковий аналіз] ====== -->
 
-    <!-- Інтерактивна рахівниця / Абак -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 3] Інтерактивна шкільна рахівниця (Абак)                      -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🧮 Шкільна рахівниця (Абак)</span>
@@ -75,8 +84,11 @@ export function renderPrimarySchoolPanel(container) {
         <button id="btnAddAbacusToBoard" class="module-btn" style="width:100%; margin-top:8px;">➕ Додати рахівницю на дошку</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 3: Рахівниця] ====== -->
 
-    <!-- Лічильні палички -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 4] Лічильні палички та математичні знаки                      -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🥢 Лічильні палички</span>
@@ -88,9 +100,30 @@ export function renderPrimarySchoolPanel(container) {
         <button class="module-btn" id="addMathSigns">➕ ➖ ✖ ➗ 🟰</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 4: Лічильні палички] ====== -->
+
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 5] Каталог інтерактивних симуляцій для початкової школи       -->
+    <!-- ===================================================================== -->
+    <div id="primarySimCatalogContainer"></div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 5: Симуляції початкової школи] ====== -->
   `;
 
-  // Обробники подій каліграфії
+  // ==========================================================================
+  // ⚙️ ОБРОБНИКИ ПОДІЙ (EVENT LISTENERS)
+  // ==========================================================================
+
+  // --------------------------------------------------------------------------
+  // [БЛОК 5 - Логіка] Ініціалізація каталогу симуляцій для початкової школи
+  // --------------------------------------------------------------------------
+  const simWrap = container.querySelector('#primarySimCatalogContainer');
+  if (simWrap) {
+    renderSimulationCatalog(simWrap, 'primary');
+  }
+
+  // --------------------------------------------------------------------------
+  // [БЛОК 1 - Логіка] Обробники подій каліграфії та сітки в косу лінію
+  // --------------------------------------------------------------------------
   container.querySelectorAll('.calligraphy-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const letter = btn.dataset.letter;
@@ -107,7 +140,9 @@ export function renderPrimarySchoolPanel(container) {
     });
   }
 
-  // Обробники звукових схем
+  // --------------------------------------------------------------------------
+  // [БЛОК 2 - Логіка] Обробники звукових схем
+  // --------------------------------------------------------------------------
   container.querySelectorAll('.sound-chip').forEach(btn => {
     btn.addEventListener('click', () => {
       const type = btn.dataset.sound;
@@ -115,7 +150,9 @@ export function renderPrimarySchoolPanel(container) {
     });
   });
 
-  // Лічильні палички
+  // --------------------------------------------------------------------------
+  // [БЛОК 4 - Логіка] Лічильні палички та знаки
+  // --------------------------------------------------------------------------
   const add1 = container.querySelector('#addStick1');
   const add5 = container.querySelector('#addStick5');
   const add10 = container.querySelector('#addStick10');
@@ -127,6 +164,13 @@ export function renderPrimarySchoolPanel(container) {
   if (addSigns) addSigns.addEventListener('click', insertMathSigns);
 }
 
+// ============================================================================
+// 🛠️ ДОПОМІЖНІ ФУНКЦІЇ ДЛЯ ПОЧАТКОВОЇ ШКОЛИ
+// ============================================================================
+
+/**
+ * [БЛОК 1 - Функція] Вставка рукописного зразка літери МОН на дошку
+ */
 function insertCalligraphySample(letterPair) {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -146,6 +190,9 @@ function insertCalligraphySample(letterPair) {
   drawLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 2 - Функція] Вставка фішки звукового аналізу слів
+ */
 function insertSoundScheme(type) {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -207,6 +254,9 @@ function insertSoundScheme(type) {
   drawLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 4 - Функція] Вставка лічильних паличок на дошку
+ */
 function insertSticks(count) {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -228,6 +278,9 @@ function insertSticks(count) {
   drawLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 4 - Функція] Вставка математичних знаків для початкової школи
+ */
 function insertMathSigns() {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');

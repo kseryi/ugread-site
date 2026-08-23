@@ -356,6 +356,19 @@ html, body {
   box-shadow: 0 3px 8px rgba(37, 99, 235, 0.35);
 }
 
+.btn-icon-sm.btn-delete-slide {
+  color: #dc2626;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.btn-icon-sm.btn-delete-slide:hover {
+  background: #fee2e2;
+  color: #991b1b;
+  transform: scale(1.08);
+}
+
 /* Multitouch Active Pill Chip */
 .btn-chip {
   display: flex;
@@ -405,7 +418,7 @@ html, body {
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 4px);
   right: 0;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(16px);
@@ -413,12 +426,24 @@ html, body {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
-  min-width: 250px;
+  min-width: 270px;
   display: none;
   flex-direction: column;
   padding: 6px;
-  z-index: 200;
+  z-index: 1000;
   animation: fadeInDown 0.15s ease-out;
+}
+
+/* Invisible bridge so cursor moving down from button to dropdown never loses hover */
+.dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background: transparent;
+  pointer-events: auto;
 }
 
 @keyframes fadeInDown {
@@ -427,15 +452,16 @@ html, body {
 }
 
 .dropdown-wrap:hover .dropdown-menu,
-.dropdown-wrap.open .dropdown-menu {
-  display: flex;
+.dropdown-wrap.open .dropdown-menu,
+.dropdown-menu.show {
+  display: flex !important;
 }
 
 .dropdown-item {
   background: none;
   border: none;
   text-align: left;
-  padding: 9px 12px;
+  padding: 10px 14px;
   font-size: 0.85rem;
   font-weight: 500;
   border-radius: var(--radius-sm);
@@ -443,13 +469,15 @@ html, body {
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   transition: all var(--transition-fast);
+  width: 100%;
 }
 
 .dropdown-item:hover {
-  background: var(--bg-tertiary);
+  background: var(--primary-light);
   color: var(--primary);
+  font-weight: 600;
 }
 
 .dropdown-divider {
@@ -460,6 +488,50 @@ html, body {
 
 .file-label {
   cursor: pointer;
+}
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast-notification {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: toastSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: auto;
+}
+
+.toast-notification.toast-success {
+  background: #065f46;
+  border: 1px solid #10b981;
+}
+
+.toast-notification.toast-error {
+  background: #991b1b;
+  border: 1px solid #ef4444;
+}
+
+@keyframes toastSlideUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* =========================================================
@@ -527,6 +599,94 @@ html, body {
   position: relative;
   transition: all var(--transition-fast);
   box-shadow: var(--shadow-xs);
+}
+
+/* Vector / Raster Segmented Toggle Switch */
+.mode-switch-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 4px;
+}
+
+.mode-switch-label {
+  font-size: 8.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.mode-toggle-switch {
+  position: relative;
+  display: flex;
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 18px;
+  padding: 2px;
+  width: 52px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  user-select: none;
+  cursor: pointer;
+}
+
+.mode-toggle-btn {
+  flex: 1;
+  position: relative;
+  z-index: 2;
+  border: none;
+  background: transparent;
+  padding: 3px 0;
+  font-size: 8px;
+  font-weight: 800;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.mode-toggle-btn .mode-icon {
+  font-size: 11px;
+  line-height: 1.1;
+}
+
+.mode-toggle-btn .mode-text {
+  font-size: 7.5px;
+  letter-spacing: -0.02em;
+}
+
+.mode-toggle-btn.active {
+  color: #1d4ed8;
+}
+
+.mode-toggle-btn.mode-raster-btn.active {
+  color: #b45309;
+}
+
+.mode-toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(50% - 2px);
+  height: calc(100% - 4px);
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 1.5px 4px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+  z-index: 1;
+}
+
+.mode-toggle-switch.is-raster .mode-toggle-slider {
+  transform: translateX(100%);
+  background: #fef08a;
 }
 
 .tool-btn svg {
@@ -787,6 +947,44 @@ html, body {
   position: relative;
   overflow: hidden;
   background: #ffffff;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Фоновий шар зошитів, сіток та лініювання (SVG) */
+.board-bg-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 18;
+  pointer-events: none;
+  touch-action: none;
+}
+
+/* Растровий шар високої чіткості - розміщений поверх векторного шару (z-index: 30) */
+.raster-canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4000px;
+  height: 3000px;
+  pointer-events: none;
+  z-index: 30;
+  transform-origin: 0 0;
+  touch-action: none;
+}
+
+#rasterCanvas {
+  display: block;
+  width: 4000px;
+  height: 3000px;
+  background: transparent;
+  touch-action: none;
 }
 
 .board-svg {
@@ -799,32 +997,99 @@ html, body {
   cursor: crosshair;
   background-color: transparent;
   z-index: 25;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.board-svg.tool-pencil,
+.board-svg.tool-highlighter,
+.board-svg.tool-brush,
+.board-svg.tool-spray,
+.board-svg.tool-calligraphy,
+.board-svg.tool-eraser {
+  cursor: crosshair;
 }
 
 .board-svg.tool-select {
   cursor: default;
 }
 
-.board-svg.tool-eraser {
-  cursor: cell;
-}
-
 .board-svg.tool-laser {
   cursor: none;
 }
 
-/* Шар фігур та малюнків з інтерактивним наведенням та підсвічуванням */
+/* ІНТЕРАКТИВНЕ КІЛЬЦЕ-КУРСОР РОЗМІРУ ПЕРА ТА ГУМКИ (ВЕКТОР + РАСТР) */
+.brush-cursor-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 999;
+  border-radius: 50%;
+  box-sizing: border-box;
+  opacity: 0;
+  transition: width 0.04s ease-out, height 0.04s ease-out, opacity 0.12s ease-out, border-color 0.12s ease-out, background-color 0.12s ease-out;
+  will-change: transform, width, height;
+}
+
+.brush-cursor-ring::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+.brush-cursor-ring.cursor-eraser::after {
+  background: #ef4444;
+  width: 4px;
+  height: 4px;
+}
+
+.brush-size-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.85);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-main, sans-serif);
+  opacity: 0;
+  transition: opacity 0.18s ease-out;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+}
+
+/* Шар фігур та малюнків з інтерактивним наведенням та підсвічуванням ТІЛЬКИ в режимі вибору (tool-select) */
 #drawingLayer > * {
-  pointer-events: all;
-  cursor: pointer;
+  pointer-events: none;
   transition: filter 0.12s ease-out;
 }
 
-#drawingLayer > *:hover:not(.selected-element) {
+.board-svg.tool-select #drawingLayer > * {
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.board-svg.tool-select #drawingLayer > *:hover:not(.selected-element) {
   filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.85)) drop-shadow(0 0 1px rgba(37, 99, 235, 0.5));
 }
 
 #drawingLayer > *.selected-element {
+  pointer-events: all;
   cursor: move;
 }
 
@@ -1498,23 +1763,64 @@ html, body {
 }
 
 .sel-rotate-knob {
-  transition: transform 0.1s;
+  cursor: grab;
 }
 
-.sel-rotate-knob:hover {
-  transform: scale(1.15);
+.sel-rotate-knob circle:hover {
+  fill: #1d4ed8;
+  stroke: #dbeafe;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments for Tablets, Mobile & Interactive Displays */
+@media (max-width: 1200px) {
+  :root {
+    --sidebar-right-width: 320px;
+  }
+  .sidebar-right {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    z-index: 90;
+    box-shadow: -4px 0 20px rgba(15, 23, 42, 0.15);
+  }
+  .topbar {
+    padding: 0 10px;
+    gap: 8px;
+  }
+  .ruling-scale-box {
+    display: none;
+  }
+}
+
 @media (max-width: 1024px) {
   :root {
     --sidebar-right-width: 300px;
+    --toolbar-left-width: 60px;
+  }
+  .tool-btn {
+    width: 42px;
+    height: 42px;
+  }
+  .topbar {
+    gap: 6px;
+  }
+  .brand-sub {
+    display: none;
+  }
+  .chip-text {
+    display: none;
+  }
+  .btn-chip {
+    padding: 6px 8px;
   }
 }
 
 @media (max-width: 768px) {
   .topbar {
-    padding: 0 8px;
+    padding: 0 6px;
+    gap: 4px;
   }
   .brand-text {
     display: none;
@@ -1525,7 +1831,78 @@ html, body {
   .sidebar-right {
     position: absolute;
     right: 0;
+    top: 0;
+    bottom: 0;
     height: 100%;
-    width: 320px;
+    width: min(320px, 90vw);
+    z-index: 95;
+  }
+  .toolbar-left {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    z-index: 85;
   }
 }
+
+/* =========================================================
+   PRINT STYLESHEET (DRUKUVATY / PRINT)
+   ========================================================= */
+@page {
+  size: landscape;
+  margin: 0;
+}
+
+@media print {
+  html, body, .app-root {
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .topbar,
+  .toolbar-left,
+  .sidebar-right,
+  .canvas-zoom-hud,
+  .fab-fullscreen-btn,
+  .screen-instruments-overlay,
+  .toast-container,
+  .cursor-ring,
+  .laser-dot,
+  .selection-box,
+  .floating-quick-toolbar,
+  #simControlBar {
+    display: none !important;
+  }
+
+  .workspace {
+    height: 100vh !important;
+    width: 100vw !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .board-container {
+    width: 100vw !important;
+    height: 100vh !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+
+  .board-svg {
+    width: 100vw !important;
+    height: 100vh !important;
+  }
+
+  .raster-canvas-container {
+    display: block !important;
+  }
+}
+

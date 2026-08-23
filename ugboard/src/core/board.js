@@ -54,9 +54,21 @@ export function initBoardViewport() {
 
 export function applyViewTransform() {
   const vp = document.getElementById('viewportGroup');
-  if (!vp) return;
+  const bgVp = document.getElementById('bgViewportGroup');
   const { scale, tx, ty } = state.view;
-  vp.setAttribute('transform', `translate(${tx.toFixed(1)} ${ty.toFixed(1)}) scale(${scale.toFixed(3)})`);
+
+  if (vp) {
+    vp.setAttribute('transform', `translate(${tx.toFixed(1)} ${ty.toFixed(1)}) scale(${scale.toFixed(3)})`);
+  }
+  if (bgVp) {
+    bgVp.setAttribute('transform', `translate(${tx.toFixed(1)} ${ty.toFixed(1)}) scale(${scale.toFixed(3)})`);
+  }
+
+  import('./rasterEngine.js').then(m => {
+    if (m.syncRasterViewTransform) m.syncRasterViewTransform();
+  });
+
+  events.emit('view:transform', state.view);
 
   const hudVal = document.getElementById('hudZoomValue');
   if (hudVal) {
@@ -106,6 +118,32 @@ function handleWheel(e) {
   }
 }
 
+export function findShapeAtPoint(pt, target = null) {
+  if (target) {
+    const direct = target.closest('#drawingLayer > *');
+    if (direct) return direct;
+  }
+
+  const drawLayer = document.getElementById('drawingLayer');
+  if (!drawLayer) return null;
+
+  const children = Array.from(drawLayer.children);
+  for (let i = children.length - 1; i >= 0; i--) {
+    const el = children[i];
+    const { x0, y0, width, height, tx, ty } = getElementTransformData(el);
+    const pad = 14;
+    const minX = x0 + tx - pad;
+    const maxX = x0 + width + tx + pad;
+    const minY = y0 + ty - pad;
+    const maxY = y0 + height + ty + pad;
+
+    if (pt.x >= minX && pt.x <= maxX && pt.y >= minY && pt.y <= maxY) {
+      return el;
+    }
+  }
+  return null;
+}
+
 function handleBoardPointerDown(e) {
   // Панорамування (середня кнопка миші або пробіл)
   if (e.button === 1 || e.spaceKey) {
@@ -123,8 +161,8 @@ function handleBoardPointerDown(e) {
     return;
   }
 
-  // Якщо активний інструмент "Гумка" — дозволяємо стирання без вибору
-  if (state.tool === 'eraser') {
+  // Якщо активний інструмент "Гумка" у векторному режимі — стираємо векторний об'єкт
+  if (state.tool === 'eraser' && state.drawMode === 'vector') {
     return;
   }
 
@@ -163,8 +201,6 @@ function handleBoardPointerDown(e) {
 
   // 3. Клік на вже виділений об'єкт або його рамку виділення (перетягування)
   const selGroup = e.target.closest('#activeSelectionGroup');
-  const drawItem = e.target.closest('#drawingLayer > *');
-
   if (selGroup && selectedElement) {
     e.stopPropagation();
     isDraggingElement = true;
@@ -175,22 +211,25 @@ function handleBoardPointerDown(e) {
     return;
   }
 
-  // 4. Клік на будь-який інший об'єкт на дошці — миттєвий вибір та поява маркерів редагування
-  if (drawItem) {
-    e.stopPropagation();
-    if (selectedElement !== drawItem) {
-      selectObject(drawItem);
+  // 4. Пошук фігури за точкою кліку (Hit-Test) — ТІЛЬКИ в режимі вибору (state.tool === 'select')
+  if (state.tool === 'select') {
+    const hitShape = findShapeAtPoint(pt, e.target);
+    if (hitShape) {
+      e.stopPropagation();
+      if (selectedElement !== hitShape) {
+        selectObject(hitShape);
+      }
+      isDraggingElement = true;
+      transformStartPt = { x: pt.x, y: pt.y };
+      const { tx, ty } = getElementTransformData(selectedElement);
+      transformInitialState = { tx, ty };
+      hideFloatingToolbar();
+      return;
     }
-    isDraggingElement = true;
-    transformStartPt = { x: pt.x, y: pt.y };
-    const { tx, ty } = getElementTransformData(selectedElement);
-    transformInitialState = { tx, ty };
-    hideFloatingToolbar();
-    return;
   }
 
-  // 5. Клік на порожнє місце полотна (скидання виділення, якщо активний режим Select)
-  if (state.tool === 'select') {
+  // 5. Клік на порожнє місце полотна (скидання виділення)
+  if (state.tool === 'select' || selectedElement) {
     deselectObject();
   }
 }
@@ -222,7 +261,6 @@ function handleBoardPointerMove(e) {
 
     selectedElement.dataset.rot = newRot.toString();
     applyElementTransform(selectedElement);
-    if (selGroup) applyElementTransform(selGroup);
     return;
   }
 
@@ -238,7 +276,6 @@ function handleBoardPointerMove(e) {
     selectedElement.dataset.sx = newSx.toFixed(3);
     selectedElement.dataset.sy = newSy.toFixed(3);
     applyElementTransform(selectedElement);
-    if (selGroup) applyElementTransform(selGroup);
     return;
   }
 
@@ -252,7 +289,7 @@ function handleBoardPointerMove(e) {
     selectedElement.dataset.tx = newTx.toFixed(1);
     selectedElement.dataset.ty = newTy.toFixed(1);
     applyElementTransform(selectedElement);
-    if (selGroup) applyElementTransform(selGroup);
+    updateFloatingToolbarPosition();
     return;
   }
 }
@@ -267,30 +304,90 @@ function handleBoardPointerUp() {
 
   if (wasTransforming && selectedElement) {
     showFloatingToolbar();
+    updateFloatingToolbarPosition();
   }
 }
 
+function parseSvgTransform(transformStr) {
+  let tx = 0, ty = 0, rot = 0, sx = 1, sy = 1;
+  if (!transformStr) return { tx, ty, rot, sx, sy };
+
+  // 1. Matrix: matrix(a, b, c, d, e, f)
+  const matrixMatch = transformStr.match(/matrix\(\s*([-\d.eE]+)[,\s]+([-\d.eE]+)[,\s]+([-\d.eE]+)[,\s]+([-\d.eE]+)[,\s]+([-\d.eE]+)[,\s]+([-\d.eE]+)\s*\)/i);
+  if (matrixMatch) {
+    const a = parseFloat(matrixMatch[1]) || 1;
+    const b = parseFloat(matrixMatch[2]) || 0;
+    const c = parseFloat(matrixMatch[3]) || 0;
+    const d = parseFloat(matrixMatch[4]) || 1;
+    const e = parseFloat(matrixMatch[5]) || 0;
+    const f = parseFloat(matrixMatch[6]) || 0;
+
+    tx = e;
+    ty = f;
+    sx = Math.hypot(a, b);
+    sy = Math.hypot(c, d);
+    rot = Math.atan2(b, a) * (180 / Math.PI);
+    return { tx, ty, rot, sx, sy };
+  }
+
+  // 2. Translate: translate(x, y) or translate(x y) or translate(x)
+  const transMatch = transformStr.match(/translate\(\s*([-\d.eE]+)(?:[,\s]+([-\d.eE]+))?\s*\)/i);
+  if (transMatch) {
+    tx = parseFloat(transMatch[1]) || 0;
+    ty = parseFloat(transMatch[2]) || 0;
+  }
+
+  // 3. Rotate: rotate(deg)
+  const rotMatch = transformStr.match(/rotate\(\s*([-\d.eE]+)\s*\)/i);
+  if (rotMatch) {
+    rot = parseFloat(rotMatch[1]) || 0;
+  }
+
+  // 4. Scale: scale(sx, sy) or scale(s)
+  const scaleMatch = transformStr.match(/scale\(\s*([-\d.eE]+)(?:[,\s]+([-\d.eE]+))?\s*\)/i);
+  if (scaleMatch) {
+    sx = parseFloat(scaleMatch[1]) || 1;
+    sy = parseFloat(scaleMatch[2] || scaleMatch[1]) || 1;
+  }
+
+  return { tx, ty, rot, sx, sy };
+}
+
 /**
- * Ініціалізація локальних даних геометрії елемента
+ * Ініціалізація локальних даних геометрії елемента (з коректним вилученням початкових зсувів)
  */
-function initElementTransformData(el) {
-  if (!el.dataset.cx || !el.dataset.cy) {
+export function initElementTransformData(el) {
+  if (!el) return;
+  if (!el.dataset.cx || !el.dataset.cy || !el.dataset.x0) {
+    const oldTransform = el.getAttribute('transform') || '';
+    const { tx, ty, rot, sx, sy } = parseSvgTransform(oldTransform);
+
+    // Тимчасово видаляємо transform для отримання чистого локального BBox
+    el.removeAttribute('transform');
     try {
       const bbox = el.getBBox();
       el.dataset.x0 = bbox.x.toFixed(1);
       el.dataset.y0 = bbox.y.toFixed(1);
+      el.dataset.width = Math.max(12, bbox.width).toFixed(1);
+      el.dataset.height = Math.max(12, bbox.height).toFixed(1);
       el.dataset.cx = (bbox.x + bbox.width / 2).toFixed(1);
       el.dataset.cy = (bbox.y + bbox.height / 2).toFixed(1);
-      el.dataset.width = bbox.width.toFixed(1);
-      el.dataset.height = bbox.height.toFixed(1);
     } catch (e) {
       el.dataset.x0 = '0';
       el.dataset.y0 = '0';
-      el.dataset.cx = '50';
-      el.dataset.cy = '50';
       el.dataset.width = '100';
       el.dataset.height = '100';
+      el.dataset.cx = '50';
+      el.dataset.cy = '50';
     }
+
+    if (el.dataset.tx === undefined) el.dataset.tx = tx.toFixed(1);
+    if (el.dataset.ty === undefined) el.dataset.ty = ty.toFixed(1);
+    if (el.dataset.rot === undefined) el.dataset.rot = rot.toString();
+    if (el.dataset.sx === undefined) el.dataset.sx = sx.toFixed(3);
+    if (el.dataset.sy === undefined) el.dataset.sy = sy.toFixed(3);
+
+    applyElementTransform(el);
   }
 
   if (el.dataset.tx === undefined) el.dataset.tx = '0';
@@ -300,7 +397,7 @@ function initElementTransformData(el) {
   if (el.dataset.sy === undefined) el.dataset.sy = '1';
 }
 
-function getElementTransformData(el) {
+export function getElementTransformData(el) {
   initElementTransformData(el);
   return {
     x0: parseFloat(el.dataset.x0 || '0'),
@@ -317,12 +414,23 @@ function getElementTransformData(el) {
   };
 }
 
-function applyElementTransform(el) {
-  const { cx, cy, tx, ty, rot, sx, sy } = getElementTransformData(selectedElement || el);
+export function syncSelectionTransform() {
+  const selGroup = document.getElementById('activeSelectionGroup');
+  if (selGroup && selectedElement) {
+    selGroup.setAttribute('transform', selectedElement.getAttribute('transform') || '');
+  }
+}
+
+export function applyElementTransform(el) {
+  if (!el) return;
+  const { cx, cy, tx, ty, rot, sx, sy } = getElementTransformData(el);
   el.setAttribute(
     'transform',
     `translate(${tx} ${ty}) translate(${cx} ${cy}) rotate(${rot}) scale(${sx} ${sy}) translate(${-cx} ${-cy})`
   );
+  if (selectedElement === el) {
+    syncSelectionTransform();
+  }
 }
 
 /**
@@ -334,15 +442,6 @@ export function selectObject(el) {
   deselectObject();
   selectedElement = el;
   el.classList.add('selected-element');
-
-  // Активуємо інструмент "Вибір" на панелі
-  state.tool = 'select';
-  document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
-  const selectBtn = document.querySelector('.tool-btn[data-tool="select"]');
-  if (selectBtn) selectBtn.classList.add('active');
-
-  const svg = document.getElementById('boardSvg');
-  if (svg) svg.className = 'board-svg tool-select';
 
   createSelectionGroup();
   showFloatingToolbar();
@@ -397,38 +496,27 @@ function createSelectionGroup() {
   rotLine.setAttribute('x1', cx.toString());
   rotLine.setAttribute('y1', by.toString());
   rotLine.setAttribute('x2', cx.toString());
-  rotLine.setAttribute('y2', (by - 28).toString());
+  rotLine.setAttribute('y2', (by - 24).toString());
   rotLine.setAttribute('stroke', '#2563eb');
   rotLine.setAttribute('stroke-width', '1.5');
   rotLine.setAttribute('stroke-dasharray', '2 2');
   g.appendChild(rotLine);
 
-  // 3. Ручка повороту (🔄)
+  // 3. Ручка повороту (чистий кружечок)
   const rotGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   rotGroup.classList.add('sel-rotate-knob');
   rotGroup.style.cursor = 'grab';
 
   const rotCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   rotCircle.setAttribute('cx', cx.toString());
-  rotCircle.setAttribute('cy', (by - 28).toString());
-  rotCircle.setAttribute('r', '13');
+  rotCircle.setAttribute('cy', (by - 24).toString());
+  rotCircle.setAttribute('r', '7.5');
   rotCircle.setAttribute('fill', '#2563eb');
   rotCircle.setAttribute('stroke', '#ffffff');
   rotCircle.setAttribute('stroke-width', '2');
-  rotCircle.style.filter = 'drop-shadow(0 2px 5px rgba(0,0,0,0.3))';
-
-  const rotIcon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  rotIcon.setAttribute('x', cx.toString());
-  rotIcon.setAttribute('y', (by - 24).toString());
-  rotIcon.setAttribute('text-anchor', 'middle');
-  rotIcon.setAttribute('font-size', '12');
-  rotIcon.setAttribute('fill', '#ffffff');
-  rotIcon.style.userSelect = 'none';
-  rotIcon.style.pointerEvents = 'none';
-  rotIcon.textContent = '🔄';
+  rotCircle.style.filter = 'drop-shadow(0 1px 3px rgba(0,0,0,0.25))';
 
   rotGroup.appendChild(rotCircle);
-  rotGroup.appendChild(rotIcon);
   g.appendChild(rotGroup);
 
   // 4. Маркери масштабування (8 точок)
@@ -460,7 +548,7 @@ function createSelectionGroup() {
   });
 
   selLayer.appendChild(g);
-  applyElementTransform(g);
+  syncSelectionTransform();
 }
 
 /**
@@ -468,6 +556,14 @@ function createSelectionGroup() {
  */
 function showFloatingToolbar() {
   if (!selectedElement) return;
+
+  // Для ліній синтаксичного розбору властивості налаштовуються на правій панелі,
+  // тому плаваюча панель над реченнями не показується і не закриває текст та лінії
+  const shapeType = selectedElement.getAttribute('data-shape') || '';
+  if (shapeType.startsWith('syntax_')) {
+    hideFloatingToolbar();
+    return;
+  }
 
   let tb = document.getElementById('floatingShapeToolbar');
   if (!tb) {
@@ -521,9 +617,6 @@ function showFloatingToolbar() {
 
     <!-- Поворот 90° -->
     <button class="fl-btn" id="flRotate90Btn" title="Повернути на 90°">🔄 90°</button>
-
-    <!-- Дублювати -->
-    <button class="fl-btn" id="flDuplicateBtn" title="Дублювати фігуру">📋 Копія</button>
 
     <!-- Видалити -->
     <button class="fl-btn fl-btn-danger" id="flDeleteBtn" title="Видалити фігуру">🗑️</button>
@@ -706,8 +799,6 @@ export function rotateSelectedObject(deltaDeg) {
   const newRot = Math.round((rot + deltaDeg) % 360);
   selectedElement.dataset.rot = newRot.toString();
   applyElementTransform(selectedElement);
-  const selGroup = document.getElementById('activeSelectionGroup');
-  if (selGroup) applyElementTransform(selGroup);
   updateFloatingToolbarPosition();
 }
 

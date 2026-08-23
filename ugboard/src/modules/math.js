@@ -5,10 +5,19 @@
 
 import { state, setRuling } from '../core/state.js';
 import { openSimulation } from '../core/simulations.js';
+import { renderSimulationCatalog } from '../core/simulationCatalog.js';
 
 export function renderMathPanel(container) {
   container.innerHTML = `
-    <!-- Математичні інструменти -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 1] Каталог математичних симуляцій (Desmos, GeoGebra тощо)     -->
+    <!-- ===================================================================== -->
+    <div id="mathSimCatalogContainer"></div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 1: Симуляції математики] ====== -->
+
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 2] Інтерактивні геометричні інструменти (Лінійка, Транспортир) -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>📐 Геометричні Інструменти</span>
@@ -20,8 +29,11 @@ export function renderMathPanel(container) {
         <button class="module-btn" id="btnMathCompass">🧭 Циркуль</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 2: Інструменти] ====== -->
 
-    <!-- Просторові 3D та 2D фігури (Штампи) -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 3] Просторові 3D та 2D геометричні фігури (Штампи)           -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>📦 Геометричні тіла (3D/2D)</span>
@@ -35,8 +47,11 @@ export function renderMathPanel(container) {
         <button class="module-btn" data-geo="parallelogram">▱ Паралелограм</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 3: Фігури] ====== -->
 
-    <!-- Графіки функцій -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 4] Дослідження функцій & Графіки (Калькулятор f(x) та Декарт) -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>📈 Дослідження функцій</span>
@@ -48,8 +63,11 @@ export function renderMathPanel(container) {
         🎯 Увімкнути координатну сітку Декарта
       </button>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 4: Графіки функцій] ====== -->
 
-    <!-- Математичні формули та символи -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 5] Математичні символи та готові формули                     -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🔣 Символи & Формули</span>
@@ -60,9 +78,24 @@ export function renderMathPanel(container) {
           .join('')}
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 5: Символи] ====== -->
   `;
 
-  // Інструменти
+  // ==========================================================================
+  // ⚙️ ОБРОБНИКИ ПОДІЙ (EVENT LISTENERS)
+  // ==========================================================================
+
+  // --------------------------------------------------------------------------
+  // [БЛОК 1 - Логіка] Ініціалізація каталогу математичних симуляцій
+  // --------------------------------------------------------------------------
+  const simWrap = container.querySelector('#mathSimCatalogContainer');
+  if (simWrap) {
+    renderSimulationCatalog(simWrap, 'math');
+  }
+
+  // --------------------------------------------------------------------------
+  // [БЛОК 2 - Логіка] Клік по кнопках інтерактивних геометричних інструментів
+  // --------------------------------------------------------------------------
   const rBtn = container.querySelector('#btnMathRuler');
   const pBtn = container.querySelector('#btnMathProtractor');
   const tBtn = container.querySelector('#btnMathTriangle');
@@ -73,14 +106,18 @@ export function renderMathPanel(container) {
   if (tBtn) tBtn.addEventListener('click', () => import('../core/instruments.js').then(m => m.toggleInstrument('triangle')));
   if (cBtn) cBtn.addEventListener('click', () => import('../core/instruments.js').then(m => m.toggleInstrument('compass')));
 
-  // Фігури
+  // --------------------------------------------------------------------------
+  // [БЛОК 3 - Логіка] Клік по кнопках вставки геометричних тіл
+  // --------------------------------------------------------------------------
   container.querySelectorAll('[data-geo]').forEach(btn => {
     btn.addEventListener('click', () => {
       insertGeometricSolid(btn.dataset.geo);
     });
   });
 
-  // Плотер
+  // --------------------------------------------------------------------------
+  // [БЛОК 4 - Логіка] Відкриття плотера та перемикання сітки Декарта
+  // --------------------------------------------------------------------------
   const plotBtn = container.querySelector('#btnOpenGraphPlotter');
   if (plotBtn) {
     plotBtn.addEventListener('click', () => {
@@ -88,7 +125,6 @@ export function renderMathPanel(container) {
     });
   }
 
-  // Координатна сітка
   const gridBtn = container.querySelector('#btnApplyCartesianGrid');
   if (gridBtn) {
     gridBtn.addEventListener('click', () => {
@@ -98,7 +134,9 @@ export function renderMathPanel(container) {
     });
   }
 
-  // Символи
+  // --------------------------------------------------------------------------
+  // [БЛОК 5 - Логіка] Клік по кнопках математичних символів
+  // --------------------------------------------------------------------------
   container.querySelectorAll('.math-sym-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       insertMathSymbol(btn.dataset.sym);
@@ -106,6 +144,13 @@ export function renderMathPanel(container) {
   });
 }
 
+// ============================================================================
+// 🛠️ ДОПОМІЖНІ ФУНКЦІЇ ДЛЯ СТВОРЕННЯ МАТЕМАТИЧНИХ ОБ'ЄКТІВ НА ДОШЦІ
+// ============================================================================
+
+/**
+ * [БЛОК 3 - Функція] Вставка 3D/2D геометричного тіла на дошку
+ */
 function insertGeometricSolid(type) {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -173,6 +218,9 @@ function insertGeometricSolid(type) {
   drawLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 5 - Функція] Вставка математичного символу або формули у вигляді тексту
+ */
 function insertMathSymbol(sym) {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');

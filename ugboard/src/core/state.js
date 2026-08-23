@@ -53,6 +53,9 @@ export const state = {
   fillColor: '#60a5fa',
   opacity: 1.0,
 
+  // Режим малювання: 'vector' (Векторний - фігури, вибір, трансформації) або 'raster' (Растровий - піксельне малювання і піксельна гумка)
+  drawMode: 'vector',
+
   // Мультитач (одночасне письмо декількома пальцями / учнями)
   multitouch: true,
 
@@ -126,6 +129,11 @@ export function setFillEnabled(enabled) {
   events.emit('style:change', { fillEnabled: enabled });
 }
 
+export function setOpacity(opacity) {
+  state.opacity = opacity;
+  events.emit('style:change', { opacity });
+}
+
 export function setRuling(rulingType) {
   const slide = getCurrentSlide();
   slide.ruling = rulingType;
@@ -149,11 +157,35 @@ export function addSlide() {
   const newSlide = createDefaultSlide(newId);
   // Копіюємо налаштування розліновки з попереднього слайду для зручності вчителя
   const prev = getCurrentSlide();
-  newSlide.ruling = prev.ruling;
-  newSlide.rulingScale = prev.rulingScale;
+  if (prev) {
+    newSlide.ruling = prev.ruling;
+    newSlide.rulingScale = prev.rulingScale;
+    newSlide.marginMode = prev.marginMode || 'none';
+  }
   state.slides.push(newSlide);
   state.currentSlideIndex = state.slides.length - 1;
   events.emit('slide:change', { index: state.currentSlideIndex, total: state.slides.length });
+}
+
+export function deleteCurrentSlide() {
+  if (state.slides.length <= 1) {
+    // Якщо лише 1 сторінка — очищаємо її малюнки та скидаємо
+    const slide = state.slides[0];
+    slide.drawingsHtml = '';
+    slide.rasterData = null;
+    slide.undoStack = [];
+    slide.redoStack = [];
+    events.emit('slide:change', { index: 0, total: 1 });
+    return false; // Позначка що сторінку не видалено, а очищено
+  }
+
+  // Видаляємо поточну відкриту сторінку
+  state.slides.splice(state.currentSlideIndex, 1);
+  if (state.currentSlideIndex >= state.slides.length) {
+    state.currentSlideIndex = state.slides.length - 1;
+  }
+  events.emit('slide:change', { index: state.currentSlideIndex, total: state.slides.length });
+  return true; // Сторінку успішно видалено
 }
 
 export function switchSlide(index) {

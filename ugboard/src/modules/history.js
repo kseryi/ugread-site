@@ -1,14 +1,17 @@
 /**
  * UGREAD Whiteboard - History Module & Simulation Hub
- * Interactive Historical Timeline generator, artifacts, and simulation launcher
+ * Historical Timeline generator, Ukrainian heraldry/symbols, and historical simulations catalog
  */
 
 import { state } from '../core/state.js';
-import { openSimulation, BUILTIN_SIMULATIONS } from '../core/simulations.js';
+import { openSimulation } from '../core/simulations.js';
+import { renderSimulationCatalog } from '../core/simulationCatalog.js';
 
 export function renderHistoryPanel(container) {
   container.innerHTML = `
-    <!-- Історична Стрічка Часу (Timeline) -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 1] Історична Стрічка Часу (Timeline України та власні дати)    -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>⏳ Стрічка Часу (Timeline)</span>
@@ -20,11 +23,14 @@ export function renderHistoryPanel(container) {
         <button class="module-btn" id="btnTimelineCustom">➕ Додати власну дату</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 1: Стрічка часу] ====== -->
 
-    <!-- Історичні символи та клейноди -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 2] Історичні символи та клейноди (Тризуб, стяг, булава)       -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
-        <span>🏛️ Історичні Символи</span>
+        <span>🏛️ Історичні Символи & Клейноди</span>
       </div>
       <div class="btn-group-grid-3">
         <button class="module-btn" data-hist="tryzub">🔱 Тризуб</button>
@@ -32,71 +38,53 @@ export function renderHistoryPanel(container) {
         <button class="module-btn" data-hist="bulava">👑 Булава</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 2: Символи] ====== -->
 
-    <!-- Каталог інтерактивних симуляцій -->
-    <div class="module-card">
-      <div class="module-card-title">
-        <span>🕹️ Каталог Симуляцій</span>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:6px;">
-        ${BUILTIN_SIMULATIONS.map(sim => `
-          <button class="menu-action-btn" data-sim-id="${sim.id}">
-            <strong>${sim.title}</strong>
-            <div style="font-size:11px; color:#64748b;">${sim.description}</div>
-          </button>
-        `).join('')}
-      </div>
-    </div>
-
-    <!-- Підвантажити сторонній сайт чи симуляцію (URL) -->
-    <div class="module-card">
-      <div class="module-card-title">
-        <span>🌐 Завантажити сторонній сайт / симуляцію</span>
-      </div>
-      <p style="font-size:12px; color:#64748b;">Введіть посилання на онлайн-симуляцію (PhET, GeoGebra, Wikipedia тощо):</p>
-      <div style="display:flex; gap:6px;">
-        <input type="url" id="customSimUrlInput" placeholder="https://..." style="flex:1; padding:6px 8px; font-size:13px; border:1px solid #cbd5e1; border-radius:6px;">
-        <button id="btnLoadCustomUrl" class="module-btn btn-accent" style="background:#2563eb; color:white;">Відкрити</button>
-      </div>
-    </div>
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 3] Каталог історичних 3D реконструкцій, турів та симуляцій    -->
+    <!-- ===================================================================== -->
+    <div id="historySimCatalogContainer"></div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 3: Симуляції історії] ====== -->
   `;
 
-  // Стрічка часу
+  // ==========================================================================
+  // ⚙️ ОБРОБНИКИ ПОДІЙ (EVENT LISTENERS)
+  // ==========================================================================
+
+  // --------------------------------------------------------------------------
+  // [БЛОК 3 - Логіка] Ініціалізація каталогу історичних симуляцій
+  // --------------------------------------------------------------------------
+  const histCatalogWrap = container.querySelector('#historySimCatalogContainer');
+  if (histCatalogWrap) {
+    renderSimulationCatalog(histCatalogWrap, 'history');
+  }
+
+  // --------------------------------------------------------------------------
+  // [БЛОК 1 - Логіка] Клік по кнопках стрічки часу
+  // --------------------------------------------------------------------------
   const tlBtn = container.querySelector('#btnTimelineUkraine');
   const customDateBtn = container.querySelector('#btnTimelineCustom');
 
   if (tlBtn) tlBtn.addEventListener('click', insertUkraineTimeline);
   if (customDateBtn) customDateBtn.addEventListener('click', promptAndInsertTimelineEvent);
 
-  // Символи
+  // --------------------------------------------------------------------------
+  // [БЛОК 2 - Логіка] Клік по кнопках історичних символів
+  // --------------------------------------------------------------------------
   container.querySelectorAll('[data-hist]').forEach(btn => {
     btn.addEventListener('click', () => {
       insertHistorySymbol(btn.dataset.hist);
     });
   });
-
-  // Симуляції
-  container.querySelectorAll('[data-sim-id]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const simId = btn.dataset.simId;
-      const sim = BUILTIN_SIMULATIONS.find(s => s.id === simId);
-      if (sim) openSimulation(sim.id, sim.title);
-    });
-  });
-
-  // Власний URL
-  const loadUrlBtn = container.querySelector('#btnLoadCustomUrl');
-  const urlInput = container.querySelector('#customSimUrlInput');
-  if (loadUrlBtn && urlInput) {
-    loadUrlBtn.addEventListener('click', () => {
-      const url = urlInput.value.trim();
-      if (url) {
-        openSimulation(url, 'Веб-ресурс: ' + url, true);
-      }
-    });
-  }
 }
 
+// ============================================================================
+// 🛠️ ДОПОМІЖНІ ФУНКЦІЇ ДЛЯ СТВОРЕННЯ ІСТОРИЧНИХ ОБ'ЄКТІВ НА ДОШЦІ
+// ============================================================================
+
+/**
+ * [БЛОК 1 - Функція] Вставка готової стрічки часу епох історії України
+ */
 function insertUkraineTimeline() {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -135,6 +123,9 @@ function insertUkraineTimeline() {
   drawLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 1 - Функція] Діалог створення та вставки власної історичної дати
+ */
 function promptAndInsertTimelineEvent() {
   const year = prompt('Введіть рік або століття (наприклад 988 р.):', '988 р.');
   if (!year) return;
@@ -155,6 +146,9 @@ function promptAndInsertTimelineEvent() {
   drawLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 2 - Функція] Вставка історичних українських символів та клейнодів
+ */
 function insertHistorySymbol(type) {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');

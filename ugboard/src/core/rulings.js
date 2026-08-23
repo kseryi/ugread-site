@@ -15,7 +15,7 @@ export function renderRuling() {
   const slide = getCurrentSlide();
   const rulingType = slide.ruling || 'white';
   const scale = slide.rulingScale || 32;
-  const marginMode = slide.marginMode || 'none'; // 'right' | 'left' | 'both' | 'none'
+  const marginMode = 'none'; // Поля вимкнено - робота на чистому полотні/розліновці без полів
   
   const backdrop = document.getElementById('boardBackdrop');
   const rulingLayer = document.getElementById('rulingLayer');

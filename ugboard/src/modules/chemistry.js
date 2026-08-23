@@ -4,6 +4,7 @@
  */
 
 import { state } from '../core/state.js';
+import { renderSimulationCatalog } from '../core/simulationCatalog.js';
 
 // Список хімічних елементів
 const ELEMENTS = [
@@ -36,7 +37,9 @@ const ELEMENTS = [
 
 export function renderChemistryPanel(container) {
   container.innerHTML = `
-    <!-- Періодична система Менделєєва -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 1] Періодична система Менделєєва (Хімічні елементи)           -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🧪 Періодична система елементів</span>
@@ -57,8 +60,11 @@ export function renderChemistryPanel(container) {
         📊 Вставити таблицю Менделєєва на дошку
       </button>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 1: Періодична система] ====== -->
 
-    <!-- Конструктор молекул -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 2] Конструктор молекул (Штампи хімічних структур)            -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🔬 Конструктор молекул</span>
@@ -70,8 +76,11 @@ export function renderChemistryPanel(container) {
         <button class="module-btn" data-mol="H2SO4">🧪 Сульфатна к-та (H₂SO₄)</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 2: Молекули] ====== -->
 
-    <!-- Таблиця розчинності -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 3] Таблиця розчинності солей, кислот та основ                 -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>💧 Таблиця розчинності солей і кислот</span>
@@ -80,9 +89,30 @@ export function renderChemistryPanel(container) {
         📋 Переглянути таблицю розчинності
       </button>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 3: Таблиця розчинності] ====== -->
+
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 4] Каталог інтерактивних симуляцій з хімії (PhET, MolView)    -->
+    <!-- ===================================================================== -->
+    <div id="chemSimCatalogContainer"></div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 4: Симуляції хімії] ====== -->
   `;
 
-  // Клік по елементу
+  // ==========================================================================
+  // ⚙️ ОБРОБНИКИ ПОДІЙ (EVENT LISTENERS)
+  // ==========================================================================
+
+  // --------------------------------------------------------------------------
+  // [БЛОК 4 - Логіка] Ініціалізація каталогу симуляцій з хімії
+  // --------------------------------------------------------------------------
+  const simWrap = container.querySelector('#chemSimCatalogContainer');
+  if (simWrap) {
+    renderSimulationCatalog(simWrap, 'chemistry');
+  }
+
+  // --------------------------------------------------------------------------
+  // [БЛОК 1 - Логіка] Клік по кнопці конкретного хімічного елемента
+  // --------------------------------------------------------------------------
   container.querySelectorAll('.chem-el-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const sym = btn.dataset.elem;
@@ -99,7 +129,9 @@ export function renderChemistryPanel(container) {
   if (addPtToBoardBtn) addPtToBoardBtn.addEventListener('click', insertPeriodicTableToBoard);
   if (solBtn) solBtn.addEventListener('click', openSolubilityModal);
 
-  // Молекули
+  // --------------------------------------------------------------------------
+  // [БЛОК 2 - Логіка] Клік по кнопках вставки молекул
+  // --------------------------------------------------------------------------
   container.querySelectorAll('[data-mol]').forEach(btn => {
     btn.addEventListener('click', () => {
       insertMoleculeDiagram(btn.dataset.mol);
@@ -107,6 +139,13 @@ export function renderChemistryPanel(container) {
   });
 }
 
+// ============================================================================
+// 🛠️ ДОПОМІЖНІ ФУНКЦІЇ ДЛЯ СТВОРЕННЯ ХІМІЧНИХ ОБ'ЄКТІВ НА ДОШЦІ ТА МОДАЛОК
+// ============================================================================
+
+/**
+ * [БЛОК 1 - Функція] Вставка картки окремого хімічного елемента на дошку
+ */
 function insertElementCard(el) {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -124,6 +163,9 @@ function insertElementCard(el) {
   drawLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 2 - Функція] Вставка діаграми просторової будови молекули на дошку
+ */
 function insertMoleculeDiagram(molType) {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -184,6 +226,9 @@ function insertMoleculeDiagram(molType) {
   drawLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 1 - Функція] Вставка всієї таблиці Менделєєва як фону на дошку
+ */
 function insertPeriodicTableToBoard() {
   const bgLayer = document.getElementById('backgroundLayer');
   bgLayer.innerHTML = '';
@@ -218,6 +263,9 @@ function insertPeriodicTableToBoard() {
   bgLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 1 - Функція] Відкриття модального вікна з повною періодичною системою
+ */
 function openFullPeriodicTableModal() {
   const backdrop = document.getElementById('appModalBackdrop');
   const title = document.getElementById('modalTitle');
@@ -239,6 +287,9 @@ function openFullPeriodicTableModal() {
   backdrop.style.display = 'flex';
 }
 
+/**
+ * [БЛОК 3 - Функція] Відкриття модального вікна з таблицею розчинності
+ */
 function openSolubilityModal() {
   const backdrop = document.getElementById('appModalBackdrop');
   const title = document.getElementById('modalTitle');

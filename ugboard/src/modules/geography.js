@@ -5,10 +5,19 @@
 
 import { state } from '../core/state.js';
 import { openSimulation } from '../core/simulations.js';
+import { renderSimulationCatalog } from '../core/simulationCatalog.js';
 
 export function renderGeographyPanel(container) {
   container.innerHTML = `
-    <!-- Карти України -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 1] Каталог інтерактивних симуляцій з географії                -->
+    <!-- ===================================================================== -->
+    <div id="geoSimCatalogContainer"></div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 1: Симуляції географії] ====== -->
+
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 2] Векторні карти України (Адміністративна, контурна, річки)   -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🇺🇦 Карта України</span>
@@ -20,8 +29,11 @@ export function renderGeographyPanel(container) {
         <button class="module-btn" id="btnLoadUkraineRelief">⛰️ Фізичний рельєф</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 2: Карта України] ====== -->
 
-    <!-- 3D Глобус та Світ -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 3] Моделі Землі та Світ (3D Глобус & Континенти)              -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🌍 Моделі Землі & Світ</span>
@@ -33,8 +45,11 @@ export function renderGeographyPanel(container) {
         🗺️ Карта континентів світу
       </button>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 3: 3D Глобус та Світ] ====== -->
 
-    <!-- Географічні позначки та символи -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 4] Географічні позначки та умовні знаки (Роза вітрів, мітки)   -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>📍 Географічні позначки</span>
@@ -46,8 +61,11 @@ export function renderGeographyPanel(container) {
         <button class="module-btn" data-marker="minerals">⛏️ Корисні копалини</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 4: Позначки] ====== -->
 
-    <!-- Власна карта -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 5] Завантаження власної карти (JPG / PNG / SVG)               -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>📁 Власна карта</span>
@@ -57,9 +75,24 @@ export function renderGeographyPanel(container) {
         <input type="file" id="customMapUpload" accept="image/*" style="display:none;" />
       </label>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 5: Власна карта] ====== -->
   `;
 
-  // Карти України
+  // ==========================================================================
+  // ⚙️ ОБРОБНИКИ ПОДІЙ (EVENT LISTENERS)
+  // ==========================================================================
+
+  // --------------------------------------------------------------------------
+  // [БЛОК 1 - Логіка] Ініціалізація каталогу симуляцій з географії
+  // --------------------------------------------------------------------------
+  const simWrap = container.querySelector('#geoSimCatalogContainer');
+  if (simWrap) {
+    renderSimulationCatalog(simWrap, 'geography');
+  }
+
+  // --------------------------------------------------------------------------
+  // [БЛОК 2 - Логіка] Завантаження карт України на дошку
+  // --------------------------------------------------------------------------
   const adminBtn = container.querySelector('#btnLoadUkraineAdminMap');
   const contourBtn = container.querySelector('#btnLoadUkraineContourMap');
   const globeBtn = container.querySelector('#btnOpen3DGlobe');
@@ -70,13 +103,18 @@ export function renderGeographyPanel(container) {
   if (globeBtn) globeBtn.addEventListener('click', () => openSimulation('globe', 'Інтерактивний 3D Глобус Землі'));
   if (worldBtn) worldBtn.addEventListener('click', renderWorldContinentsOnBoard);
 
-  // Маркери
+  // --------------------------------------------------------------------------
+  // [БЛОК 4 - Логіка] Клік по кнопках умовних позначок
+  // --------------------------------------------------------------------------
   container.querySelectorAll('[data-marker]').forEach(btn => {
     btn.addEventListener('click', () => {
       insertGeoMarker(btn.dataset.marker);
     });
   });
 
+  // --------------------------------------------------------------------------
+  // [БЛОК 5 - Логіка] Завантаження власного файлу карти користувача
+  // --------------------------------------------------------------------------
   const mapUpload = container.querySelector('#customMapUpload');
   if (mapUpload) {
     mapUpload.addEventListener('change', (e) => {
@@ -91,8 +129,12 @@ export function renderGeographyPanel(container) {
   }
 }
 
+// ============================================================================
+// 🛠️ ДОПОМІЖНІ ФУНКЦІЇ ДЛЯ СТВОРЕННЯ ГЕОГРАФІЧНИХ ОБ'ЄКТІВ ТА КАРТ НА ДОШЦІ
+// ============================================================================
+
 /**
- * Векторна інтерактивна карта України
+ * [БЛОК 2 - Функція] Векторна інтерактивна карта України (адміністративна або контурна)
  */
 function renderUkraineMapOnBoard(isContour = false) {
   const bgLayer = document.getElementById('backgroundLayer');
@@ -182,6 +224,9 @@ function renderUkraineMapOnBoard(isContour = false) {
   bgLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 3 - Функція] Векторна карта континентів світу
+ */
 function renderWorldContinentsOnBoard() {
   const bgLayer = document.getElementById('backgroundLayer');
   bgLayer.innerHTML = '';
@@ -221,6 +266,9 @@ function renderWorldContinentsOnBoard() {
   bgLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 4 - Функція] Вставка умовних географічних позначок (компас, пін, гора, копалини)
+ */
 function insertGeoMarker(type) {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -259,6 +307,9 @@ function insertGeoMarker(type) {
   drawLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 2 - Функція] Інформаційне модальне вікно для кліку по області України
+ */
 function showRegionModal(name, center) {
   const backdrop = document.getElementById('appModalBackdrop');
   const title = document.getElementById('modalTitle');

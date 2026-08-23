@@ -4,31 +4,19 @@
 
 import { state } from '../core/state.js';
 import { openSimulation } from '../core/simulations.js';
+import { renderSimulationCatalog } from '../core/simulationCatalog.js';
 
 export function renderPhysicsPanel(container) {
   container.innerHTML = `
-    <!-- Готові симуляції фізичних явищ -->
-    <div class="module-card">
-      <div class="module-card-title">
-        <span>⚡ Фізичні Лабораторії & Симуляції</span>
-      </div>
-      <div class="btn-group-grid">
-        <button class="module-btn btn-accent" id="btnPhysCircuit" style="background:#2563eb; color:white;">
-          ⚡ Електричне коло
-        </button>
-        <button class="module-btn btn-accent" id="btnPhysOptics" style="background:#0284c7; color:white;">
-          🔍 Оптика & Лінзи
-        </button>
-        <button class="module-btn" id="btnPhysPendulum">
-          ⏱️ Маятник (Коливання)
-        </button>
-        <button class="module-btn" id="btnPhysForces">
-          🏹 Додавання сил (Вектори)
-        </button>
-      </div>
-    </div>
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 1] Каталог інтерактивних симуляцій з фізики (PhET / сайти)   -->
+    <!-- ===================================================================== -->
+    <div id="physSimCatalogContainer"></div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 1: Симуляції фізики] ====== -->
 
-    <!-- Елементи електричних схем (Штампи) -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 2] Елементи електричних схем (Штампи компонентів кола)       -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🔌 Елементи електричних схем</span>
@@ -45,8 +33,11 @@ export function renderPhysicsPanel(container) {
         <button class="module-btn" data-circuit="ground">⏚ Заземлення</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 2: Схеми] ====== -->
 
-    <!-- Вектори сил та механіка -->
+    <!-- ===================================================================== -->
+    <!-- 📦 [БЛОК 3] Вектори сил та механіка (Ньютонівська динаміка)           -->
+    <!-- ===================================================================== -->
     <div class="module-card">
       <div class="module-card-title">
         <span>🏹 Вектори сил</span>
@@ -58,27 +49,33 @@ export function renderPhysicsPanel(container) {
         <button class="module-btn" id="btnAddReactionVector">⬆️ Реакція опори N</button>
       </div>
     </div>
+    <!-- ====== [КІНЕЦЬ БЛОКУ 3: Вектори сил] ====== -->
   `;
 
-  // Симуляції
-  const cBtn = container.querySelector('#btnPhysCircuit');
-  const oBtn = container.querySelector('#btnPhysOptics');
-  const pBtn = container.querySelector('#btnPhysPendulum');
-  const fBtn = container.querySelector('#btnPhysForces');
+  // ==========================================================================
+  // ⚙️ ОБРОБНИКИ ПОДІЙ (EVENT LISTENERS)
+  // ==========================================================================
 
-  if (cBtn) cBtn.addEventListener('click', () => openSimulation('circuit', 'Електричне коло (Струм & Лампочка)'));
-  if (oBtn) oBtn.addEventListener('click', () => openSimulation('optics', 'Геометрична Оптика (Лінзи & Промені)'));
-  if (pBtn) pBtn.addEventListener('click', () => openSimulation('pendulum', 'Математичний Маятник (Коливання)'));
-  if (fBtn) fBtn.addEventListener('click', insertForceDiagram);
+  // --------------------------------------------------------------------------
+  // [БЛОК 1 - Логіка] Ініціалізація каталогу симуляцій з фізики
+  // --------------------------------------------------------------------------
+  const simWrap = container.querySelector('#physSimCatalogContainer');
+  if (simWrap) {
+    renderSimulationCatalog(simWrap, 'physics');
+  }
 
-  // Схеми
+  // --------------------------------------------------------------------------
+  // [БЛОК 2 - Логіка] Клік по кнопках елементів електричних схем
+  // --------------------------------------------------------------------------
   container.querySelectorAll('[data-circuit]').forEach(btn => {
     btn.addEventListener('click', () => {
       insertCircuitElement(btn.dataset.circuit);
     });
   });
 
-  // Вектори
+  // --------------------------------------------------------------------------
+  // [БЛОК 3 - Логіка] Клік по кнопках додавання векторів сил
+  // --------------------------------------------------------------------------
   const fV = container.querySelector('#btnAddForceVector');
   const gV = container.querySelector('#btnAddGravityVector');
   const frV = container.querySelector('#btnAddFrictionVector');
@@ -90,6 +87,13 @@ export function renderPhysicsPanel(container) {
   if (rV) rV.addEventListener('click', () => insertSingleVector('N', 0, -80, '#16a34a'));
 }
 
+// ============================================================================
+// 🛠️ ДОПОМІЖНІ ФУНКЦІЇ ДЛЯ СТВОРЕННЯ ФІЗИЧНИХ ОБ'ЄКТІВ НА ДОШЦІ
+// ============================================================================
+
+/**
+ * [БЛОК 2 - Функція] Вставка графічного елемента електричної схеми
+ */
 function insertCircuitElement(type) {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -163,6 +167,9 @@ function insertCircuitElement(type) {
   drawLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 3 - Функція] Вставка окремого вектора сили на дошку
+ */
 function insertSingleVector(label, dx, dy, color) {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -188,6 +195,9 @@ function insertSingleVector(label, dx, dy, color) {
   drawLayer.appendChild(g);
 }
 
+/**
+ * [БЛОК 3 - Функція] Вставка комплексної схеми сил на похилій площині
+ */
 function insertForceDiagram() {
   const drawLayer = document.getElementById('drawingLayer');
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');

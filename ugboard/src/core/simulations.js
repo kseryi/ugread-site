@@ -170,7 +170,7 @@ export function setSimulationMode(mode) {
       document.querySelectorAll('.tool-btn[data-tool]').forEach(b => {
         b.classList.toggle('active', b.dataset.tool === 'pencil');
       });
-      if (boardSvg) boardSvg.className = 'board-svg tool-pencil';
+      if (boardSvg) boardSvg.setAttribute('class', 'board-svg tool-pencil');
     }
   }
 }
@@ -227,17 +227,76 @@ export function closeSimulation() {
   boardSvg.style.pointerEvents = 'auto';
 }
 
-function saveCurrentSimulationDrawings(simId) {
+export function saveCurrentSimulationDrawings(simId) {
   const drawLayer = document.getElementById('drawingLayer');
   if (drawLayer) {
     simulationDrawingsCache.set(simId, drawLayer.innerHTML);
   }
 }
 
-function restoreSimulationDrawings(simId) {
+export function restoreSimulationDrawings(simId) {
   const drawLayer = document.getElementById('drawingLayer');
   if (drawLayer && simulationDrawingsCache.has(simId)) {
     drawLayer.innerHTML = simulationDrawingsCache.get(simId);
+  }
+}
+
+export function getAllSimulationDrawingsCache() {
+  const obj = {};
+  simulationDrawingsCache.forEach((val, key) => {
+    obj[key] = val;
+  });
+  return obj;
+}
+
+export function setAllSimulationDrawingsCache(cacheObj) {
+  simulationDrawingsCache.clear();
+  if (cacheObj && typeof cacheObj === 'object') {
+    Object.entries(cacheObj).forEach(([key, val]) => {
+      simulationDrawingsCache.set(key, val);
+    });
+  }
+}
+
+export function getActiveSimulationData() {
+  if (!state.activeSimulation) return null;
+  const container = document.getElementById('simulationContainer');
+  const iframe = document.getElementById('simulationIframe');
+  const isOpen = container && container.style.display !== 'none';
+  const drawLayer = document.getElementById('drawingLayer');
+  const overlayVisible = drawLayer ? drawLayer.style.display !== 'none' : true;
+
+  return {
+    ...state.activeSimulation,
+    isOpen,
+    overlayVisible,
+    iframeSrc: iframe ? iframe.src : ''
+  };
+}
+
+export function restoreActiveSimulationData(simData) {
+  if (!simData || !simData.id || simData.isOpen === false) {
+    closeSimulation();
+    return;
+  }
+
+  const isExternal = simData.id.startsWith('http://') || simData.id.startsWith('https://');
+  openSimulation(simData.id, simData.title || 'Симуляція', isExternal);
+
+  if (simData.mode) {
+    setSimulationMode(simData.mode);
+  }
+
+  if (simData.overlayVisible === false) {
+    const drawLayer = document.getElementById('drawingLayer');
+    const statusSpan = document.getElementById('simLayerStatus');
+    if (drawLayer) drawLayer.style.display = 'none';
+    if (statusSpan) statusSpan.textContent = 'Вимкн.';
+  } else {
+    const drawLayer = document.getElementById('drawingLayer');
+    const statusSpan = document.getElementById('simLayerStatus');
+    if (drawLayer) drawLayer.style.display = 'block';
+    if (statusSpan) statusSpan.textContent = 'Увімкн.';
   }
 }
 

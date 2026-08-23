@@ -48,6 +48,7 @@ const CATEGORIES_DATA = {
     desc: 'Інженерні проєкти, робототехніка, 3D-моделювання та наукові експерименти.',
     topics: [
       { name: 'Симулятор ЧПК верстата', link: './products/cnc%20v%200.14/index.html' },
+      { name: 'Гра-симулятор Сонячна ферма ', link: './products/solarfarm/SolarFarm.html' },
       { name: 'Сканер штрих-коду', link: './products/stem/barcodescan2.html' },
       { name: 'Генератор QR', link: './products/stem/QR_gen.html' },
 

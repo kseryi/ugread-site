@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Магнітосфера Землі — 3D симуляція</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#05070d;
+    --bg-1:#0a0f1c;
+    --panel:rgba(12,18,32,0.72);
+    --line:rgba(150,180,220,0.18);
+    --line-strong:rgba(150,180,220,0.35);
+    --text:#e8ecf5;
+    --text-dim:#8592ab;
+    --cyan:#4fd8c4;
+    --violet:#9b8cf2;
+    --amber:#f0a868;
+    --rose:#e8607a;
+    --green:#7ee787;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%; overflow:hidden;
+    background:var(--bg-0);
+    font-family:'Space Grotesk', sans-serif;
+    color:var(--text);
+    touch-action:none;
+    overscroll-behavior:none;
+  }
+  #scene{position:fixed; inset:0; display:block; touch-action:none; outline:none;}
+
+  .mono{font-family:'IBM Plex Mono', monospace;}
+
+  /* ---- corner telemetry frame ---- */
+  .frame-corner{position:fixed; width:22px; height:22px; border:var(--line-strong) solid; opacity:.55; pointer-events:none; z-index:5;}
+  .fc-tl{top:10px; left:10px; border-width:1.5px 0 0 1.5px;}
+  .fc-tr{top:10px; right:10px; border-width:1.5px 1.5px 0 0;}
+  .fc-bl{bottom:10px; left:10px; border-width:0 0 1.5px 1.5px;}
+  .fc-br{bottom:10px; right:10px; border-width:0 1.5px 1.5px 0;}
+
+  /* ---- top bar ---- */
+  #topbar{
+    position:fixed; top:14px; left:50%; transform:translateX(-50%);
+    display:flex; gap:8px; z-index:20;
+    background:var(--panel); backdrop-filter:blur(14px) saturate(140%);
+    border:1px solid var(--line); border-radius:999px;
+    padding:5px; box-shadow:0 8px 30px rgba(0,0,0,.4);
+  }
+  .mode-btn{
+    appearance:none; border:none; cursor:pointer;
+    padding:9px 16px; border-radius:999px;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:12.5px;
+    letter-spacing:.02em;
+    background:transparent; color:var(--text-dim);
+    display:flex; align-items:center; gap:7px;
+    transition:background .25s, color .25s;
+    white-space:nowrap;
+  }
+  .mode-btn .dot{width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.6;}
+  .mode-btn.active{ color:var(--bg-0); background:var(--cyan); }
+  .mode-btn:not(.active):hover{ color:var(--text); background:rgba(255,255,255,0.06); }
+
+  /* ---- title block ---- */
+  #titleblock{
+    position:fixed; top:16px; left:16px; z-index:15; pointer-events:none;
+    max-width:220px;
+  }
+  #titleblock .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:9.5px; letter-spacing:.16em;
+    color:var(--cyan); text-transform:uppercase; opacity:.85;
+  }
+  #titleblock h1{
+    margin:3px 0 0; font-size:15px; font-weight:600; line-height:1.25;
+    color:var(--text);
+  }
+  @media (max-width:640px){ #titleblock{display:none;} }
+
+  /* ---- side control panel ---- */
+  #panel{
+    position:fixed; top:16px; right:16px; z-index:20;
+    width:220px;
+    background:var(--panel); backdrop-filter:blur(14px) saturate(140%);
+    border:1px solid var(--line); border-radius:14px;
+    padding:14px 14px 12px;
+    box-shadow:0 8px 30px rgba(0,0,0,.4);
+    font-size:12px;
+  }
+  #panel .row{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;}
+  #panel .lbl{color:var(--text-dim); font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase;}
+  #panel .val{color:var(--cyan); font-family:'IBM Plex Mono',monospace; font-size:11px;}
+  input[type=range]{
+    -webkit-appearance:none; appearance:none; width:100%; height:3px; border-radius:2px;
+    background:var(--line-strong); outline:none; margin:0;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:var(--cyan); cursor:pointer; border:2px solid var(--bg-0);
+    box-shadow:0 0 0 1px var(--cyan);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:14px; height:14px; border-radius:50%; background:var(--cyan); cursor:pointer; border:2px solid var(--bg-0);
+  }
+  .icon-btn{
+    appearance:none; border:1px solid var(--line-strong); cursor:pointer;
+    background:rgba(255,255,255,0.03); color:var(--text);
+    border-radius:8px; padding:7px 10px; font-size:12px; font-family:'Space Grotesk';
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    transition:background .2s, border-color .2s;
+    flex:1;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.08); border-color:var(--cyan);}
+  .icon-btn.on{ color:var(--bg-0); background:var(--cyan); border-color:var(--cyan);}
+  .btnrow{display:flex; gap:6px; margin-top:2px;}
+  hr.sep{border:none; border-top:1px solid var(--line); margin:10px 0;}
+
+  /* ---- legend ---- */
+  #legend{
+    position:fixed; bottom:16px; left:16px; z-index:15;
+    background:var(--panel); backdrop-filter:blur(14px) saturate(140%);
+    border:1px solid var(--line); border-radius:12px;
+    padding:10px 12px; font-size:11px; max-width:230px;
+    transition:opacity .3s, transform .3s;
+  }
+  #legend.hidden{opacity:0; transform:translateY(8px); pointer-events:none;}
+  #legend .lg-title{font-family:'IBM Plex Mono'; font-size:9.5px; letter-spacing:.14em; color:var(--text-dim); text-transform:uppercase; margin-bottom:7px;}
+  .lg-item{display:flex; align-items:center; gap:7px; margin-bottom:5px; color:var(--text);}
+  .lg-item:last-child{margin-bottom:0;}
+  .lg-swatch{width:14px; height:2.5px; border-radius:2px; flex:none;}
+  .lg-swatch.dashed{background:none; border-top:2px dashed currentColor; height:0;}
+  .lg-swatch.grad{background:linear-gradient(90deg,#ff5a5a 50%,#5a7bff 50%); width:22px; height:4px;}
+
+  /* ---- compass (physics view) ---- */
+  #compass{
+    position:fixed; top:70px; left:16px; z-index:16;
+    width:104px; display:none; flex-direction:column; align-items:center; gap:6px;
+    opacity:0; transform:scale(.9); transition:opacity .3s, transform .3s;
+  }
+  #compass.show{ display:flex; opacity:1; transform:scale(1); }
+  #compass .ring-wrap{ position:relative; width:88px; height:88px;
+    background:var(--panel); backdrop-filter:blur(14px) saturate(140%);
+    border-radius:50%; border:1px solid var(--line); box-shadow:0 8px 26px rgba(0,0,0,.4); }
+  #compass svg{position:absolute; inset:0; width:100%; height:100%;}
+  #compass .decl{font-family:'IBM Plex Mono', monospace; font-size:9.5px; color:var(--text-dim); text-align:center; letter-spacing:.02em;
+    background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:4px 8px;}
+  #compass .decl b{color:var(--violet);}
+
+  /* ---- readout (telemetry numbers) ---- */
+  #readout{
+    position:fixed; bottom:16px; right:16px; z-index:15;
+    background:var(--panel); backdrop-filter:blur(14px) saturate(140%);
+    border:1px solid var(--line); border-radius:12px;
+    padding:10px 14px; font-family:'IBM Plex Mono', monospace; font-size:10.5px;
+    color:var(--text-dim); line-height:1.9; min-width:168px;
+  }
+  #readout b{color:var(--cyan); font-weight:600;}
+  #readout .r2 b{color:var(--violet);}
+  #readout .r3 b{color:var(--amber);}
+
+  /* ---- topbar info button ---- */
+  .topbar-sep{ width:1px; align-self:stretch; background:var(--line); margin:4px 3px; }
+  .info-btn{
+    appearance:none; border:none; cursor:pointer;
+    width:30px; height:30px; border-radius:50%; flex:none;
+    background:rgba(255,255,255,0.05); color:var(--text-dim);
+    font-family:'IBM Plex Mono', monospace; font-size:12px; font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .2s, color .2s;
+  }
+  .info-btn:hover{ background:rgba(255,255,255,0.14); color:var(--text); }
+
+  /* ---- info modal (right side) ---- */
+  #infoOverlay{
+    position:fixed; inset:0; z-index:40; background:rgba(3,5,10,0.5);
+    opacity:0; pointer-events:none; transition:opacity .3s; backdrop-filter:blur(2px);
+  }
+  #infoOverlay.open{ opacity:1; pointer-events:auto; }
+  #infoModal{
+    position:fixed; top:0; right:0; height:100%; width:370px; max-width:88vw;
+    background:var(--panel); backdrop-filter:blur(20px) saturate(140%);
+    border-left:1px solid var(--line); box-shadow:-24px 0 70px rgba(0,0,0,.5);
+    z-index:41; padding:28px 26px; overflow-y:auto;
+    transform:translateX(100%); transition:transform .35s cubic-bezier(.22,.85,.25,1);
+  }
+  #infoModal.open{ transform:translateX(0); }
+  #infoModal .eyebrow{font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.16em; color:var(--cyan); text-transform:uppercase;}
+  #infoModal h2{font-size:20px; margin:7px 0 18px; color:var(--text); font-weight:600; line-height:1.3;}
+  #infoModal p{margin:0 0 13px; font-size:13px; line-height:1.65; color:var(--text-dim);}
+  #infoModal p b{color:var(--text);}
+  #infoModal .close{
+    position:absolute; top:22px; right:22px; cursor:pointer; width:28px; height:28px;
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    color:var(--text-dim); border:1px solid var(--line-strong); font-size:13px; transition:.2s;
+  }
+  #infoModal .close:hover{color:var(--text); border-color:var(--cyan);}
+  #infoModal .stat{display:flex; justify-content:space-between; padding:9px 0; border-top:1px solid var(--line); font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--text-dim);}
+  #infoModal .stat b{color:var(--cyan); font-weight:600;}
+  #infoModal .stats{margin-top:6px;}
+  @media (max-width:640px){ #infoModal{ padding:24px 20px; } }
+
+  /* ---- touch hint ---- */
+  #touchHint{
+    position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
+    z-index:18; background:var(--panel); border:1px solid var(--line);
+    border-radius:999px; padding:8px 16px; font-size:11px; color:var(--text-dim);
+    font-family:'IBM Plex Mono'; display:flex; gap:10px; align-items:center;
+    backdrop-filter:blur(10px);
+    animation:hintFade 6.5s ease forwards;
+  }
+  @keyframes hintFade{ 0%{opacity:0; transform:translate(-50%,10px);} 10%{opacity:1; transform:translate(-50%,0);} 82%{opacity:1;} 100%{opacity:0; transform:translate(-50%,-6px); pointer-events:none;} }
+
+  #loading{
+    position:fixed; inset:0; z-index:100; background:var(--bg-0);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; transition:opacity .5s;
+  }
+  #loading .ring{width:34px; height:34px; border-radius:50%; border:2px solid rgba(79,216,196,.2); border-top-color:var(--cyan); animation:spin 0.9s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #loading span{font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:.12em; color:var(--text-dim); text-transform:uppercase;}
+
+  @media (max-width:640px){
+    #panel{width:170px; padding:11px 11px 10px; font-size:11px; top:auto; bottom:16px; right:12px;}
+    #legend{display:none;}
+    #readout{left:12px; right:auto; bottom:auto; top:56px; min-width:0;}
+    #topbar{top:auto; bottom:110px; max-width:92vw; overflow-x:auto;}
+    #titleblock{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="ring"></div><span>Ініціалізація поля…</span></div>
+
+<canvas id="scene"></canvas>
+
+<div class="frame-corner fc-tl"></div>
+<div class="frame-corner fc-tr"></div>
+<div class="frame-corner fc-bl"></div>
+<div class="frame-corner fc-br"></div>
+
+<div id="titleblock">
+  <div class="eyebrow">Геомагнітна модель · дипольне наближення</div>
+  <h1>Магнітосфера Землі</h1>
+</div>
+
+<div id="topbar">
+  <button class="mode-btn active" id="btnMode1"><span class="dot"></span>Географічні полюси</button>
+  <button class="mode-btn" id="btnMode2"><span class="dot"></span>Захист від радіації</button>
+  <button class="mode-btn" id="btnMode3"><span class="dot"></span>Фізичні полюси</button>
+  <div class="topbar-sep"></div>
+  <button class="info-btn" id="infoToggle" title="Інформація про режим">ⓘ</button>
+</div>
+
+<div id="compass">
+  <div class="ring-wrap">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="47" fill="none" stroke="rgba(150,180,220,0.25)" stroke-width="1"/>
+      <circle cx="50" cy="50" r="34" fill="none" stroke="rgba(150,180,220,0.15)" stroke-width="1"/>
+      <g id="compassRose">
+        <text x="50" y="15" text-anchor="middle" font-size="11" fill="#dfe6f2" font-family="IBM Plex Mono, monospace" font-weight="600">N</text>
+        <text x="50" y="91" text-anchor="middle" font-size="8.5" fill="#8592ab" font-family="IBM Plex Mono, monospace">S</text>
+        <text x="9" y="53.5" text-anchor="middle" font-size="8.5" fill="#8592ab" font-family="IBM Plex Mono, monospace">W</text>
+        <text x="91" y="53.5" text-anchor="middle" font-size="8.5" fill="#8592ab" font-family="IBM Plex Mono, monospace">E</text>
+      </g>
+      <g id="compassNeedle">
+        <line x1="50" y1="50" x2="50" y2="20" stroke="#e8607a" stroke-width="2.6" stroke-linecap="round"/>
+        <line x1="50" y1="50" x2="50" y2="76" stroke="#5a7bff" stroke-width="2.6" stroke-linecap="round"/>
+        <circle cx="50" cy="50" r="3" fill="#e8ecf5"/>
+      </g>
+    </svg>
+  </div>
+  <div class="decl">Схилення: <b id="declVal">0°</b></div>
+</div>
+
+<div id="panel">
+  <div class="row"><span class="lbl">Обертання</span><span class="val mono" id="speedVal">1.0×</span></div>
+  <input type="range" id="speedSlider" min="0" max="4" step="0.05" value="1">
+  <hr class="sep">
+  <div class="btnrow">
+    <button class="icon-btn on" id="btnPlay">⏸ Пауза</button>
+    <button class="icon-btn" id="btnReset">⟲ Камера</button>
+  </div>
+  <div class="btnrow" style="margin-top:6px;">
+    <button class="icon-btn" id="btnLines">Лінії поля</button>
+    <button class="icon-btn" id="btnEcliptic">Екліптика</button>
+  </div>
+</div>
+
+<div id="legend">
+  <div class="lg-title">Легенда</div>
+  <div class="lg-item"><span class="lg-swatch grad"></span>Лінії поля (Пн → Пд)</div>
+  <div class="lg-item"><span class="lg-swatch dashed" style="color:#dfe6f2"></span>Вісь обертання (геогр. полюси)</div>
+  <div class="lg-item"><span class="lg-swatch dashed" style="color:var(--violet)"></span>Вісь диполя (магн. полюси)</div>
+  <div class="lg-item" id="legendEcliptic"><span class="lg-swatch" style="background:rgba(150,180,220,.5)"></span>Площина екліптики</div>
+  <div class="lg-item" id="legendSolar" style="display:none;"><span class="lg-swatch" style="background:var(--amber)"></span>Сонячний вітер</div>
+  <div class="lg-item" id="legendAurora" style="display:none;"><span class="lg-swatch" style="background:var(--green)"></span>Захоплені частинки (полярне сяйво)</div>
+  <div class="lg-item" id="legendCompass" style="display:none;"><span class="lg-swatch" style="background:linear-gradient(90deg,#e8607a,#5a7bff)"></span>Компас: схилення від геогр. півночі</div>
+</div>
+
+<div id="readout" class="mono">
+  <div>НАХИЛ ОСІ: <b>23.4°</b></div>
+  <div class="r2">ЗСУВ ДИПОЛЯ: <b>11.0°</b></div>
+  <div class="r3" id="readoutExtra">РЕЖИМ: <b>ОГЛЯД ПОЛЯ</b></div>
+</div>
+
+<div id="infoOverlay"></div>
+<div id="infoModal">
+  <span class="close" id="infoClose">✕</span>
+  <div class="eyebrow" id="infoEyebrow">РЕЖИМ</div>
+  <h2 id="infoTitle">Про модель</h2>
+  <div id="infoBody"></div>
+</div>
+
+<div id="touchHint">👆 один палець — обертання · два пальці — масштаб/зсув</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* =========================================================
+   CONSTANTS / STATE
+   ========================================================= */
+const EARTH_R = 1;
+const AXIAL_TILT_DEG = 23.44;      // нахил осі обертання відносно екліптики
+const MAG_TILT_DEG   = 11.0;       // кут між віссю обертання і віссю диполя
+const MAG_OFFSET = new THREE.Vector3(0.075, 0.02, 0.045); // зсув диполя від центру Землі
+
+let playing = true;
+let spinSpeed = 1.0;               // multiplier
+const BASE_SPIN = 0.28;            // rad/s at 1.0x
+let mode = 1;                      // 1 = field view, 2 = solar wind view
+let showLines = true;
+let showEcliptic = true;
+
+/* =========================================================
+   RENDERER / SCENE / CAMERA
+   ========================================================= */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05070d);
+scene.fog = new THREE.FogExp2(0x05070d, 0.0055);
+
+const camera = new THREE.PerspectiveCamera(52, window.innerWidth/window.innerHeight, 0.05, 800);
+const DEFAULT_CAM_POS = new THREE.Vector3(6.2, 3.6, 8.4);
+camera.position.copy(DEFAULT_CAM_POS);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 2.4;
+controls.maxDistance = 55;
+controls.target.set(0,0,0);
+controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+controls.update();
+
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* =========================================================
+   LIGHTS
+   ========================================================= */
+const ambient = new THREE.AmbientLight(0x2a3550, 0.55);
+scene.add(ambient);
+
+const sunDist = 16;
+const sunLight = new THREE.DirectionalLight(0xfff2df, 2.0);
+sunLight.position.set(-sunDist, 2, 1);
+scene.add(sunLight);
+
+const rimFill = new THREE.PointLight(0x4fd8c4, 0.35, 30);
+rimFill.position.set(6,-4,-6);
+scene.add(rimFill);
+
+/* =========================================================
+   STARFIELD
+   ========================================================= */
+function buildStars(){
+  const n = 3200;
+  const positions = new Float32Array(n*3);
+  const colors = new Float32Array(n*3);
+  const c1 = new THREE.Color(0xbfd4ff), c2 = new THREE.Color(0xffffff), c3 = new THREE.Color(0x9fb8e8);
+  for(let i=0;i<n;i++){
+    const r = 120 + Math.random()*260;
+    const th = Math.random()*Math.PI*2;
+    const ph = Math.acos(2*Math.random()-1);
+    positions[i*3]   = r*Math.sin(ph)*Math.cos(th);
+    positions[i*3+1] = r*Math.cos(ph);
+    positions[i*3+2] = r*Math.sin(ph)*Math.sin(th);
+    const c = [c1,c2,c3][i%3];
+    colors[i*3]=c.r; colors[i*3+1]=c.g; colors[i*3+2]=c.b;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+  const mat = new THREE.PointsMaterial({ size:0.9, vertexColors:true, sizeAttenuation:true, transparent:true, opacity:0.85 });
+  const pts = new THREE.Points(geo, mat);
+  scene.add(pts);
+}
+buildStars();
+
+/* =========================================================
+   ECLIPTIC REFERENCE PLANE
+   ========================================================= */
+const eclipticGroup = new THREE.Group();
+const polarGrid = new THREE.PolarGridHelper(8.4, 16, 5, 64, 0x3a4f72, 0x22314a);
+polarGrid.material.transparent = true;
+polarGrid.material.opacity = 0.45;
+eclipticGroup.add(polarGrid);
+scene.add(eclipticGroup);
+
+/* =========================================================
+   EARTH TEXTURE (procedural canvas)
+   ========================================================= */
+function buildEarthTexture(){
+  const w=1024,h=512;
+  const cv = document.createElement('canvas'); cv.width=w; cv.height=h;
+  const ctx = cv.getContext('2d');
+
+  const grad = ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,'#0e3a63');
+  grad.addColorStop(0.5,'#12588f');
+  grad.addColorStop(1,'#0b3157');
+  ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
+
+  function blob(cx,cy,rx,ry,rot,col){
+    ctx.save();
+    ctx.translate(cx,cy); ctx.rotate(rot);
+    ctx.beginPath();
+    const pts=10;
+    for(let i=0;i<=pts;i++){
+      const a=(i/pts)*Math.PI*2;
+      const jr = 0.72+Math.random()*0.5;
+      const x=Math.cos(a)*rx*jr, y=Math.sin(a)*ry*jr;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.fillStyle=col; ctx.fill();
+    ctx.restore();
+  }
+  const land = '#3f7a45';
+  const land2 = '#4f8f52';
+  const seeds = [
+    [150,150,90,60],[210,180,50,40],[130,260,70,50],[300,250,110,55],
+    [520,140,120,70],[610,220,60,45],[560,300,90,55],
+    [760,160,100,60],[840,230,70,45],[900,300,60,40],
+    [420,340,80,40],[680,370,90,45],[120,360,60,35],[960,120,55,35]
+  ];
+  seeds.forEach((s,i)=>blob(s[0],s[1],s[2],s[3], (i*0.7)%3, i%2===0?land:land2));
+
+  // ice caps
+  ctx.fillStyle = 'rgba(235,245,255,0.85)';
+  ctx.fillRect(0,0,w,18);
+  ctx.fillRect(0,h-18,w,18);
+
+  // lat/long grid
+  ctx.strokeStyle = 'rgba(200,225,255,0.10)'; ctx.lineWidth=1;
+  for(let i=1;i<12;i++){ ctx.beginPath(); ctx.moveTo(i*w/12,0); ctx.lineTo(i*w/12,h); ctx.stroke(); }
+  for(let i=1;i<6;i++){ ctx.beginPath(); ctx.moveTo(0,i*h/6); ctx.lineTo(w,i*h/6); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(255,210,120,0.28)';
+  ctx.beginPath(); ctx.moveTo(0,h/2); ctx.lineTo(w,h/2); ctx.stroke();
+
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/* =========================================================
+   EARTH BODY HIERARCHY
+   tiltGroup -> spinGroup -> earthMesh
+                          -> magAxisGroup -> fieldLinesGroup
+   ========================================================= */
+const tiltGroup = new THREE.Group();
+tiltGroup.rotation.z = THREE.MathUtils.degToRad(AXIAL_TILT_DEG);
+scene.add(tiltGroup);
+
+const spinGroup = new THREE.Group();
+tiltGroup.add(spinGroup);
+
+// rotation-axis dashed line (geographic)
+function dashedAxisLine(length, color){
+  const geo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0,-length,0), new THREE.Vector3(0,length,0)
+  ]);
+  const mat = new THREE.LineDashedMaterial({ color, dashSize:0.09, gapSize:0.07, transparent:true, opacity:0.85 });
+  const line = new THREE.Line(geo, mat);
+  line.computeLineDistances();
+  return line;
+}
+spinGroup.add(dashedAxisLine(1.55, 0xdfe6f2));
+
+const earthGeo = new THREE.SphereGeometry(EARTH_R, 72, 72);
+const earthMat = new THREE.MeshPhongMaterial({ map: buildEarthTexture(), specular:0x2a3550, shininess:9 });
+const earthMesh = new THREE.Mesh(earthGeo, earthMat);
+spinGroup.add(earthMesh);
+
+// atmosphere glow (fresnel-ish shader)
+const atmoGeo = new THREE.SphereGeometry(EARTH_R*1.045, 64, 64);
+const atmoMat = new THREE.ShaderMaterial({
+  transparent:true, side:THREE.BackSide, depthWrite:false,
+  uniforms:{ glowColor:{ value:new THREE.Color(0x5ecbe8) } },
+  vertexShader:`
+    varying float vIntensity;
+    void main(){
+      vec3 vNormal = normalize(normalMatrix * normal);
+      vec3 vNormel = normalize((modelViewMatrix * vec4(position,1.0)).xyz);
+      vIntensity = pow(0.68 - dot(vNormal, -normalize(vNormel)), 2.5);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+    }`,
+  fragmentShader:`
+    varying float vIntensity;
+    uniform vec3 glowColor;
+    void main(){
+      gl_FragColor = vec4(glowColor, clamp(vIntensity,0.0,1.0)*0.55);
+    }`
+});
+spinGroup.add(new THREE.Mesh(atmoGeo, atmoMat));
+
+// magnetic axis group (offset + tilted relative to spin axis)
+const magAxisGroup = new THREE.Group();
+magAxisGroup.position.copy(MAG_OFFSET);
+magAxisGroup.rotation.x = THREE.MathUtils.degToRad(MAG_TILT_DEG);
+spinGroup.add(magAxisGroup);
+magAxisGroup.add(dashedAxisLine(1.7, 0x9b8cf2));
+
+/* ---- field lines (dipole) ---- */
+const fieldLinesGroup = new THREE.Group();
+magAxisGroup.add(fieldLinesGroup);
+
+// Physically-motivated colour convention: field lines run from the magnetic
+// north hemisphere (red, higher field strength close to the pole) to the
+// south hemisphere (blue), matching how geomagnetic maps commonly shade
+// vertical field intensity/polarity. Colour is interpolated smoothly by
+// each point's position along the dipole axis (local Y).
+const FIELD_COLOR_NORTH = new THREE.Color(0xff5a5a);
+const FIELD_COLOR_SOUTH = new THREE.Color(0x5a7bff);
+const FIELD_Y_NORM = 3.3; // ~ largest L-shell radius, used to normalize colour blend
+
+function colorForY(y){
+  const t = THREE.MathUtils.clamp(y / FIELD_Y_NORM, -1, 1); // +1 north .. -1 south
+  return FIELD_COLOR_SOUTH.clone().lerp(FIELD_COLOR_NORTH, (t+1)/2);
+}
+// Sharp (non-gradient) variant: hard boundary at the magnetic equator (y=0),
+// used in the two "polarity" modes (geographic / physics) so the colour
+// change reads as a clean line-of-symmetry rather than a soft blend.
+function colorForYHard(y){
+  return (y >= 0) ? FIELD_COLOR_NORTH.clone() : FIELD_COLOR_SOUTH.clone();
+}
+
+// Arrows live in their own group so they can be shown only in the
+// "physics poles" mode, independent from the line geometry itself.
+const fieldArrowsGroup = new THREE.Group();
+fieldLinesGroup.add(fieldArrowsGroup);
+
+function buildDipoleFieldLines(){
+  const Lshells = [1.28, 1.55, 1.95, 2.5, 3.25];
+  const lonSteps = 12;
+
+  Lshells.forEach((L, li)=>{
+    const thetaMin = Math.asin(Math.min(1, Math.sqrt(1/L))) + 0.001;
+    const thetaMax = Math.PI - thetaMin;
+    const steps = 48;
+    const mix = li/(Lshells.length-1);
+    const baseOpacity = 0.55 + 0.16*(1-mix);
+
+    for(let i=0;i<lonSteps;i++){
+      const phi = (i/lonSteps)*Math.PI*2;
+      const pts = [];
+      const colsSoft = [];
+      const colsHard = [];
+      for(let s=0;s<=steps;s++){
+        const theta = thetaMin + (thetaMax-thetaMin)*(s/steps);
+        const r = L*Math.sin(theta)*Math.sin(theta);
+        const y = r*Math.cos(theta);
+        const x = r*Math.sin(theta)*Math.cos(phi);
+        const z = r*Math.sin(theta)*Math.sin(phi);
+        pts.push(new THREE.Vector3(x,y,z));
+        const cSoft = colorForY(y);
+        colsSoft.push(cSoft.r, cSoft.g, cSoft.b);
+        const cHard = colorForYHard(y);
+        colsHard.push(cHard.r, cHard.g, cHard.b);
+      }
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      geo.setAttribute('color', new THREE.Float32BufferAttribute(colsSoft.slice(), 3));
+      const mat = new THREE.LineBasicMaterial({ vertexColors:true, transparent:true, opacity: baseOpacity });
+      const line = new THREE.Line(geo, mat);
+      line.userData.isFieldLine = true;
+      line.userData.colsSoft = colsSoft;
+      line.userData.colsHard = colsHard;
+      fieldLinesGroup.add(line);
+
+      // Direction arrows: physically the field emerges from the dipole's
+      // N pole (near the geographic SOUTH footpoint, s=steps) and re-enters
+      // at the S pole (near the geographic NORTH footpoint, s=0) - i.e. flow
+      // runs toward decreasing s along this parametrisation.
+      if(i % 2 === 0){
+        [0.3, 0.62].forEach(frac=>{
+          const idx = Math.floor(steps*frac);
+          const a = pts[idx], b = pts[Math.min(steps, idx+2)];
+          const dir = new THREE.Vector3().subVectors(a,b).normalize(); // south -> north
+          const col = colorForYHard(a.y);
+          const cone = new THREE.Mesh(
+            new THREE.ConeGeometry(0.026, 0.085, 8),
+            new THREE.MeshBasicMaterial({ color: col, transparent:true, opacity:0.9 })
+          );
+          cone.position.copy(a);
+          cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir);
+          cone.userData.isFieldLine = true;
+          fieldArrowsGroup.add(cone);
+        });
+      }
+    }
+  });
+}
+buildDipoleFieldLines();
+
+/* ---- pole markers + labels ---- */
+function makeLabelSprite(text, color){
+  const cv = document.createElement('canvas'); cv.width=256; cv.height=80;
+  const ctx = cv.getContext('2d');
+  ctx.font = '600 40px "IBM Plex Mono", monospace';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle = 'rgba(6,9,16,0.55)';
+  roundRect(ctx, 6,14,244,52,14); ctx.fill();
+  ctx.fillStyle = color;
+  ctx.fillText(text, 128, 42);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const mat = new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:false });
+  const spr = new THREE.Sprite(mat);
+  spr.scale.set(0.62,0.19,1);
+  spr.renderOrder = 999;
+  return spr;
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function markerDot(color){
+  return new THREE.Mesh(new THREE.SphereGeometry(0.032,16,16), new THREE.MeshBasicMaterial({color}));
+}
+
+// geographic poles (spinGroup local)
+const geoN = markerDot(0xdfe6f2); geoN.position.set(0, EARTH_R, 0);
+const geoS = markerDot(0xdfe6f2); geoS.position.set(0,-EARTH_R, 0);
+spinGroup.add(geoN, geoS);
+const geoNLabel = makeLabelSprite('N geo','#dfe6f2'); geoNLabel.position.set(0, EARTH_R*1.28, 0);
+const geoSLabel = makeLabelSprite('S geo','#dfe6f2'); geoSLabel.position.set(0,-EARTH_R*1.28, 0);
+spinGroup.add(geoNLabel, geoSLabel);
+
+// magnetic poles: ray-sphere intersection from MAG_OFFSET along dipole axis, in spinGroup space
+function raySphereExit(origin, dir, radius){
+  const b = origin.dot(dir);
+  const c = origin.dot(origin) - radius*radius;
+  const disc = Math.max(0, b*b - c);
+  const t = -b + Math.sqrt(disc);
+  return origin.clone().addScaledVector(dir, t);
+}
+const dipoleDirLocal = new THREE.Vector3(0,1,0).applyEuler(new THREE.Euler(THREE.MathUtils.degToRad(MAG_TILT_DEG),0,0)).normalize();
+const magN_local = raySphereExit(MAG_OFFSET.clone(), dipoleDirLocal.clone(), EARTH_R);
+const magS_local = raySphereExit(MAG_OFFSET.clone(), dipoleDirLocal.clone().negate(), EARTH_R);
+const magN = markerDot(0x9b8cf2); magN.position.copy(magN_local);
+const magS = markerDot(0x9b8cf2); magS.position.copy(magS_local);
+spinGroup.add(magN, magS);
+
+// Two label sets for the same two physical points, switched by mode:
+// - "geographic" naming: the pole near the north footpoint is casually
+//   called the "north magnetic pole" (how maps/navigation label it).
+// - "physics" naming: by field-line convention (N = source, S = sink) the
+//   pole near the geographic north footpoint is actually the dipole's
+//   SOUTH pole, and vice versa - so the labels swap sides.
+const geoLabelsGroup = new THREE.Group();
+const magNLabel = makeLabelSprite('N magn.','#c9bfff'); magNLabel.position.copy(magN_local).multiplyScalar(1.32);
+const magSLabel = makeLabelSprite('S magn.','#c9bfff'); magSLabel.position.copy(magS_local).multiplyScalar(1.32);
+geoLabelsGroup.add(magNLabel, magSLabel);
+spinGroup.add(geoLabelsGroup);
+
+const physLabelsGroup = new THREE.Group();
+const magSLabelPhys = makeLabelSprite('S magn.','#c9bfff'); magSLabelPhys.position.copy(magN_local).multiplyScalar(1.32);
+const magNLabelPhys = makeLabelSprite('N magn.','#c9bfff'); magNLabelPhys.position.copy(magS_local).multiplyScalar(1.32);
+physLabelsGroup.add(magSLabelPhys, magNLabelPhys);
+physLabelsGroup.visible = false;
+spinGroup.add(physLabelsGroup);
+
+/* =========================================================
+   MODE 2 — SOLAR WIND / MAGNETOSPHERE
+   ========================================================= */
+const solarGroup = new THREE.Group();
+solarGroup.visible = false;
+scene.add(solarGroup);
+
+// Sun
+const sunX = -sunDist;
+const sunMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(1.9, 32, 32),
+  new THREE.MeshBasicMaterial({ color:0xffd9a0 })
+);
+sunMesh.position.set(sunX, 2, 1);
+solarGroup.add(sunMesh);
+const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+  map:(function(){
+    const cv=document.createElement('canvas'); cv.width=256; cv.height=256;
+    const ctx=cv.getContext('2d');
+    const g=ctx.createRadialGradient(128,128,0,128,128,128);
+    g.addColorStop(0,'rgba(255,225,180,0.9)');
+    g.addColorStop(0.35,'rgba(255,190,120,0.35)');
+    g.addColorStop(1,'rgba(255,190,120,0)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,256,256);
+    return new THREE.CanvasTexture(cv);
+  })(),
+  transparent:true, depthWrite:false
+}));
+sunGlow.scale.set(14,14,1);
+sunGlow.position.copy(sunMesh.position);
+solarGroup.add(sunGlow);
+const sunLabel = makeLabelSprite('Сонце →','#ffd9a0');
+sunLabel.position.set(sunX+3.2, 2, 1);
+solarGroup.add(sunLabel);
+
+// Magnetopause boundary (lathe revolve around sun-earth axis)
+const STANDOFF = 3.0;     // dayside standoff distance
+const DAY_R    = 4.4;     // radius at terminator (x=0)
+const TAIL_R   = 7.2;     // asymptotic tail radius
+const TAIL_LEN = 22;      // tail length
+
+function boundaryRadius(s){
+  if(s <= 0){
+    const t = THREE.MathUtils.clamp((s + STANDOFF)/STANDOFF, 0, 1); // 0 at nose .. 1 at x=0
+    return DAY_R * Math.sqrt(Math.max(0, t*(2-t)));
+  } else {
+    return DAY_R + (TAIL_R-DAY_R) * (1 - Math.exp(-s/8));
+  }
+}
+function buildMagnetopause(){
+  const pts = [];
+  const N = 56;
+  for(let i=0;i<=N;i++){
+    const s = THREE.MathUtils.lerp(-STANDOFF, TAIL_LEN, i/N);
+    const r = Math.max(0.001, boundaryRadius(s));
+    pts.push(new THREE.Vector2(r, s));
+  }
+  const geo = new THREE.LatheGeometry(pts, 40);
+  geo.rotateZ(-Math.PI/2); // align revolve axis to world +X (tail away from sun at -X)
+  const mat = new THREE.MeshPhongMaterial({
+    color:0x2f6fb0, transparent:true, opacity:0.13, side:THREE.DoubleSide,
+    depthWrite:false, shininess:30
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  solarGroup.add(mesh);
+
+  const wire = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20),
+    new THREE.LineBasicMaterial({ color:0x6fb8e8, transparent:true, opacity:0.16 }));
+  solarGroup.add(wire);
+
+  // bow shock (slightly larger, further out, faint)
+  const ptsBow = pts.map(p => new THREE.Vector2(p.x*1.28 + 0.4, p.y - 0.5));
+  const geoBow = new THREE.LatheGeometry(ptsBow, 40);
+  geoBow.rotateZ(-Math.PI/2);
+  const bow = new THREE.Mesh(geoBow, new THREE.MeshBasicMaterial({ color:0xffb37a, transparent:true, opacity:0.05, side:THREE.DoubleSide, depthWrite:false }));
+  solarGroup.add(bow);
+}
+buildMagnetopause();
+
+const mpLabel = makeLabelSprite('Магнітопауза','#8fd0ff');
+mpLabel.position.set(-STANDOFF-0.6, DAY_R*0.55, 0);
+solarGroup.add(mpLabel);
+
+/* ---- solar wind particles ---- */
+const N_PARTICLES = 900;
+const pPos = new Float32Array(N_PARTICLES*3);
+const pVel = new Float32Array(N_PARTICLES*3);
+const pCol = new Float32Array(N_PARTICLES*3);
+const pState = new Uint8Array(N_PARTICLES); // 0 free/deflect, 1 captured
+const pTimer = new Float32Array(N_PARTICLES);
+const pTarget = new Float32Array(N_PARTICLES*3);
+
+const SPAWN_X = -sunDist*0.62;
+const SPEED = 6.2;
+const colFree = new THREE.Color(0xffcf8a);
+const colAurora = new THREE.Color(0x7ee787);
+
+function respawn(i){
+  const ang = Math.random()*Math.PI*2;
+  const rad = Math.sqrt(Math.random())*DAY_R*2.3;
+  pPos[i*3]   = SPAWN_X + (Math.random()-0.5)*2;
+  pPos[i*3+1] = Math.sin(ang)*rad;
+  pPos[i*3+2] = Math.cos(ang)*rad;
+  pVel[i*3]   = SPEED*(0.85+Math.random()*0.3);
+  pVel[i*3+1] = (Math.random()-0.5)*0.15;
+  pVel[i*3+2] = (Math.random()-0.5)*0.15;
+  pState[i]=0; pTimer[i]=0;
+  pCol[i*3]=colFree.r; pCol[i*3+1]=colFree.g; pCol[i*3+2]=colFree.b;
+}
+for(let i=0;i<N_PARTICLES;i++) respawn(i);
+// desync initial spawn along the flow so the stream isn't a single wall
+for(let i=0;i<N_PARTICLES;i++){ pPos[i*3] += Math.random()* (sunDist*1.3); }
+
+const particleGeo = new THREE.BufferGeometry();
+particleGeo.setAttribute('position', new THREE.BufferAttribute(pPos,3));
+particleGeo.setAttribute('color', new THREE.BufferAttribute(pCol,3));
+const particleMat = new THREE.PointsMaterial({ size:0.11, vertexColors:true, transparent:true, opacity:0.9, depthWrite:false, blending:THREE.AdditiveBlending });
+const particlePoints = new THREE.Points(particleGeo, particleMat);
+solarGroup.add(particlePoints);
+
+const tmpNorth = new THREE.Vector3();
+const tmpSouth = new THREE.Vector3();
+
+function updateParticles(dt){
+  magN.getWorldPosition(tmpNorth);
+  magS.getWorldPosition(tmpSouth);
+
+  for(let i=0;i<N_PARTICLES;i++){
+    const ix=i*3;
+    if(pState[i]===1){
+      // captured -> funnel toward nearest pole, color shift to aurora green
+      pTimer[i]+=dt;
+      const tx=pTarget[ix], ty=pTarget[ix+1], tz=pTarget[ix+2];
+      const k = Math.min(1, pTimer[i]/1.1);
+      pPos[ix]   += (tx-pPos[ix])*3.2*dt;
+      pPos[ix+1] += (ty-pPos[ix+1])*3.2*dt;
+      pPos[ix+2] += (tz-pPos[ix+2])*3.2*dt;
+      pCol[ix]   += (colAurora.r-pCol[ix])*3*dt;
+      pCol[ix+1] += (colAurora.g-pCol[ix+1])*3*dt;
+      pCol[ix+2] += (colAurora.b-pCol[ix+2])*3*dt;
+      if(pTimer[i]>1.15) respawn(i);
+      continue;
+    }
+
+    let x=pPos[ix], y=pPos[ix+1], z=pPos[ix+2];
+    const rad = Math.sqrt(y*y+z*z);
+    const s = x; // axial coordinate == world x since earth at origin
+    const boundary = boundaryRadius(THREE.MathUtils.clamp(s, -STANDOFF, TAIL_LEN));
+
+    if(s >= -STANDOFF && s <= TAIL_LEN && rad < boundary){
+      const distToCenter = Math.sqrt(x*x+y*y+z*z);
+      if(distToCenter < 2.1 && rad < 0.85 && s < 1.4){
+        // capture into auroral funnel
+        pState[i]=1; pTimer[i]=0;
+        const useNorth = y >= 0;
+        const t = useNorth?tmpNorth:tmpSouth;
+        pTarget[ix]=t.x; pTarget[ix+1]=t.y; pTarget[ix+2]=t.z;
+        continue;
+      }
+      // deflect outward (magnetic shielding pushes the particle around the cavity)
+      const away = rad>0.0001 ? [y/rad, z/rad] : [Math.random()-0.5, Math.random()-0.5];
+      const push = (boundary-rad+0.15)*2.6;
+      pVel[ix+1] += away[0]*push*dt;
+      pVel[ix+2] += away[1]*push*dt;
+      pVel[ix]   *= 0.985; // slows / piles up near the shield
+      pCol[ix]   += (0.95-pCol[ix])*1.2*dt;
+      pCol[ix+1] += (0.55-pCol[ix+1])*1.2*dt;
+      pCol[ix+2] += (0.32-pCol[ix+2])*1.2*dt;
+    } else {
+      // free flow: drift back toward base color
+      pCol[ix]   += (colFree.r-pCol[ix])*1.0*dt;
+      pCol[ix+1] += (colFree.g-pCol[ix+1])*1.0*dt;
+      pCol[ix+2] += (colFree.b-pCol[ix+2])*1.0*dt;
+    }
+
+    pPos[ix]   += pVel[ix]*dt;
+    pPos[ix+1] += pVel[ix+1]*dt;
+    pPos[ix+2] += pVel[ix+2]*dt;
+
+    if(pPos[ix] > TAIL_LEN+6 || Math.abs(pPos[ix+1])>40 || Math.abs(pPos[ix+2])>40){
+      respawn(i);
+    }
+  }
+  particleGeo.attributes.position.needsUpdate = true;
+  particleGeo.attributes.color.needsUpdate = true;
+}
+
+/* =========================================================
+   UI WIRING
+   ========================================================= */
+const btnMode1 = document.getElementById('btnMode1');
+const btnMode2 = document.getElementById('btnMode2');
+const btnMode3 = document.getElementById('btnMode3');
+const readoutExtra = document.getElementById('readoutExtra');
+const legendEcliptic = document.getElementById('legendEcliptic');
+const legendSolar = document.getElementById('legendSolar');
+const legendAurora = document.getElementById('legendAurora');
+const legendCompass = document.getElementById('legendCompass');
+const compassEl = document.getElementById('compass');
+
+// store base opacities once so mode switching doesn't compound-dim them
+fieldLinesGroup.traverse(o=>{ if(o.material) o.userData.baseOpacity = o.material.opacity; });
+
+const MODE_LABELS = {
+  1:'ГЕОГРАФІЧНІ ПОЛЮСИ',
+  2:'ЗАХИСТ ВІД ВІТРУ',
+  3:'ФІЗИЧНІ ПОЛЮСИ'
+};
+
+function setMode(m){
+  mode = m;
+  btnMode1.classList.toggle('active', m===1);
+  btnMode2.classList.toggle('active', m===2);
+  btnMode3.classList.toggle('active', m===3);
+
+  solarGroup.visible = (m===2);
+  eclipticGroup.visible = (m!==2) && showEcliptic;
+  compassEl.classList.toggle('show', m===3);
+
+  legendEcliptic.style.display = (m!==2) ? 'flex':'none';
+  legendSolar.style.display = (m===2) ? 'flex':'none';
+  legendAurora.style.display = (m===2) ? 'flex':'none';
+  legendCompass.style.display = (m===3) ? 'flex':'none';
+  readoutExtra.innerHTML = 'РЕЖИМ: <b>'+MODE_LABELS[m]+'</b>';
+
+  // field lines: full brightness in modes 1 & 3, dimmed while solar wind is the focus
+  fieldLinesGroup.traverse(o=>{
+    if(o.material && o.userData.baseOpacity!==undefined){
+      o.material.opacity = (m===2) ? Math.min(o.userData.baseOpacity, 0.22) : o.userData.baseOpacity;
+    }
+  });
+
+  // Colour scheme on the lines: modes 1 & 3 ("polarity" modes) use a hard
+  // boundary at the magnetic equator; mode 2 (solar wind) keeps the
+  // original soft gradient look, unchanged.
+  fieldLinesGroup.children.forEach(o=>{
+    if(o.isLine && o.userData.colsHard){
+      const cols = (m===2) ? o.userData.colsSoft : o.userData.colsHard;
+      o.geometry.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+    }
+  });
+
+  // Direction arrows only make sense once we commit to one polarity
+  // convention, so they only appear in the "physics poles" mode.
+  fieldArrowsGroup.visible = (m===3);
+
+  // Pole labelling: casual/geographic naming in modes 1 & 2, the
+  // (reversed) true dipole-polarity naming in mode 3.
+  geoLabelsGroup.visible = (m!==3);
+  physLabelsGroup.visible = (m===3);
+
+  if(m===2){
+    // pull the camera back so both Earth and the Sun are framed together
+    animateCameraTo(new THREE.Vector3(3, 9, 27), new THREE.Vector3(-7, 0, 0));
+  } else if(m===3){
+    animateCameraTo(new THREE.Vector3(7.5, 4.6, 9.6), new THREE.Vector3(0,0,0));
+  } else {
+    animateCameraTo(DEFAULT_CAM_POS.clone(), new THREE.Vector3(0,0,0));
+  }
+
+  if(infoModal.classList.contains('open')) openInfo(); // refresh content if left open while switching
+}
+btnMode1.addEventListener('click', ()=>setMode(1));
+btnMode2.addEventListener('click', ()=>setMode(2));
+btnMode3.addEventListener('click', ()=>setMode(3));
+
+let camAnimT = null;
+function animateCameraTo(pos, target){
+  const startPos = camera.position.clone();
+  const startTarget = controls.target.clone();
+  let t0 = null;
+  const dur = 900;
+  if(camAnimT) cancelAnimationFrame(camAnimT);
+  function step(ts){
+    if(t0===null) t0 = ts;
+    const k = Math.min(1, (ts-t0)/dur);
+    const e = k<0.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2; // easeInOutQuad
+    camera.position.lerpVectors(startPos,pos,e);
+    controls.target.lerpVectors(startTarget,target,e);
+    controls.update();
+    if(k<1) camAnimT = requestAnimationFrame(step);
+  }
+  camAnimT = requestAnimationFrame(step);
+}
+
+const speedSlider = document.getElementById('speedSlider');
+const speedVal = document.getElementById('speedVal');
+speedSlider.addEventListener('input', e=>{
+  spinSpeed = parseFloat(e.target.value);
+  speedVal.textContent = spinSpeed.toFixed(2)+'×';
+});
+
+const btnPlay = document.getElementById('btnPlay');
+btnPlay.addEventListener('click', ()=>{
+  playing = !playing;
+  btnPlay.textContent = playing ? '⏸ Пауза' : '▶ Старт';
+  btnPlay.classList.toggle('on', playing);
+});
+
+const MODE_CAMS = {
+  1: [DEFAULT_CAM_POS.clone(), new THREE.Vector3(0,0,0)],
+  2: [new THREE.Vector3(3,9,27), new THREE.Vector3(-7,0,0)],
+  3: [new THREE.Vector3(7.5,4.6,9.6), new THREE.Vector3(0,0,0)]
+};
+document.getElementById('btnReset').addEventListener('click', ()=>{
+  const [pos, tgt] = MODE_CAMS[mode];
+  animateCameraTo(pos.clone(), tgt.clone());
+});
+
+const btnLines = document.getElementById('btnLines');
+btnLines.classList.add('on');
+btnLines.addEventListener('click', ()=>{
+  showLines = !showLines;
+  fieldLinesGroup.visible = showLines;
+  btnLines.classList.toggle('on', showLines);
+});
+
+const btnEcliptic = document.getElementById('btnEcliptic');
+btnEcliptic.classList.add('on');
+btnEcliptic.addEventListener('click', ()=>{
+  showEcliptic = !showEcliptic;
+  eclipticGroup.visible = showEcliptic && mode!==2;
+  btnEcliptic.classList.toggle('on', showEcliptic);
+});
+
+/* info modal (right side), per-mode content */
+const infoToggle = document.getElementById('infoToggle');
+const infoOverlay = document.getElementById('infoOverlay');
+const infoModal = document.getElementById('infoModal');
+const infoEyebrow = document.getElementById('infoEyebrow');
+const infoTitle = document.getElementById('infoTitle');
+const infoBody = document.getElementById('infoBody');
+
+const INFO_CONTENT = {
+  1: {
+    eyebrow:'Режим 1 · Географічні полюси',
+    title:'Магнітне поле Землі',
+    body:`<p>Ви бачите модель геомагнітного поля у наближенні <b>диполя</b> — так само, як поводиться поле звичайного стрижневого магніту, вміщеного всередину планети.</p>
+      <p>Вісь обертання Землі нахилена на <b>23,44°</b> відносно площини екліптики (сіра полярна сітка) — саме це спричиняє зміну пір року.</p>
+      <p>Вісь магнітного диполя відхилена ще на <b>≈11°</b> від осі обертання, а центр диполя зміщений відносно центру планети — тому магнітні полюси (фіолетові мітки) не збігаються з географічними (білі мітки).</p>
+      <p>Підписи <b>N magn. / S magn.</b> тут дані в звичному, «навігаційному» сенсі: полюс біля географічної півночі називають північним магнітним, а біля півдня — південним, так само, як на картах і в компасах.</p>
+      <p>Лінії поля мають чітку кольорову межу — <b>червоний</b> колір у північній півкулі, <b>синій</b> — у південній, без стрілок напрямку.</p>
+      <div class="stats">
+        <div class="stat"><span>Нахил осі обертання</span><b>23,44°</b></div>
+        <div class="stat"><span>Зсув магнітної осі</span><b>≈11°</b></div>
+        <div class="stat"><span>Зміщення диполя</span><b>≈0,09 R⊕</b></div>
+      </div>`
+  },
+  2: {
+    eyebrow:'Режим 2 · Взаємодія',
+    title:'Захист від сонячної радіації',
+    body:`<p>Потік заряджених частинок від Сонця (<b>сонячний вітер</b>) летить праворуч і зустрічає магнітне поле Землі.</p>
+      <p>З денного боку поле стискається до межі, що зветься <b>магнітопаузою</b> — приблизно там, де тиск магнітного поля врівноважує тиск вітру. З нічного боку поле натомість витягується у довгий <b>магнітний хвіст</b>.</p>
+      <p>Більшість частинок (жовто-помаранчеві точки) відхиляється навколо цієї межі й обтікає планету, не досягаючи поверхні.</p>
+      <p>Невелика частина потрапляє у «лійки» поблизу полюсів, де силові лінії ведуть прямо до атмосфери — це показано <b>зеленими</b> частинками і відповідає реальному механізму виникнення <b>полярного сяйва</b>.</p>
+      <p>Камеру навмисно відсунуто назад, щоб одночасно бачити і Сонце, і Землю, і форму магнітного щита між ними.</p>`
+  },
+  3: {
+    eyebrow:'Режим 3 · Фізичні полюси',
+    title:'З точки зору фізики',
+    body:`<p>Тут ті самі дві точки на поверхні, що й у режимі «Географічні полюси», але підписані за <b>справжньою полярністю диполя</b>, а не за звичкою.</p>
+      <p>Силові лінії за означенням виходять із <b>N</b>-полюса магніту і входять у <b>S</b>-полюс. Оскільки стрілка компаса (яка сама є N-полюсом) притягується до полюса біля географічної півночі, цей полюс має бути протилежної полярності — тобто це фактично <b>S</b>-полюс диполя Землі. І навпаки: біля географічного півдня лежить справжній <b>N</b>-полюс.</p>
+      <p>Тому тут підписи навмисно «перевернуті» відносно звичного географічного режиму, а на лініях поля додано <b>стрілки</b>: вони виходять від полюса біля географічного півдня (N) і збігаються до полюса біля географічної півночі (S) — саме такий напрямок передбачає фізика диполя.</p>
+      <p>Зліва додано <b>компас</b>: він живий і реагує на поточний кут камери. Позначка <b>N</b> завжди вказує на проєкцію напрямку географічної півночі, а двоколірна стрілка (червоний — до магнітної півночі, синій — до магнітної півдні) показує, куди насправді вказувала б магнітна стрілка компаса.</p>
+      <p>Кут між цими двома напрямками називається <b>магнітним схиленням</b> — саме тому компас на Землі рідко показує точно на географічний Північний полюс.</p>`
+  }
+};
+
+function openInfo(){
+  const c = INFO_CONTENT[mode];
+  infoEyebrow.textContent = c.eyebrow;
+  infoTitle.textContent = c.title;
+  infoBody.innerHTML = c.body;
+  infoModal.classList.add('open');
+  infoOverlay.classList.add('open');
+}
+function closeInfo(){
+  infoModal.classList.remove('open');
+  infoOverlay.classList.remove('open');
+}
+infoToggle.addEventListener('click', openInfo);
+document.getElementById('infoClose').addEventListener('click', closeInfo);
+infoOverlay.addEventListener('click', closeInfo);
+
+/* =========================================================
+   LIVE COMPASS (mode 3)
+   Projects the true geographic-north direction and the magnetic-axis
+   direction onto the camera's screen plane, so the rose/needle react to
+   both the current viewing angle and Earth's rotation in real time.
+   ========================================================= */
+const compassRose = document.getElementById('compassRose');
+const compassNeedle = document.getElementById('compassNeedle');
+const declVal = document.getElementById('declVal');
+const _geoDir = new THREE.Vector3(), _magDir = new THREE.Vector3();
+const _camRight = new THREE.Vector3(), _camUp = new THREE.Vector3();
+
+function updateCompass(){
+  _geoDir.set(0,1,0).transformDirection(spinGroup.matrixWorld);
+  _magDir.set(0,1,0).transformDirection(magAxisGroup.matrixWorld);
+
+  camera.matrixWorld.extractBasis(_camRight, _camUp, new THREE.Vector3());
+
+  const angGeo = Math.atan2(_geoDir.dot(_camRight), _geoDir.dot(_camUp));
+  const angMag = Math.atan2(_magDir.dot(_camRight), _magDir.dot(_camUp));
+
+  compassRose.setAttribute('transform', `rotate(${THREE.MathUtils.radToDeg(angGeo)} 50 50)`);
+  compassNeedle.setAttribute('transform', `rotate(${THREE.MathUtils.radToDeg(angMag)} 50 50)`);
+
+  let declDeg = THREE.MathUtils.radToDeg(angMag - angGeo);
+  declDeg = ((declDeg + 180) % 360 + 360) % 360 - 180;
+  declVal.textContent = declDeg.toFixed(1) + '°';
+}
+
+/* =========================================================
+   ANIMATE
+   ========================================================= */
+const clock = new THREE.Clock();
+document.getElementById('loading').style.opacity = '0';
+setTimeout(()=>{ document.getElementById('loading').style.display='none'; }, 550);
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+
+  if(playing){
+    spinGroup.rotation.y += BASE_SPIN*spinSpeed*dt;
+  }
+  if(mode===2){
+    updateParticles(dt);
+    sunGlow.material.rotation += dt*0.05;
+  }
+  if(mode===3){
+    updateCompass();
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+setMode(1);
+</script>
+</body>
+</html>

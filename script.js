@@ -108,6 +108,9 @@ const CATEGORIES_DATA = {
     desc: 'Орфографія, синтаксис, стилістика та шедеври української класичної й сучасної літератури.',
     topics: [
       { name: 'Кругообіг води в природі', link: './products/watercycle/water_cycle_simulation.html' },
+       { name: 'Магнітне поле Землі', link: './products/Earth_magnetic_field /earth_magnetic_field.html' },
+
+       
       
     ]
   }

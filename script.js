@@ -15,6 +15,9 @@ const CATEGORIES_DATA = {
     topics: [
       { name: 'Інтерактивне середовище побудови графіків', link: './products/uMathLab/umathlab.html' },
       { name: 'Дроби для початківців', link: './products/fractions/fractions.html' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
      
     ]
   },
@@ -40,7 +43,8 @@ const CATEGORIES_DATA = {
       { name: 'Сонячна системи', link: './products/solar_system/solar_system.html' },
       { name: 'Будова Землі', link: './products/structure_of_the_earth/index.html' },
       { name: 'Зміна пір року', link: './products/seasons/index.html' },
-      { name: 'Фази Місяця', link: './products/phases_of_the_Moon/index.html' }
+      { name: 'Фази Місяця', link: './products/phases_of_the_Moon/index.html' },
+       { name: 'Додатки в розробці', link: '' },
     ]
   },
   stem: {
@@ -52,6 +56,7 @@ const CATEGORIES_DATA = {
       { name: 'Гра-симулятор Сонячна ферма ', link: './products/solarfarm/SolarFarm.html' },
       { name: 'Сканер штрих-коду', link: './products/stem/barcodescan2.html' },
       { name: 'Генератор QR', link: './products/stem/QR_gen.html' },
+       { name: 'Додатки в розробці', link: '' },
 
     ]
   },
@@ -62,6 +67,9 @@ const CATEGORIES_DATA = {
     topics: [
       { name: 'Періодична система хімічних елементів', link: './products/periodic/periodic.html' },
       { name: 'Будова атома', link: './products/atom/index.html' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
       
     ]
   },
@@ -72,7 +80,9 @@ const CATEGORIES_DATA = {
     topics: [
       { name: 'ЗD моделювання для дітей', link: './products/3Dcraft/index.html' },
       { name: 'Веб-технології: HTML, CSS та JS', link: './products/uweb/index.html' },
-      { name: 'Блочне програмування', link: 'https://kseryi.github.io/uPyth/' }
+      { name: 'Блочне програмування', link: 'https://kseryi.github.io/uPyth/' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
     ]
   },
   geography: {
@@ -81,7 +91,10 @@ const CATEGORIES_DATA = {
     desc: 'Фізична та економічна географія, інтерактивні карти, кліматичні пояси та геологія.',
     topics: [
       { name: 'Інтерактивний глобус', link: './products/globe/globe.html' },
-       { name: 'Симулятор рельєфу', link: './products/relief/relief.html' }
+       { name: 'Симулятор рельєфу', link: './products/relief/relief.html' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
       
     ]
   },
@@ -91,6 +104,10 @@ const CATEGORIES_DATA = {
     desc: 'Цитологія, генетика, анатомія людини, ботаніка, зоологія та екологія.',
     topics: [
       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
      
     ]
   },
@@ -100,6 +117,10 @@ const CATEGORIES_DATA = {
     desc: 'Історія України та всесвітня історія, хронологічні шкали, історичні карти та події.',
     topics: [
       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
 
     ]
   },
@@ -110,6 +131,9 @@ const CATEGORIES_DATA = {
     topics: [
       { name: 'Кругообіг води в природі', link: './products/watercycle/water_cycle_simulation.html' },
       { name: 'Магнітне поле Землі', link: './products/Earth_magnetic_field/earth_magnetic_field.html' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
+       { name: 'Додатки в розробці', link: '' },
 
        
       

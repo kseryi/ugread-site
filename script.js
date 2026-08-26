@@ -14,6 +14,7 @@ const CATEGORIES_DATA = {
     desc: 'Алгебра, геометрія, функції, математичний аналіз та інтерактивні графіки.',
     topics: [
       { name: 'Інтерактивне середовище побудови графіків', link: './products/uMathLab/umathlab.html' },
+      { name: 'Дроби для початківців', link: './products/fractions/fractions.html' },
      
     ]
   },

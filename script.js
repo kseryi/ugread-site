@@ -67,7 +67,7 @@ const CATEGORIES_DATA = {
     topics: [
       { name: 'Періодична система хімічних елементів', link: './products/periodic/periodic.html' },
       { name: 'Будова атома', link: './products/atom/index.html' },
-       { name: 'Додатки в розробці', link: '' },
+       { name: 'Хімічний пазл', link: './products/chemical_puzzle/chemical_puzzle_offline.html' },
        { name: 'Додатки в розробці', link: '' },
        { name: 'Додатки в розробці', link: '' },
       

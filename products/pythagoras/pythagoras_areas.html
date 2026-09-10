@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Теорема Піфагора — площі</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  /* ==========================================================
+     ДИЗАЙН-ТОКЕНИ — тема "аркуш креслярського зошита"
+     ========================================================== */
+  :root{
+    --bg:            #0f1320;
+    --bg-grid:       #171d30;
+    --panel:         #161b2c;
+    --panel-2:       #1d2338;
+    --line:          #2a3252;
+    --text:          #e9ecf7;
+    --text-dim:      #97a0c2;
+    --accent-a:      #4f8fe8;   /* квадрат A — синій   */
+    --accent-b:      #34d399;   /* квадрат B — зелений */
+    --accent-c:      #a78bfa;   /* квадрат C — фіолетовий */
+    --accent-warn:   #f5a623;
+    --radius-lg:     22px;
+    --radius-md:     14px;
+    --font-display:  'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body:     'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono:     'JetBrains Mono', 'Courier New', monospace;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 800px at 15% -10%, #1b2340 0%, transparent 60%),
+      radial-gradient(1000px 700px at 110% 10%, #202a1f 0%, transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    display:flex;
+    justify-content:center;
+    padding:28px 16px 60px;
+  }
+
+  .app{ width:100%; max-width:1360px; }
+
+  header{ text-align:center; margin-bottom:26px; }
+  .eyebrow{
+    font-family:var(--font-mono);
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-size:12px;
+    color:var(--accent-warn);
+    margin:0 0 10px;
+  }
+  h1{
+    font-family:var(--font-display);
+    font-weight:650;
+    font-size:clamp(28px, 4vw, 44px);
+    margin:0 0 10px;
+    line-height:1.1;
+  }
+  h1 span{ color:var(--accent-a); }
+  header p{
+    color:var(--text-dim);
+    max-width:640px;
+    margin:0 auto;
+    font-size:15px;
+    line-height:1.55;
+  }
+
+  main{
+    display:grid;
+    grid-template-columns: minmax(360px, 820px) 320px;
+    gap:22px;
+    align-items:start;
+    justify-content:center;
+  }
+  @media (max-width: 900px){
+    main{ grid-template-columns: 1fr; justify-items:center; }
+  }
+
+  .stage{
+    position:relative;
+    background:
+      linear-gradient(var(--bg-grid) 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px) 0 0 / 28px 28px,
+      var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:14px;
+    box-shadow: 0 30px 60px -30px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.02);
+  }
+  canvas{
+    width:100%;
+    height:auto;
+    display:block;
+    border-radius:12px;
+  }
+
+  .formula-bar{
+    margin-top:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+    font-family:var(--font-mono);
+    font-weight:700;
+    font-size:clamp(16px, 2.6vw, 24px);
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    padding:14px 10px;
+  }
+  .formula-bar .num-a{ color:var(--accent-a); }
+  .formula-bar .num-b{ color:var(--accent-b); }
+  .formula-bar .num-c{ color:var(--accent-c); }
+  .formula-bar .op, .formula-bar .eq{ color:var(--text-dim); font-weight:500; }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    width:100%;
+  }
+  .panel h2{
+    font-family:var(--font-display);
+    font-size:18px;
+    margin:0;
+    font-weight:650;
+  }
+
+  .control{ display:flex; flex-direction:column; gap:8px; }
+  .control label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:13px; color:var(--text-dim);
+  }
+  .control label b{
+    font-family:var(--font-mono);
+    color:var(--text);
+    font-size:14px;
+  }
+  input[type=range]{
+    -webkit-appearance:none;
+    width:100%;
+    height:6px;
+    border-radius:6px;
+    background:var(--line);
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:18px; height:18px;
+    border-radius:50%;
+    background:var(--accent-warn);
+    border:3px solid #241a08;
+    cursor:pointer;
+    box-shadow:0 0 0 3px rgba(245,166,35,.18);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:18px; height:18px; border-radius:50%;
+    background:var(--accent-warn); border:3px solid #241a08; cursor:pointer;
+  }
+
+  .toggles{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    padding:16px 0;
+  }
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .toggle-row .toggle-text{ display:flex; flex-direction:column; gap:2px; }
+  .toggle-row .toggle-title{ font-size:14px; font-weight:600; color:var(--text); }
+  .toggle-row .toggle-hint{ font-size:11.5px; color:var(--text-dim); }
+
+  .switch{
+    position:relative;
+    display:inline-block;
+    width:46px;
+    height:26px;
+    flex-shrink:0;
+  }
+  .switch input{
+    opacity:0;
+    width:0;
+    height:0;
+  }
+  .switch .track{
+    position:absolute;
+    cursor:pointer;
+    inset:0;
+    background:var(--line);
+    border-radius:999px;
+    transition:background .18s ease;
+  }
+  .switch .track::before{
+    content:"";
+    position:absolute;
+    height:20px;
+    width:20px;
+    left:3px;
+    top:3px;
+    background:#e9ecf7;
+    border-radius:50%;
+    transition:transform .18s ease;
+  }
+  .switch input:checked + .track{
+    background:var(--accent-warn);
+  }
+  .switch input:checked + .track::before{
+    transform:translateX(20px);
+    background:#241a08;
+  }
+  .switch input:disabled + .track{
+    opacity:.4;
+    cursor:not-allowed;
+  }
+
+  .stat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .stat{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px;
+  }
+  .stat .dot{
+    display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px;
+  }
+  .stat .label{ font-size:12px; color:var(--text-dim); }
+  .stat .value{ font-family:var(--font-mono); font-size:19px; font-weight:700; margin-top:4px; }
+  .stat .sub{ font-family:var(--font-mono); font-size:11px; color:var(--text-dim); margin-top:2px;}
+
+  .legend{
+    display:flex; flex-direction:column; gap:6px;
+    font-size:12.5px; color:var(--text-dim);
+    border-top:1px solid var(--line);
+    padding-top:14px;
+  }
+  .legend span.sw{ display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:8px; }
+
+  footer{
+    text-align:center;
+    margin-top:26px;
+    color:var(--text-dim);
+    font-size:12.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header>
+    <p class="eyebrow">Наочна геометрія</p>
+    <h1>Теорема <span>Піфагора</span> — площі</h1>
+    <p>
+      Спочатку на кресленні лише прямокутний трикутник. Перемикачами на панелі
+      праворуч можна поступово побудувати квадрати на його сторонах, а потім
+      показати їхні площі — і побачити, що площа квадрата гіпотенузи
+      <b style="color:var(--accent-c)">c²</b> завжди точно дорівнює сумі площ
+      квадратів катетів <b style="color:var(--accent-a)">a²</b> і
+      <b style="color:var(--accent-b)">b²</b>.
+    </p>
+  </header>
+
+  <main>
+    <div class="stage">
+      <canvas id="canvas" width="820" height="820"></canvas>
+
+      <div class="formula-bar">
+        <span class="num-a" id="fA">0</span>
+        <span class="op">+</span>
+        <span class="num-b" id="fB">0</span>
+        <span class="eq">=</span>
+        <span class="num-c" id="fC">0</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Катети трикутника</h2>
+
+      <div class="control">
+        <label>Катет <b>a</b> <b id="valA">90</b> px</label>
+        <input type="range" id="sliderA" min="50" max="170" value="90" step="1">
+      </div>
+
+      <div class="control">
+        <label>Катет <b>b</b> <b id="valB">120</b> px</label>
+        <input type="range" id="sliderB" min="50" max="170" value="120" step="1">
+      </div>
+
+      <div class="toggles">
+        <div class="toggle-row">
+          <div class="toggle-text">
+            <span class="toggle-title">Показати квадрати</span>
+            <span class="toggle-hint">Побудувати квадрати на сторонах</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggleSquares">
+            <span class="track"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-text">
+            <span class="toggle-title">Показати площі</span>
+            <span class="toggle-hint">Підписати площу кожного квадрата</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggleAreas" disabled>
+            <span class="track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="label"><span class="dot" style="background:var(--accent-a)"></span>Катет a</div>
+          <div class="value" id="lenA">—</div>
+          <div class="sub">px</div>
+        </div>
+        <div class="stat">
+          <div class="label"><span class="dot" style="background:var(--accent-b)"></span>Катет b</div>
+          <div class="value" id="lenB">—</div>
+          <div class="sub">px</div>
+        </div>
+        <div class="stat" style="grid-column:1 / -1;">
+          <div class="label"><span class="dot" style="background:var(--accent-c)"></span>Гіпотенуза c</div>
+          <div class="value" id="lenC">—</div>
+          <div class="sub">√(a² + b²), px</div>
+        </div>
+      </div>
+
+      <div id="areaStatsWrap">
+        <div class="stat-grid" id="areaStats">
+          <div class="stat">
+            <div class="label"><span class="dot" style="background:var(--accent-a)"></span>Площа A²</div>
+            <div class="value" id="areaA">—</div>
+            <div class="sub">a × a</div>
+          </div>
+          <div class="stat">
+            <div class="label"><span class="dot" style="background:var(--accent-b)"></span>Площа B²</div>
+            <div class="value" id="areaB">—</div>
+            <div class="sub">b × b</div>
+          </div>
+          <div class="stat" style="grid-column:1 / -1;">
+            <div class="label"><span class="dot" style="background:var(--accent-c)"></span>Площа C² (гіпотенуза)</div>
+            <div class="value" id="areaC">—</div>
+            <div class="sub" id="cSub">c × c</div>
+          </div>
+        </div>
+        <p id="areaStatsHint" class="toggle-hint" style="margin:0; padding:4px 2px;">
+          Увімкніть «Показати площі», щоб побачити значення.
+        </p>
+      </div>
+
+      <div class="legend">
+        <div><span class="sw" style="background:var(--accent-a)"></span>Квадрат на катеті a</div>
+        <div><span class="sw" style="background:var(--accent-b)"></span>Квадрат на катеті b</div>
+        <div><span class="sw" style="background:var(--accent-c)"></span>Квадрат на гіпотенузі c</div>
+      </div>
+    </div>
+  </main>
+
+  <footer>Геометрія та площі оновлюються в реальному часі</footer>
+</div>
+
+<script>
+/* =====================================================================
+   ТЕОРЕМА ПІФАГОРА — ПРОСТА СТАТИЧНА ДЕМОНСТРАЦІЯ ПЛОЩ
+   ---------------------------------------------------------------------
+   Без фізики, без пересипання/переливання — лише геометрія:
+   1. Будуємо прямокутний трикутник із катетами a, b у точці прямого
+      кута O, і три квадрати, побудовані ЗОВНІ трикутника на кожній
+      стороні (класична конструкція Піфагора).
+   2. Кожен квадрат зафарбований своїм кольором і підписаний площею.
+   3. Формула внизу показує в реальному часі, що areaA + areaB = areaC.
+   4. Значення a та b плавно анімуються (easing) при русі повзунків,
+      щоб перехід між розмірами виглядав живо, без "різких стрибків".
+   ===================================================================== */
+
+const canvas  = document.getElementById('canvas');
+const ctx     = canvas.getContext('2d');
+const sliderA = document.getElementById('sliderA');
+const sliderB = document.getElementById('sliderB');
+const valA    = document.getElementById('valA');
+const valB    = document.getElementById('valB');
+
+const toggleSquares = document.getElementById('toggleSquares');
+const toggleAreas   = document.getElementById('toggleAreas');
+
+const lenAEl  = document.getElementById('lenA');
+const lenBEl  = document.getElementById('lenB');
+const lenCEl  = document.getElementById('lenC');
+const areaStats     = document.getElementById('areaStats');
+const areaStatsHint = document.getElementById('areaStatsHint');
+const areaAEl = document.getElementById('areaA');
+const areaBEl = document.getElementById('areaB');
+const areaCEl = document.getElementById('areaC');
+const cSubEl  = document.getElementById('cSub');
+const fA = document.getElementById('fA');
+const fB = document.getElementById('fB');
+const fC = document.getElementById('fC');
+
+const PIVOT = { x: 380, y: 420 }; // точка прямого кута O на екрані
+
+// ---------- стан відображення (перемикачі на панелі) ----------
+let showSquares = false; // спочатку показуємо лише трикутник
+let showAreas   = false; // підписи площ вмикаються лише разом із квадратами
+
+// ---------- стан (з плавною анімацією значень a, b) ----------
+let a = parseFloat(sliderA.value);
+let b = parseFloat(sliderB.value);
+let targetA = a;
+let targetB = b;
+
+// =====================================================================
+// ГЕОМЕТРІЯ
+// =====================================================================
+
+// Обчислює вершини трьох квадратів (у світових координатах канви)
+// для заданих довжин катетів a і b.
+function computeGeometry(a, b) {
+  const c = Math.sqrt(a * a + b * b);
+
+  const O    = { x: PIVOT.x,       y: PIVOT.y };
+  const Aend = { x: PIVOT.x + a,   y: PIVOT.y };
+  const Bend = { x: PIVOT.x,       y: PIVOT.y - b };
+
+  // Квадрат на катеті a — будується "вниз", назовні трикутника
+  const sqA = [ O, Aend, { x: Aend.x, y: Aend.y + a }, { x: O.x, y: O.y + a } ];
+
+  // Квадрат на катеті b — будується "вліво", назовні трикутника
+  const sqB = [ O, Bend, { x: Bend.x - b, y: Bend.y }, { x: O.x - b, y: O.y } ];
+
+  // Квадрат на гіпотенузі — зсув відрізка Aend-Bend на вектор (b, -a),
+  // перпендикулярний гіпотенузі й напрямлений назовні трикутника
+  const sqC = [
+    Aend,
+    Bend,
+    { x: Bend.x + b, y: Bend.y - a },
+    { x: Aend.x + b, y: Aend.y - a }
+  ];
+
+  return {
+    a, b, c,
+    areaA: Math.round(a * a),
+    areaB: Math.round(b * b),
+    areaC: Math.round(a * a + b * b), // точна сума — гарантія a² + b² = c²
+    O, Aend, Bend, sqA, sqB, sqC
+  };
+}
+
+// =====================================================================
+// МАЛЮВАННЯ
+// =====================================================================
+
+function drawPoly(pts, fill, stroke) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = stroke;
+  ctx.stroke();
+}
+
+function polyCentroid(pts) {
+  let x = 0, y = 0;
+  pts.forEach(p => { x += p.x; y += p.y; });
+  return { x: x / pts.length, y: y / pts.length };
+}
+
+function drawLabel(centroid, text, color) {
+  ctx.save();
+  ctx.font = '600 15px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const padX = 9, padY = 5;
+  const w = ctx.measureText(text).width;
+  ctx.fillStyle = 'rgba(15,19,32,0.85)';
+  ctx.fillRect(centroid.x - w / 2 - padX, centroid.y - 9 - padY, w + padX * 2, 18 + padY);
+  ctx.fillStyle = color;
+  ctx.fillText(text, centroid.x, centroid.y);
+  ctx.restore();
+}
+
+// невеликий квадратик прямого кута в точці O (традиційне позначення 90°)
+function drawRightAngleMark(O, dirX, dirY) {
+  const s = 14;
+  ctx.beginPath();
+  ctx.moveTo(O.x + dirX * s, O.y);
+  ctx.lineTo(O.x + dirX * s, O.y + dirY * s);
+  ctx.lineTo(O.x, O.y + dirY * s);
+  ctx.strokeStyle = 'rgba(233,236,247,0.55)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+function render(geo) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // ---- трикутник ----
+  drawPoly([geo.O, geo.Aend, geo.Bend], 'rgba(255,255,255,0.05)', 'rgba(255,255,255,0.35)');
+  drawRightAngleMark(geo.O, 1, -1);
+
+  // ---- три квадрати (лише якщо перемикач "Показати квадрати" увімкнено) ----
+  if (showSquares) {
+    drawPoly(geo.sqA, 'rgba(79,143,232,0.22)', '#4f8fe8');
+    drawPoly(geo.sqB, 'rgba(52,211,153,0.22)', '#34d399');
+    drawPoly(geo.sqC, 'rgba(167,139,250,0.22)', '#a78bfa');
+  }
+
+  // ---- підписи довжин сторін (завжди, разом із трикутником) ----
+  ctx.font = '500 12px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(233,236,247,0.7)';
+  ctx.textAlign = 'center';
+  ctx.fillText(`a = ${Math.round(geo.a)}`, (geo.O.x + geo.Aend.x) / 2, geo.O.y + 16);
+  ctx.save();
+  ctx.translate(geo.O.x - 14, (geo.O.y + geo.Bend.y) / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(`b = ${Math.round(geo.b)}`, 0, 0);
+  ctx.restore();
+  const midHyp = { x: (geo.Aend.x + geo.Bend.x) / 2, y: (geo.Aend.y + geo.Bend.y) / 2 };
+  ctx.fillText(`c ≈ ${geo.c.toFixed(1)}`, midHyp.x + 22, midHyp.y - 8);
+
+  // ---- підписи площ (лише якщо квадрати показані і ввімкнено "Показати площі") ----
+  if (showSquares && showAreas) {
+    drawLabel(polyCentroid(geo.sqA), `A² = ${geo.areaA}`, '#4f8fe8');
+    drawLabel(polyCentroid(geo.sqB), `B² = ${geo.areaB}`, '#34d399');
+    drawLabel(polyCentroid(geo.sqC), `C² = ${geo.areaC}`, '#a78bfa');
+  }
+}
+
+function updateStats(geo) {
+  lenAEl.textContent = Math.round(geo.a);
+  lenBEl.textContent = Math.round(geo.b);
+  lenCEl.textContent = geo.c.toFixed(1);
+
+  areaAEl.textContent = geo.areaA;
+  areaBEl.textContent = geo.areaB;
+  areaCEl.textContent = geo.areaC;
+  cSubEl.textContent  = `c × c  (c ≈ ${geo.c.toFixed(1)})`;
+
+  fA.textContent = geo.areaA;
+  fB.textContent = geo.areaB;
+  fC.textContent = geo.areaC;
+
+  valA.textContent = Math.round(geo.a);
+  valB.textContent = Math.round(geo.b);
+}
+
+// =====================================================================
+// ІНТЕРФЕЙС + ПЛАВНА АНІМАЦІЯ ЗНАЧЕНЬ
+// =====================================================================
+
+sliderA.addEventListener('input', () => { targetA = parseFloat(sliderA.value); });
+sliderB.addEventListener('input', () => { targetB = parseFloat(sliderB.value); });
+
+// Перемикач "Показати квадрати" — вмикає/вимикає побудову квадратів.
+// Поки квадрати вимкнені, перемикач площ теж заблокований і скинутий,
+// бо підписувати площу немає чого показувати.
+toggleSquares.addEventListener('change', () => {
+  showSquares = toggleSquares.checked;
+  toggleAreas.disabled = !showSquares;
+  if (!showSquares) {
+    showAreas = false;
+    toggleAreas.checked = false;
+    syncAreaStatsVisibility();
+  }
+});
+
+toggleAreas.addEventListener('change', () => {
+  showAreas = toggleAreas.checked;
+  syncAreaStatsVisibility();
+});
+
+function syncAreaStatsVisibility() {
+  areaStats.style.display     = showAreas ? 'grid' : 'none';
+  areaStatsHint.style.display = showAreas ? 'none' : 'block';
+}
+syncAreaStatsVisibility(); // початковий стан — площі приховані
+
+function loop() {
+  // плавно "доганяємо" цільові значення повзунків (easing), щоб зміна
+  // розміру виглядала живо, а не миттєвим стрибком
+  a += (targetA - a) * 0.18;
+  b += (targetB - b) * 0.18;
+  if (Math.abs(targetA - a) < 0.05) a = targetA;
+  if (Math.abs(targetB - b) < 0.05) b = targetB;
+
+  const geo = computeGeometry(a, b);
+  render(geo);
+  updateStats(geo);
+
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

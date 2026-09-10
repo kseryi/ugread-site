@@ -1,0 +1,565 @@
+
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit Circle → Sine Wave / Одиничне коло → Синусоїда</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  html, body {
+    background: radial-gradient(ellipse at top, #131a2e 0%, #05070c 65%);
+    min-height: 100%;
+  }
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  .glass {
+    background: rgba(17, 24, 39, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  #equationDisplay {
+    font-family: Cambria, 'Georgia', 'Times New Roman', serif;
+    font-style: italic;
+    letter-spacing: 0.5px;
+    white-space: pre;
+  }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  .canvas-wrap { position: relative; height: 320px; }
+  @media (min-width: 768px) { .canvas-wrap { height: 420px; } }
+
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 6px; border-radius: 999px;
+    background: linear-gradient(90deg, #22d3ee, #a855f7);
+    outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; border: 3px solid #22d3ee;
+    box-shadow: 0 0 10px rgba(34,211,238,0.8);
+    cursor: pointer; margin-top: -6px;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; border: 3px solid #22d3ee;
+    box-shadow: 0 0 10px rgba(34,211,238,0.8);
+    cursor: pointer; border: none;
+  }
+  .slider-card { transition: background .2s ease, transform .15s ease; }
+  .slider-card:hover { background: rgba(255,255,255,0.05); }
+  .glow-btn { box-shadow: 0 0 22px rgba(34,211,238,0.35); }
+  .lang-btn { transition: all .15s ease; }
+  .lang-btn.active { background: #22d3ee; color: #05070c; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+</style>
+</head>
+<body class="text-slate-200 min-h-screen pb-16">
+
+<div class="max-w-7xl mx-auto px-4 pt-8">
+
+  <div class="flex justify-end mb-2">
+    <div class="glass rounded-full flex p-1 gap-1">
+      <button id="langEN" class="lang-btn active text-xs font-semibold px-3 py-1.5 rounded-full">EN</button>
+      <button id="langUA" class="lang-btn text-xs font-semibold px-3 py-1.5 rounded-full">UA</button>
+    </div>
+  </div>
+
+  <header class="text-center mb-6">
+    <h1 id="pageTitle" class="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-sky-300 to-fuchsia-400">
+      Unit Circle → Sine Wave
+    </h1>
+    <p id="pageSubtitle" class="text-slate-400 text-sm mt-1">Drag the sliders to transform the wave — watch the rotating radius generate it in real time.</p>
+  </header>
+
+  <div class="glass rounded-2xl px-6 py-5 mb-6 text-center shadow-2xl">
+    <div id="eqLabel" class="text-xs uppercase tracking-widest text-cyan-400/70 mb-2 font-sans not-italic">Dynamic Equation</div>
+    <div id="equationDisplay" class="text-3xl sm:text-4xl md:text-5xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-fuchsia-400">y = sin(x)</div>
+    <div id="liveReadout" class="text-xs sm:text-sm text-slate-400 mt-3 font-mono not-italic">x = 0.00 &nbsp;|&nbsp; y = 0.00</div>
+  </div>
+
+  <div class="relative flex flex-col md:flex-row gap-6 mb-6" id="vizRow">
+    <div class="flex-1 glass rounded-2xl p-4 shadow-xl min-w-0">
+      <div class="flex items-center justify-between mb-2">
+        <h2 id="circleTitle" class="text-sm font-semibold text-slate-300">Unit Circle</h2>
+        <span class="text-xs text-slate-500 font-mono">θ = Bx + C</span>
+      </div>
+      <div class="canvas-wrap rounded-xl overflow-hidden bg-black/20">
+        <canvas id="circleCanvas"></canvas>
+      </div>
+    </div>
+
+    <div class="flex-1 glass rounded-2xl p-4 shadow-xl min-w-0">
+      <div class="flex items-center justify-between mb-2">
+        <h2 id="graphTitle" class="text-sm font-semibold text-slate-300">Generated Wave</h2>
+        <span class="text-xs text-slate-500 font-mono">y = f(x)</span>
+      </div>
+      <div class="canvas-wrap rounded-xl overflow-hidden bg-black/20">
+        <canvas id="graphCanvas"></canvas>
+      </div>
+    </div>
+
+    <canvas id="connectorCanvas" class="hidden md:block absolute inset-0 pointer-events-none"></canvas>
+  </div>
+
+  <div class="glass rounded-2xl p-5 shadow-xl">
+    <div class="flex flex-wrap items-center gap-4 mb-5 pb-5 border-b border-white/10">
+      <button id="playPauseBtn" class="glow-btn flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-5 py-2.5 rounded-xl transition">
+        <svg id="pauseIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5.5 3.5A1.5 1.5 0 017 5v10a1.5 1.5 0 01-3 0V5a1.5 1.5 0 011.5-1.5zm7 0A1.5 1.5 0 0114 5v10a1.5 1.5 0 01-3 0V5a1.5 1.5 0 011.5-1.5z"/></svg>
+        <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 3.4a1 1 0 011.02-.03l9 5.6a1 1 0 010 1.7l-9 5.6A1 1 0 016 15.4V4.6a1 1 0 01.3-.7z"/></svg>
+        <span id="playPauseLabel">Pause</span>
+      </button>
+      <button id="resetBtn" class="text-sm text-slate-400 hover:text-cyan-300 border border-white/10 hover:border-cyan-400/50 px-4 py-2.5 rounded-xl transition">Reset Defaults</button>
+      <div class="flex-1 min-w-[180px]">
+        <div class="flex justify-between text-xs text-slate-400 mb-1">
+          <span id="speedLabel">Animation Speed</span><span id="speedVal" class="font-mono text-cyan-300">1.0x</span>
+        </div>
+        <input type="range" id="speedSlider" min="0.1" max="3" step="0.1" value="1">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <div class="slider-card bg-white/5 rounded-xl p-4">
+        <div class="flex justify-between items-baseline mb-2">
+          <label class="text-sm font-medium text-slate-200"><span id="labelA">Amplitude</span> <span class="text-cyan-400">(A)</span></label>
+          <span id="Aval" class="font-mono text-sm text-cyan-300">1.0</span>
+        </div>
+        <input type="range" id="Aslider" min="-3" max="3" step="0.1" value="1">
+      </div>
+
+      <div class="slider-card bg-white/5 rounded-xl p-4">
+        <div class="flex justify-between items-baseline mb-2">
+          <label class="text-sm font-medium text-slate-200"><span id="labelB">Frequency</span> <span class="text-cyan-400">(B)</span></label>
+          <span id="Bval" class="font-mono text-sm text-cyan-300">1.0</span>
+        </div>
+        <input type="range" id="Bslider" min="0.5" max="5" step="0.1" value="1">
+      </div>
+
+      <div class="slider-card bg-white/5 rounded-xl p-4">
+        <div class="flex justify-between items-baseline mb-2">
+          <label class="text-sm font-medium text-slate-200"><span id="labelC">Phase Shift</span> <span class="text-cyan-400">(C)</span></label>
+          <span id="Cval" class="font-mono text-sm text-cyan-300">0.00</span>
+        </div>
+        <input type="range" id="Cslider" min="-3.14" max="3.14" step="0.05" value="0">
+      </div>
+
+      <div class="slider-card bg-white/5 rounded-xl p-4">
+        <div class="flex justify-between items-baseline mb-2">
+          <label class="text-sm font-medium text-slate-200"><span id="labelN">Power</span> <span class="text-cyan-400">(n)</span></label>
+          <span id="nval" class="font-mono text-sm text-cyan-300">1</span>
+        </div>
+        <input type="range" id="nslider" min="1" max="5" step="1" value="1">
+      </div>
+
+      <div class="slider-card bg-white/5 rounded-xl p-4">
+        <div class="flex justify-between items-baseline mb-2">
+          <label class="text-sm font-medium text-slate-200"><span id="labelM">Root Degree</span> <span class="text-cyan-400">(m)</span></label>
+          <span id="mval" class="font-mono text-sm text-cyan-300">1</span>
+        </div>
+        <input type="range" id="mslider" min="1" max="4" step="1" value="1">
+      </div>
+
+      <div class="slider-card bg-white/5 rounded-xl p-4">
+        <div class="flex justify-between items-baseline mb-2">
+          <label class="text-sm font-medium text-slate-200"><span id="labelD">Vertical Shift</span> <span class="text-cyan-400">(D)</span></label>
+          <span id="Dval" class="font-mono text-sm text-cyan-300">0.0</span>
+        </div>
+        <input type="range" id="Dslider" min="-2" max="2" step="0.1" value="0">
+      </div>
+
+    </div>
+  </div>
+
+  <p id="footerNote" class="text-center text-xs text-slate-600 mt-6">Left: raw unit-circle rotation generates sin(θ). Right: your transformed wave, with the dashed line tracking the relationship.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Translations ----------
+  const translations = {
+    en: {
+      pageTitle: "Unit Circle → Sine Wave",
+      pageSubtitle: "Drag the sliders to transform the wave — watch the rotating radius generate it in real time.",
+      eqLabel: "Dynamic Equation",
+      circleTitle: "Unit Circle",
+      graphTitle: "Generated Wave",
+      play: "Play",
+      pause: "Pause",
+      reset: "Reset Defaults",
+      speedLabel: "Animation Speed",
+      labelA: "Amplitude",
+      labelB: "Frequency",
+      labelC: "Phase Shift",
+      labelN: "Power",
+      labelM: "Root Degree",
+      labelD: "Vertical Shift",
+      footerNote: "Left: raw unit-circle rotation generates sin(θ). Right: your transformed wave, with the dashed line tracking the relationship."
+    },
+    ua: {
+      pageTitle: "Одиничне коло → Синусоїда",
+      pageSubtitle: "Рухайте повзунки, щоб трансформувати хвилю — дивіться, як обертовий радіус генерує її в реальному часі.",
+      eqLabel: "Динамічна формула",
+      circleTitle: "Одиничне коло",
+      graphTitle: "Згенерована хвиля",
+      play: "Пуск",
+      pause: "Пауза",
+      reset: "Скинути",
+      speedLabel: "Швидкість анімації",
+      labelA: "Амплітуда",
+      labelB: "Частота",
+      labelC: "Фазовий зсув",
+      labelN: "Степінь",
+      labelM: "Степінь кореня",
+      labelD: "Вертикальний зсув",
+      footerNote: "Ліворуч: обертання одиничного кола генерує sin(θ). Праворуч: перетворена хвиля, штрихова лінія показує їхній зв'язок."
+    }
+  };
+
+  let currentLang = 'en';
+
+  function applyLang(lang) {
+    currentLang = lang;
+    const t = translations[lang];
+    document.getElementById('pageTitle').textContent = t.pageTitle;
+    document.getElementById('pageSubtitle').textContent = t.pageSubtitle;
+    document.getElementById('eqLabel').textContent = t.eqLabel;
+    document.getElementById('circleTitle').textContent = t.circleTitle;
+    document.getElementById('graphTitle').textContent = t.graphTitle;
+    document.getElementById('playPauseLabel').textContent = state.playing ? t.pause : t.play;
+    document.getElementById('resetBtn').textContent = t.reset;
+    document.getElementById('speedLabel').textContent = t.speedLabel;
+    document.getElementById('labelA').textContent = t.labelA;
+    document.getElementById('labelB').textContent = t.labelB;
+    document.getElementById('labelC').textContent = t.labelC;
+    document.getElementById('labelN').textContent = t.labelN;
+    document.getElementById('labelM').textContent = t.labelM;
+    document.getElementById('labelD').textContent = t.labelD;
+    document.getElementById('footerNote').textContent = t.footerNote;
+
+    document.getElementById('langEN').classList.toggle('active', lang === 'en');
+    document.getElementById('langUA').classList.toggle('active', lang === 'ua');
+    document.documentElement.lang = lang === 'ua' ? 'uk' : 'en';
+  }
+
+  document.getElementById('langEN').addEventListener('click', () => applyLang('en'));
+  document.getElementById('langUA').addEventListener('click', () => applyLang('ua'));
+
+  // ---------- State ----------
+  const state = { A: 1, B: 1, C: 0, n: 1, m: 1, D: 0, t: 0, playing: true, speed: 1 };
+
+  const els = {
+    A: document.getElementById('Aslider'), Aval: document.getElementById('Aval'),
+    B: document.getElementById('Bslider'), Bval: document.getElementById('Bval'),
+    C: document.getElementById('Cslider'), Cval: document.getElementById('Cval'),
+    n: document.getElementById('nslider'), nval: document.getElementById('nval'),
+    m: document.getElementById('mslider'), mval: document.getElementById('mval'),
+    D: document.getElementById('Dslider'), Dval: document.getElementById('Dval'),
+    speed: document.getElementById('speedSlider'), speedVal: document.getElementById('speedVal'),
+    eq: document.getElementById('equationDisplay'),
+    readout: document.getElementById('liveReadout'),
+    playBtn: document.getElementById('playPauseBtn'),
+    playLabel: document.getElementById('playPauseLabel'),
+    playIcon: document.getElementById('playIcon'),
+    pauseIcon: document.getElementById('pauseIcon'),
+    resetBtn: document.getElementById('resetBtn')
+  };
+
+  // ---------- Math / equation formatting ----------
+  const SUP_DIGITS = { 0:'⁰',1:'¹',2:'²',3:'³',4:'⁴',5:'⁵',6:'⁶',7:'⁷',8:'⁸',9:'⁹' };
+  function toSuper(n) {
+    return String(n).split('').map(ch => SUP_DIGITS[ch] !== undefined ? SUP_DIGITS[ch] : ch).join('');
+  }
+
+  function formatNum(v) {
+    let r = Math.round(v * 100) / 100;
+    if (Object.is(r, -0)) r = 0;
+    return r.toString();
+  }
+
+  function buildEquation(s) {
+    const { A, B, C, n, m, D } = s;
+
+    let arg = (B === 1) ? 'x' : `${formatNum(B)}x`;
+    if (C > 0) arg += ` + ${formatNum(C)}`;
+    else if (C < 0) arg += ` - ${formatNum(Math.abs(C))}`;
+
+    const expo = (n !== 1) ? toSuper(n) : '';
+    let sinPart = `sin${expo}(${arg})`;
+
+    let rootPart = sinPart;
+    if (m === 2) rootPart = `√(${sinPart})`;
+    else if (m >= 3) rootPart = `${toSuper(m)}√(${sinPart})`;
+
+    let ampPart;
+    if (A === 1) ampPart = rootPart;
+    else if (A === -1) ampPart = `-${rootPart}`;
+    else ampPart = `${formatNum(A)}·${rootPart}`;
+
+    let dPart = '';
+    if (D > 0) dPart = ` + ${formatNum(D)}`;
+    else if (D < 0) dPart = ` - ${formatNum(Math.abs(D))}`;
+
+    return `y = ${ampPart}${dPart}`;
+  }
+
+  function updateEquation() {
+    els.eq.textContent = buildEquation(state);
+  }
+
+  function computeY(x, s) {
+    const raw = Math.sin(s.B * x + s.C);
+    let powRes = Math.pow(raw, s.n);
+    if (!isFinite(powRes)) powRes = 0;
+
+    let rootRes;
+    if (s.m === 1) {
+      rootRes = powRes;
+    } else {
+      const sign = powRes < 0 ? -1 : 1;
+      rootRes = sign * Math.pow(Math.abs(powRes), 1 / s.m);
+    }
+    let y = s.A * rootRes + s.D;
+    if (!isFinite(y)) y = 0;
+    return y;
+  }
+
+  // ---------- Slider bindings ----------
+  function bindFloat(key, elKey, valKey, decimals) {
+    els[elKey].addEventListener('input', (e) => {
+      state[key] = parseFloat(e.target.value);
+      els[valKey].textContent = state[key].toFixed(decimals);
+      updateEquation();
+    });
+  }
+  bindFloat('A', 'A', 'Aval', 1);
+  bindFloat('B', 'B', 'Bval', 1);
+  bindFloat('C', 'C', 'Cval', 2);
+  bindFloat('D', 'D', 'Dval', 1);
+
+  els.n.addEventListener('input', (e) => {
+    state.n = parseInt(e.target.value, 10);
+    els.nval.textContent = state.n;
+    updateEquation();
+  });
+  els.m.addEventListener('input', (e) => {
+    state.m = parseInt(e.target.value, 10);
+    els.mval.textContent = state.m;
+    updateEquation();
+  });
+  els.speed.addEventListener('input', (e) => {
+    state.speed = parseFloat(e.target.value);
+    els.speedVal.textContent = state.speed.toFixed(1) + 'x';
+  });
+
+  els.playBtn.addEventListener('click', () => {
+    state.playing = !state.playing;
+    const t = translations[currentLang];
+    els.playLabel.textContent = state.playing ? t.pause : t.play;
+    els.pauseIcon.classList.toggle('hidden', !state.playing);
+    els.playIcon.classList.toggle('hidden', state.playing);
+  });
+
+  els.resetBtn.addEventListener('click', () => {
+    state.A = 1; state.B = 1; state.C = 0; state.n = 1; state.m = 1; state.D = 0;
+    els.A.value = 1; els.B.value = 1; els.C.value = 0; els.n.value = 1; els.m.value = 1; els.D.value = 0;
+    els.Aval.textContent = '1.0'; els.Bval.textContent = '1.0'; els.Cval.textContent = '0.00';
+    els.nval.textContent = '1'; els.mval.textContent = '1'; els.Dval.textContent = '0.0';
+    updateEquation();
+  });
+
+  updateEquation();
+  applyLang('en');
+
+  // ---------- Canvas setup ----------
+  const circleCanvas = document.getElementById('circleCanvas');
+  const graphCanvas = document.getElementById('graphCanvas');
+  const connectorCanvas = document.getElementById('connectorCanvas');
+  const vizRow = document.getElementById('vizRow');
+
+  let circleCtx, graphCtx, connectorCtx;
+  let circleW = 0, circleH = 0, graphW = 0, graphH = 0, connW = 0, connH = 0;
+
+  function setupHiDPI(canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx: ctx, w: rect.width, h: rect.height };
+  }
+
+  function resizeAll() {
+    const c1 = setupHiDPI(circleCanvas); circleCtx = c1.ctx; circleW = c1.w; circleH = c1.h;
+    const c2 = setupHiDPI(graphCanvas); graphCtx = c2.ctx; graphW = c2.w; graphH = c2.h;
+    const c3 = setupHiDPI(connectorCanvas); connectorCtx = c3.ctx; connW = c3.w; connH = c3.h;
+  }
+  window.addEventListener('resize', resizeAll);
+  if (window.ResizeObserver) {
+    new ResizeObserver(resizeAll).observe(vizRow);
+  }
+  resizeAll();
+  setTimeout(resizeAll, 60);
+
+  let graphScale = 60;
+  const mq = window.matchMedia('(min-width: 768px)');
+
+  function drawCircle(theta) {
+    const w = circleW, h = circleH, ctx = circleCtx;
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2, cy = h / 2;
+    const R = Math.min(w, h) * 0.36;
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy);
+    ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke();
+
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(56,189,248,0.35)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    const px = cx + R * Math.cos(theta);
+    const py = cy - R * Math.sin(theta);
+
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py);
+    ctx.strokeStyle = '#67e8f9'; ctx.lineWidth = 2.5; ctx.stroke();
+
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, cy);
+    ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 3;
+    ctx.shadowColor = '#f43f5e'; ctx.shadowBlur = 10;
+    ctx.stroke(); ctx.shadowBlur = 0;
+
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(w, py); ctx.stroke();
+    ctx.restore();
+
+    ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff'; ctx.shadowColor = '#67e8f9'; ctx.shadowBlur = 12;
+    ctx.fill(); ctx.shadowBlur = 0;
+
+    ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fill();
+
+    return { px: px, py: py };
+  }
+
+  function drawGraph(t) {
+    const w = graphW, h = graphH, ctx = graphCtx;
+    ctx.clearRect(0, 0, w, h);
+    const cy = h / 2;
+
+    const targetRange = Math.max(1.4, Math.abs(state.A) + Math.abs(state.D) + 0.4);
+    const targetScale = (h / 2 - 20) / targetRange;
+    graphScale += (targetScale - graphScale) * 0.08;
+
+    // Determine a clean step for y-axis labels (1, 0.5, or 2)
+    let step = 1;
+    if (targetRange <= 2) step = 0.5;
+    else if (targetRange > 4) step = 2;
+    const maxLabel = Math.ceil(targetRange / step) * step;
+
+    ctx.font = '11px monospace';
+    ctx.textBaseline = 'middle';
+
+    for (let gy = -maxLabel; gy <= maxLabel + 1e-9; gy += step) {
+      const y = cy - gy * graphScale;
+      if (y < -10 || y > h + 10) continue;
+      ctx.strokeStyle = Math.abs(gy) < 1e-9 ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = Math.abs(gy) < 1e-9 ? 1.5 : 1;
+      ctx.beginPath(); ctx.moveTo(28, y); ctx.lineTo(w, y); ctx.stroke();
+
+      const label = (Math.round(gy * 100) / 100).toString();
+      ctx.fillStyle = 'rgba(226,232,240,0.55)';
+      ctx.textAlign = 'left';
+      ctx.fillText(label, 4, y);
+    }
+
+    const W = 4 * Math.PI;
+    const steps = Math.max(60, Math.floor(w / 2));
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const xpx = (i / steps) * w;
+      const mathX = t - (xpx / w) * W;
+      const val = computeY(mathX, state);
+      const ypx = cy - val * graphScale;
+      if (i === 0) ctx.moveTo(xpx, ypx); else ctx.lineTo(xpx, ypx);
+    }
+    const grad = ctx.createLinearGradient(0, 0, w, 0);
+    grad.addColorStop(0, '#22d3ee'); grad.addColorStop(1, '#e879f9');
+    ctx.strokeStyle = grad; ctx.lineWidth = 3;
+    ctx.shadowColor = '#67e8f9'; ctx.shadowBlur = 8;
+    ctx.stroke(); ctx.shadowBlur = 0;
+
+    const dotVal = computeY(t, state);
+    const dotY = cy - dotVal * graphScale;
+    const dotX = 0;
+
+    ctx.beginPath(); ctx.arc(dotX, dotY, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff'; ctx.shadowColor = '#e879f9'; ctx.shadowBlur = 18;
+    ctx.fill(); ctx.shadowBlur = 0;
+
+    els.readout.textContent = `x = ${t.toFixed(2)}  |  y = ${dotVal.toFixed(2)}`;
+
+    return { dotX: dotX, dotY: dotY };
+  }
+
+  function drawConnector(circleInfo, graphInfo) {
+    connectorCtx.clearRect(0, 0, connW, connH);
+    if (!mq.matches) return;
+
+    const connRect = connectorCanvas.getBoundingClientRect();
+    const cRect = circleCanvas.getBoundingClientRect();
+    const gRect = graphCanvas.getBoundingClientRect();
+
+    const tipX = (cRect.left - connRect.left) + circleInfo.px;
+    const tipY = (cRect.top - connRect.top) + circleInfo.py;
+    const dotX = (gRect.left - connRect.left) + graphInfo.dotX;
+    const dotY = (gRect.top - connRect.top) + graphInfo.dotY;
+
+    connectorCtx.save();
+    connectorCtx.setLineDash([6, 5]);
+    connectorCtx.strokeStyle = 'rgba(250,204,21,0.85)';
+    connectorCtx.lineWidth = 2;
+    connectorCtx.shadowColor = 'rgba(250,204,21,0.6)';
+    connectorCtx.shadowBlur = 6;
+    connectorCtx.beginPath();
+    connectorCtx.moveTo(tipX, tipY);
+    connectorCtx.lineTo(dotX, tipY);
+    connectorCtx.lineTo(dotX, dotY);
+    connectorCtx.stroke();
+    connectorCtx.restore();
+
+    connectorCtx.beginPath(); connectorCtx.arc(tipX, tipY, 4, 0, Math.PI * 2);
+    connectorCtx.fillStyle = '#facc15'; connectorCtx.fill();
+    connectorCtx.beginPath(); connectorCtx.arc(dotX, dotY, 4, 0, Math.PI * 2);
+    connectorCtx.fillStyle = '#facc15'; connectorCtx.fill();
+  }
+
+  let lastTime = null;
+  function loop(ts) {
+    if (lastTime === null) lastTime = ts;
+    const dt = Math.min(0.05, (ts - lastTime) / 1000);
+    lastTime = ts;
+    if (state.playing) state.t += dt * state.speed * 1.2;
+
+    const theta = state.B * state.t + state.C;
+    const circleInfo = drawCircle(theta);
+    const graphInfo = drawGraph(state.t);
+    drawConnector(circleInfo, graphInfo);
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
+```

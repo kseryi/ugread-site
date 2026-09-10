@@ -14,10 +14,11 @@ const CATEGORIES_DATA = {
     desc: 'Алгебра, геометрія, функції, математичний аналіз та інтерактивні графіки.',
     topics: [
       { name: 'Інтерактивне середовище побудови графіків', link: './products/uMathLab/umathlab.html' },
+      { name: 'Інтерактивна планіметрія та стереометрія', link: './products/GeoCraft/GeoCraft.html' },
       { name: 'Дроби для початківців', link: './products/fractions/fractions.html' },
-       { name: 'Додатки в розробці', link: '' },
-       { name: 'Додатки в розробці', link: '' },
-       { name: 'Додатки в розробці', link: '' },
+      { name: 'Синусоїда', link: './products/uSinX/sinx.htm' },
+      { name: 'Теорема Піфагора', link: './products/pythagoras/pythagoras_areas.html' },
+      { name: 'Додатки в розробці', link: '' },
      
     ]
   },
@@ -68,7 +69,7 @@ const CATEGORIES_DATA = {
       { name: 'Періодична система хімічних елементів', link: './products/periodic/periodic.html' },
       { name: 'Будова атома', link: './products/atom/index.html' },
        { name: 'Хімічний пазл', link: './products/chemical_puzzle/chemical_puzzle_offline.html' },
-       { name: 'Додатки в розробці', link: '' },
+       { name: 'Конструктор молекул', link: './products/uCad/ucad.html' },
        { name: 'Додатки в розробці', link: '' },
       
     ]

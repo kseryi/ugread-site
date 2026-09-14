@@ -57,7 +57,9 @@ const CATEGORIES_DATA = {
       { name: 'Гра-симулятор Сонячна ферма ', link: './products/solarfarm/SolarFarm.html' },
       { name: 'Сканер штрих-коду', link: './products/stem/barcodescan2.html' },
       { name: 'Генератор QR', link: './products/stem/QR_gen.html' },
-       { name: 'Середовище літофанії', link: './products/LithoG/LithoG.html' },
+      { name: 'Середовище літофанії', link: './products/LithoG/LithoG.html' },
+      { name: 'Сприйняття кольору', link: './products/pixelsim/pixelsim.html' },
+      
 
     ]
   },

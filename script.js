@@ -84,7 +84,7 @@ const CATEGORIES_DATA = {
       { name: 'ЗD моделювання для дітей', link: './products/3Dcraft/index.html' },
       { name: 'Веб-технології: HTML, CSS та JS', link: './products/uweb/index.html' },
       { name: 'Блочне програмування', link: 'https://kseryi.github.io/uPyth/' },
-       { name: 'Додатки в розробці', link: '' },
+       { name: 'Стікербос', link: './products/stikerbox/stikerbox.html' },
        { name: 'Додатки в розробці', link: '' },
     ]
   },

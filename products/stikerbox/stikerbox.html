@@ -1,0 +1,2904 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stickerbox</title>
+  <meta name="description" content="Stickerbox — створення інтерактивних стікерів на дошці та презентацій у форматі 16:9 PDF для учнів.">
+  <meta property="og:title" content="Stickerbox">
+  <meta property="og:description" content="Stickerbox — створення інтерактивних стікерів на дошці та презентацій у форматі 16:9 PDF для учнів.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #13241b;
+      --bg-board: #1c3227;
+      --ink: #1e293b;
+      --ink-muted: #475569;
+      --primary: #f59e0b;
+      --primary-hover: #d97706;
+      --accent: #10b981;
+      --danger: #ef4444;
+      --card-cream: #fef9c3;
+      --card-mint: #dcfce7;
+      --card-sky: #e0f2fe;
+      --card-rose: #ffe4e6;
+      --card-lavender: #f3e8ff;
+      --card-peach: #ffedd5;
+      --card-white: #ffffff;
+      --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-title: 'Comfortaa', cursive, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: var(--font-body); color: var(--ink); background: var(--bg-dark); overflow: hidden; user-select: none; }
+
+    #app { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: relative; }
+
+    /* Верхня панель інструментів */
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 18px; background: #0f1c15; color: #f8fafc;
+      border-bottom: 2px solid rgba(255,255,255,0.08); z-index: 40; flex-shrink: 0;
+    }
+    .brand-section { display: flex; align-items: center; gap: 10px; }
+    .brand-logo {
+      width: 38px; height: 38px; border-radius: 10px;
+      background-color: #f7fbfb;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25); flex-shrink: 0;
+    }
+    .brand-name-tag {
+      font-family: var(--font-title); font-size: 20px; font-weight: 700; color: #ffffff;
+      letter-spacing: -0.3px; white-space: nowrap; line-height: 1;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .brand-divider {
+      width: 1px; height: 26px; background: rgba(255,255,255,0.18); margin: 0 2px; flex-shrink: 0;
+    }
+    .title-area { display: flex; flex-direction: column; }
+    .project-title {
+      font-family: var(--font-title); font-size: 17px; font-weight: 700; color: #fef08a;
+      cursor: pointer; padding: 2px 6px; border-radius: 6px; max-width: 300px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      transition: background 0.15s;
+    }
+    .project-title:hover { background: rgba(255,255,255,0.12); }
+    .project-author {
+      font-size: 12px; color: #94a3b8; cursor: pointer; padding: 1px 6px; border-radius: 4px;
+      transition: background 0.15s; width: fit-content;
+    }
+    .project-author:hover { background: rgba(255,255,255,0.12); color: #cbd5e1; }
+
+    .title-input, .author-input {
+      background: #1e293b; border: 1.5px solid #f59e0b; color: #f8fafc;
+      padding: 3px 8px; border-radius: 6px; outline: none; font-family: inherit; font-size: 14px;
+    }
+
+    .tools-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      font-family: var(--font-body); font-size: 13.5px; font-weight: 600;
+      padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06); color: #f8fafc; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn:hover { background: rgba(255,255,255,0.14); transform: translateY(-1px); }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #1e1b4b; border: none; font-weight: 700;
+      box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+    }
+    .btn-primary:hover { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+    .btn-accent {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff; border: none; font-weight: 600;
+    }
+
+    /* Випадаючі списки меню */
+    .dropdown { position: relative; display: inline-block; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 6px); right: 0;
+      background: #1e293b; border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px; box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+      min-width: 220px; padding: 6px; display: none; z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .dropdown-menu.show { display: block; animation: dropIn 0.15s ease-out; }
+    @keyframes dropIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      padding: 9px 12px; background: transparent; border: none; border-radius: 6px;
+      color: #f1f5f9; font-size: 13.5px; text-align: left; cursor: pointer;
+      font-family: inherit; transition: background 0.12s;
+    }
+    .dropdown-item:hover { background: rgba(245,158,11,0.18); color: #fef08a; }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.2); color: #fca5a5; }
+
+    /* Елементи списку вибору дошок */
+    .board-menu-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; cursor: pointer; transition: all 0.15s;
+      border-radius: 8px; margin: 2px 4px; border: 1px solid transparent;
+    }
+    .board-menu-item:hover { background: rgba(255,255,255,0.08); }
+    .board-menu-item.active {
+      background: rgba(245,158,11,0.16);
+      border-color: rgba(245,158,11,0.35);
+    }
+    .board-item-meta {
+      display: flex; flex-direction: column; overflow: hidden; margin-right: 8px;
+    }
+    .board-item-title {
+      font-size: 13px; font-weight: 600; color: #f8fafc;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .board-item-sub {
+      font-size: 11px; color: #94a3b8; margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .board-item-delete {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      color: #cbd5e1; width: 26px; height: 26px; border-radius: 6px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; opacity: 0.8; transition: all 0.15s;
+      flex-shrink: 0; margin-left: 6px;
+    }
+    .board-item-delete:hover {
+      opacity: 1; color: #ffffff; background: #ef4444; border-color: #ef4444;
+      transform: scale(1.08);
+    }
+    @media (max-width: 768px) {
+      .btn-text-hide-sm { display: none; }
+    }
+
+    /* Дошка */
+    #boardContainer {
+      flex: 1; overflow: auto; position: relative; background: var(--bg-board);
+      transition: background 0.25s; cursor: grab;
+    }
+    #boardContainer:active { cursor: grabbing; }
+    #boardCanvas {
+      position: relative; width: 3200px; height: 2200px;
+      transform-origin: 0 0;
+    }
+
+    /* Фонововмісні текстури дошки */
+    .theme-chalk {
+      background-color: #172d22 !important;
+      background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 80%),
+                        repeating-linear-gradient(45deg, rgba(255,255,255,0.008) 0, rgba(255,255,255,0.008) 2px, transparent 2px, transparent 10px) !important;
+    }
+    .theme-cork {
+      background-color: #925835 !important;
+      background-image: radial-gradient(circle at 15% 20%, rgba(0,0,0,0.15) 2px, transparent 3px),
+                        radial-gradient(circle at 75% 65%, rgba(0,0,0,0.12) 2px, transparent 3px),
+                        radial-gradient(circle at 40% 85%, rgba(255,255,255,0.08) 3px, transparent 4px) !important;
+      background-size: 60px 60px !important;
+    }
+    .theme-grid {
+      background-color: #f8fafc !important;
+      background-image: linear-gradient(rgba(59,130,246,0.15) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(59,130,246,0.15) 1px, transparent 1px) !important;
+      background-size: 28px 28px !important;
+    }
+    .theme-lines {
+      background-color: #fdfbf7 !important;
+      background-image:
+        linear-gradient(90deg, transparent 79px, rgba(239,68,68,0.35) 79px, rgba(239,68,68,0.35) 81px, transparent 81px),
+        linear-gradient(rgba(59,130,246,0.16) 1px, transparent 1px) !important;
+      background-size: 100% 100%, 100% 30px !important;
+    }
+    .theme-dots {
+      background-color: #1a2e26 !important;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.16) 1.5px, transparent 1.5px) !important;
+      background-size: 28px 28px !important;
+    }
+    .theme-blueprint {
+      background-color: #1e3a8a !important;
+      background-image: linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px) !important;
+      background-size: 24px 24px !important;
+    }
+    .theme-parchment {
+      background-color: #f5eedc !important;
+      background-image:
+        radial-gradient(circle at 50% 50%, rgba(180,83,9,0.05) 0%, rgba(120,53,15,0.12) 100%),
+        repeating-radial-gradient(circle at 20% 30%, rgba(160,110,60,0.04) 0, rgba(160,110,60,0.04) 4px, transparent 4px, transparent 18px) !important;
+    }
+    .theme-wood {
+      background-color: #dfcdb3 !important;
+      background-image:
+        linear-gradient(90deg, rgba(120,53,15,0.06) 1px, transparent 1px),
+        repeating-linear-gradient(0deg, rgba(120,53,15,0.03) 0px, rgba(120,53,15,0.03) 2px, transparent 2px, transparent 40px) !important;
+      background-size: 120px 100%, 100% 40px !important;
+    }
+    .theme-slate {
+      background-color: #0f172a !important;
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.04) 0%, transparent 40%),
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px) !important;
+      background-size: 100% 100%, 32px 32px, 32px 32px !important;
+    }
+    .theme-mint {
+      background-color: #ecfdf5 !important;
+      background-image:
+        radial-gradient(circle, rgba(16,185,129,0.2) 1.5px, transparent 1.5px) !important;
+      background-size: 26px 26px !important;
+    }
+    .theme-sunset {
+      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 50%, #fef2f2 100%) !important;
+    }
+    .theme-cyber {
+      background-color: #180d2b !important;
+      background-image:
+        linear-gradient(rgba(217,70,239,0.18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(147,51,234,0.18) 1px, transparent 1px) !important;
+      background-size: 32px 32px !important;
+    }
+    .theme-canvas {
+      background-color: #f7f5ef !important;
+      background-image:
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.025) 0, rgba(0,0,0,0.025) 1px, transparent 1px, transparent 4px),
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.025) 0, rgba(0,0,0,0.025) 1px, transparent 1px, transparent 4px) !important;
+      background-size: 4px 4px !important;
+    }
+    .theme-custom {
+      /* Динамічні стилі встановлюються через JavaScript */
+    }
+
+    /* Підказка коли дошка порожня */
+    .board-empty-hint {
+      position: absolute; top: 380px; left: 450px;
+      background: rgba(15,23,42,0.85); color: #f8fafc; padding: 24px 30px;
+      border-radius: 16px; border: 2px dashed rgba(245,158,11,0.5);
+      text-align: center; pointer-events: none; max-width: 440px;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.4);
+    }
+    .board-empty-hint h3 { font-family: var(--font-title); font-size: 20px; color: #fef08a; margin-bottom: 8px; }
+    .board-empty-hint p { font-size: 14px; color: #cbd5e1; line-height: 1.5; }
+
+    /* Стікери */
+    .sticker-card {
+      position: absolute; width: 270px; border-radius: 14px;
+      padding: 16px 16px 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.32), 0 2px 5px rgba(0,0,0,0.15);
+      cursor: grab; transition: transform 0.15s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.15s ease;
+      user-select: none; z-index: 10;
+    }
+    .sticker-card:hover {
+      transform: scale(1.025) translateY(-3px) !important;
+      box-shadow: 0 18px 36px rgba(0,0,0,0.42), 0 4px 10px rgba(0,0,0,0.2);
+      z-index: 30 !important;
+    }
+    .sticker-card.dragging {
+      cursor: grabbing; opacity: 0.96;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.5) !important;
+      z-index: 100 !important; transform: scale(1.04) !important;
+    }
+
+    /* Кріплення зверху стікера */
+    .card-attachment {
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      pointer-events: none; z-index: 12;
+    }
+    .pin-red {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #ff8a80, #d32f2f 70%, #801313);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.45);
+    }
+    .pin-gold {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #fff176, #f59e0b 70%, #b45309);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.45);
+    }
+    .tape {
+      width: 80px; height: 22px; background: rgba(255,255,255,0.65);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15); transform: rotate(-2deg);
+      border-left: 2px dashed rgba(0,0,0,0.15); border-right: 2px dashed rgba(0,0,0,0.15);
+      backdrop-filter: blur(2px);
+    }
+    .star-pin { font-size: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+
+    /* Шапка стікера: номер слайду, бейдж категорії, кнопки керування */
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 6px; margin-bottom: 8px;
+    }
+    .card-slide-pill {
+      font-size: 11px; font-weight: 700; background: rgba(0,0,0,0.12);
+      color: rgba(0,0,0,0.75); padding: 2px 7px; border-radius: 20px;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .card-cat-badge {
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+      background: rgba(255,255,255,0.7); color: #1e293b;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08); display: inline-flex; align-items: center; gap: 3px;
+    }
+    .card-actions-quick {
+      display: flex; align-items: center; gap: 3px; opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .sticker-card:hover .card-actions-quick { opacity: 1; }
+    .card-mini-btn {
+      width: 24px; height: 24px; border-radius: 6px; border: none;
+      background: rgba(0,0,0,0.08); color: #1e293b; font-size: 12px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: background 0.12s;
+    }
+    .card-mini-btn:hover { background: rgba(0,0,0,0.2); }
+    .card-mini-btn.del:hover { background: #fee2e2; color: #b91c1c; }
+
+    .card-title {
+      font-family: var(--font-title); font-size: 16px; font-weight: 700;
+      line-height: 1.3; margin-bottom: 8px; word-break: break-word; color: #0f172a;
+    }
+    .card-img-wrap {
+      width: 100%; height: 140px; border-radius: 8px; overflow: hidden;
+      margin-bottom: 10px; background: rgba(0,0,0,0.05); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+    }
+    .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-text {
+      font-size: 13.5px; line-height: 1.5; color: #334155;
+      white-space: pre-wrap; word-break: break-word; max-height: 140px; overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Модальні вікна */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.7);
+      backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center;
+      z-index: 200; padding: 16px; opacity: 0; pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-card {
+      background: #ffffff; width: min(540px, 94vw); border-radius: 18px;
+      padding: 24px 26px; box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+      max-height: 90vh; overflow-y: auto; transform: scale(0.96);
+      transition: transform 0.18s cubic-bezier(0.2,0.8,0.2,1);
+    }
+    .modal-overlay.open .modal-card { transform: scale(1); }
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;
+    }
+    .modal-head h2 { font-family: var(--font-title); font-size: 20px; font-weight: 700; color: #0f172a; }
+    .close-btn {
+      width: 32px; height: 32px; border-radius: 8px; border: none;
+      background: #f1f5f9; color: #64748b; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .close-btn:hover { background: #e2e8f0; color: #0f172a; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block; font-size: 12.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;
+    }
+    .form-input, .form-textarea {
+      width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1;
+      font-family: var(--font-body); font-size: 14px; color: #0f172a; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-input:focus, .form-textarea:focus {
+      border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.2);
+    }
+    .form-textarea { min-height: 95px; resize: vertical; }
+
+    /* Вибір кольору */
+    .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+    .swatch {
+      width: 34px; height: 34px; border-radius: 10px; cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15); border: 3px solid transparent;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .swatch:hover { transform: scale(1.1); }
+    .swatch.active { border-color: #0f172a; transform: scale(1.1); }
+
+    /* Вибір категорії та кріплення */
+    .pill-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pill-opt {
+      padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      border: 1.5px solid #e2e8f0; background: #f8fafc; color: #475569;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .pill-opt:hover { border-color: #cbd5e1; background: #f1f5f9; }
+    .pill-opt.active {
+      border-color: #f59e0b; background: #fef3c7; color: #92400e;
+    }
+
+    .image-preview-box {
+      margin-top: 8px; position: relative; border-radius: 10px; overflow: hidden;
+      max-height: 160px; display: none; background: #f1f5f9;
+    }
+    .image-preview-box.has-img { display: block; }
+    .image-preview-box img { width: 100%; max-height: 160px; object-fit: cover; display: block; }
+    .remove-img-btn {
+      position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.65);
+      color: #fff; border: none; border-radius: 50%; width: 26px; height: 26px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .remove-img-btn:hover { background: #ef4444; }
+
+    .modal-actions {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-top: 20px; padding-top: 14px; border-top: 1px solid #e2e8f0;
+    }
+
+    /* Модальне вікно пошуку картинок */
+    .search-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px; max-height: 380px; overflow-y: auto; margin-top: 12px; padding: 2px;
+    }
+    .search-thumb {
+      aspect-ratio: 1/1; border-radius: 10px; overflow: hidden; cursor: pointer;
+      position: relative; background: #f1f5f9; border: 1.5px solid #e2e8f0;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+    .search-thumb:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+      border-color: #f59e0b;
+    }
+    .search-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .search-thumb-title {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(0deg, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.6) 70%, transparent 100%);
+      color: #ffffff; font-size: 11px; padding: 12px 6px 5px 6px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      text-align: center; pointer-events: none; font-weight: 500;
+    }
+
+    /* Режим живої презентації (16:9 Fullscreen) */
+    .presentation-view {
+      position: fixed; inset: 0; background: #0b130e; z-index: 300;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+    }
+    .presentation-view.open { opacity: 1; pointer-events: auto; }
+    .pres-header {
+      position: absolute; top: 16px; left: 24px; right: 24px;
+      display: flex; align-items: center; justify-content: space-between; color: #f8fafc;
+    }
+    .pres-title-badge { font-family: var(--font-title); font-size: 16px; color: #fef08a; }
+    .pres-controls-top { display: flex; gap: 8px; }
+
+    .slide-wrapper {
+      width: min(1180px, 92vw); aspect-ratio: 16 / 9; max-height: 82vh;
+      border-radius: 20px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+      background: #fef9c3; display: flex; position: relative;
+    }
+    .slide-body {
+      display: flex; width: 100%; height: 100%; padding: 46px 56px;
+      gap: 40px; align-items: center;
+    }
+    .slide-media {
+      flex: 0 0 45%; height: 100%; display: flex; align-items: center; justify-content: center;
+    }
+    .slide-media img {
+      max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 14px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.22);
+    }
+    .slide-content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .slide-badge-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .slide-num-tag {
+      font-size: 13px; font-weight: 700; background: rgba(0,0,0,0.1);
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .slide-h1 {
+      font-family: var(--font-title); font-size: 36px; font-weight: 700;
+      color: #0f172a; line-height: 1.25; margin-bottom: 18px;
+    }
+    .slide-p {
+      font-size: 18px; line-height: 1.65; color: #334155; white-space: pre-wrap;
+    }
+
+    /* Титульний слайд презентації */
+    .slide-title-layout {
+      width: 100%; height: 100%; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center; padding: 40px;
+    }
+    .slide-title-layout h1 {
+      font-family: var(--font-title); font-size: 52px; font-weight: 700;
+      color: #0f172a; margin-bottom: 20px; max-width: 860px; line-height: 1.2;
+    }
+    .slide-title-layout .author-tag {
+      font-size: 22px; color: #d97706; font-weight: 600; margin-bottom: 12px;
+    }
+    .slide-title-layout .date-tag { font-size: 15px; color: #64748b; }
+
+    /* Навігація в презентації */
+    .pres-nav-bar {
+      display: flex; align-items: center; gap: 20px; margin-top: 20px;
+    }
+    .pres-nav-btn {
+      width: 46px; height: 46px; border-radius: 50%; border: none;
+      background: rgba(255,255,255,0.12); color: #fff; font-size: 20px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .pres-nav-btn:hover:not(:disabled) { background: #f59e0b; color: #0f172a; transform: scale(1.1); }
+    .pres-nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+    .pres-counter { color: #94a3b8; font-size: 15px; font-weight: 600; min-width: 80px; text-align: center; }
+
+    /* Індикатор завантаження */
+    .loading-toast {
+      position: fixed; bottom: 24px; right: 24px; background: #0f172a; color: #f8fafc;
+      padding: 14px 22px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      display: flex; align-items: center; gap: 12px; z-index: 500; font-size: 14px;
+      border: 1px solid rgba(255,255,255,0.15); opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .loading-toast.show { opacity: 1; pointer-events: auto; }
+    .spinner {
+      width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.25);
+      border-top-color: #f59e0b; border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Керування масштабом дошки */
+    .zoom-dock {
+      position: absolute; bottom: 20px; left: 20px; background: rgba(15,23,42,0.85);
+      backdrop-filter: blur(8px); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; padding: 4px; gap: 4px; z-index: 30;
+    }
+    .zoom-btn {
+      width: 32px; height: 32px; border-radius: 6px; border: none; background: transparent;
+      color: #f8fafc; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .zoom-btn:hover { background: rgba(255,255,255,0.15); }
+    .zoom-level { font-size: 12px; font-weight: 700; color: #cbd5e1; padding: 0 6px; }
+
+    /* СТИЛІ ДЛЯ ДРУКУ / ВЕКТОРНОГО PDF (16:9 Landscape) */
+    @media print {
+      @page {
+        size: 297mm 167mm; /* 16:9 widescreen page */
+        margin: 0;
+      }
+      body { background: #fff !important; color: #000 !important; overflow: visible !important; }
+      .toolbar, .zoom-dock, .modal-overlay, .presentation-view, .board-empty-hint { display: none !important; }
+      #boardContainer { display: none !important; }
+      #printContainer {
+        display: block !important; width: 100% !important;
+      }
+      .print-slide {
+        width: 297mm !important; height: 167mm !important; page-break-after: always;
+        break-after: page; display: flex !important; flex-direction: column;
+        padding: 24mm !important; box-sizing: border-box; justify-content: center;
+        background: #fef9c3 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      }
+    }
+    #printContainer { display: none; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Шапка додатка -->
+    <header class="toolbar">
+      <div class="brand-section">
+        <div class="brand-logo" title="Stickerbox">📌</div>
+        <div class="brand-name-tag">Stickerbox</div>
+        <div class="brand-divider"></div>
+        <div class="title-area">
+          <div class="project-title" id="projTitleDisplay" title="Натисніть для зміни теми">Напиши свою тему</div>
+          <div class="project-author" id="projAuthorDisplay" title="Натисніть для зміни автора">Вкажи автора презентації</div>
+        </div>
+      </div>
+
+      <div class="tools-group">
+        <!-- Вибір дошки та кнопка «Нова дошка» -->
+        <div class="boards-control-group" style="display: flex; align-items: center; gap: 4px;">
+          <div class="dropdown">
+            <button class="btn" id="boardsDropdownBtn" title="Мої дошки (перемикання між дошками)" style="background: #1e293b; border-color: rgba(255,255,255,0.22); color: #f8fafc; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px;">📋</span>
+              <span id="activeBoardTitleBadge" style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Напиши свою тему</span>
+              <span style="font-size: 10px; color: #94a3b8;">▾</span>
+            </button>
+            <div class="dropdown-menu" id="boardsMenu" style="width: 290px; max-height: 400px; overflow-y: auto;">
+              <div style="font-size: 11px; font-weight: 700; color: #94a3b8; padding: 6px 12px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Мої дошки (<span id="boardsCountBadge">1</span>)</span>
+              </div>
+              <div id="boardsListContainer"></div>
+              <div style="border-top: 1px solid rgba(255,255,255,0.12); margin: 6px 0;"></div>
+              <button class="dropdown-item" id="menuNewBoardBtn" style="color: #6ee7b7; font-weight: 700; background: rgba(16,185,129,0.12); display: flex; align-items: center; gap: 8px;">
+                Створити нову дошку
+              </button>
+            </div>
+          </div>
+          <button class="btn" id="createNewBoardBtn" title="Створити нову чисту дошку" style="background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.45); color: #6ee7b7; font-weight: 700;">Нова дошка</button>
+        </div>
+
+        <!-- Вибір фону дошки -->
+        <div class="dropdown">
+          <button class="btn" id="themeDropdownBtn" title="Обрати стиль фону дошки">🎨 Стиль дошки ▾</button>
+          <div class="dropdown-menu" id="themeMenu" style="max-height: 440px; overflow-y: auto; width: 230px;">
+            <div style="font-size: 11px; font-weight: 700; color: #94a3b8; padding: 4px 10px; text-transform: uppercase; letter-spacing: 0.5px;">Готові стилі</div>
+            <button class="dropdown-item" data-theme="chalk">🏫 Крейдова дошка</button>
+            <button class="dropdown-item" data-theme="cork">📌 Корок (пробка)</button>
+            <button class="dropdown-item" data-theme="grid">📐 Зошит у клітинку</button>
+            <button class="dropdown-item" data-theme="lines">📝 Зошит у лінійку</button>
+            <button class="dropdown-item" data-theme="dots">✨ Папір у крапку</button>
+            <button class="dropdown-item" data-theme="blueprint">🌌 Космічний синій</button>
+            <button class="dropdown-item" data-theme="parchment">📜 Пергамент</button>
+            <button class="dropdown-item" data-theme="wood">🪵 Світле дерево</button>
+            <button class="dropdown-item" data-theme="slate">🖤 Темний графіт</button>
+            <button class="dropdown-item" data-theme="mint">🌿 Ніжна м'ята</button>
+            <button class="dropdown-item" data-theme="sunset">🌅 Пастельний захід</button>
+            <button class="dropdown-item" data-theme="cyber">💜 Неонова ніч</button>
+            <button class="dropdown-item" data-theme="canvas">🎨 Тканинне полотно</button>
+            <div style="border-top: 1px solid rgba(255,255,255,0.12); margin: 6px 0;"></div>
+            <button class="dropdown-item" data-theme="custom" id="customSavedThemeItem" style="display: none;">🎨 Мій власний стиль</button>
+            <button class="dropdown-item" id="openCustomThemeMenuItem" style="color: #fef08a; font-weight: 700; background: rgba(245,158,11,0.12);">⚙️ Налаштувати свій стиль...</button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="addStickerBtn">➕ Додати стікер</button>
+        <button class="btn btn-accent" id="startPresentationBtn">▶ Презентація</button>
+
+        <!-- Меню експорту PDF -->
+        <div class="dropdown">
+          <button class="btn" id="exportDropdownBtn">📥 Експорт PDF ▾</button>
+          <div class="dropdown-menu" id="exportMenu">
+            <button class="dropdown-item" id="exportPdf169Btn">📑 Слайди 16:9 (PDF-файл)</button>
+            <button class="dropdown-item" id="exportBoardPosterBtn">🖼 Постер усієї дошки (PDF)</button>
+            <button class="dropdown-item" id="printDirectBtn">🖨 Роздрукувати / Зберегти як PDF</button>
+          </div>
+        </div>
+
+        <!-- Меню файлу проекту -->
+        <div class="dropdown">
+          <button class="btn" id="fileDropdownBtn">📁 Файл ▾</button>
+          <div class="dropdown-menu" id="fileMenu">
+            <button class="dropdown-item" id="saveJsonBtn">💾 Зберегти поточну дошку (.json)</button>
+            <button class="dropdown-item" id="saveAllBoardsJsonBtn">📦 Зберегти всі дошки разом (.json)</button>
+            <button class="dropdown-item" id="loadJsonBtn">📂 Відкрити проект (.json)</button>
+            <button class="dropdown-item" id="loadDemoBtn">✨ Відновити інструкцію на цій дошці</button>
+            <div style="border-top: 1px solid rgba(255,255,255,0.12); margin: 6px 0;"></div>
+            <button class="dropdown-item danger" id="clearBoardBtn">🗑 Очистити дошку (видалити всі стікери)</button>
+            <button class="dropdown-item danger" id="closeCurrentBoardFileMenuBtn">✕ Закрити поточну дошку</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Робоча поверхня (дошка) -->
+    <main id="boardContainer">
+      <div id="boardCanvas" class="theme-chalk">
+        <div class="board-empty-hint" id="boardEmptyHint" style="display:none;">
+          <h3>Дошка готова до творчості! ✨</h3>
+          <p>Натисніть кнопку <b>«➕ Додати стікер»</b> вгорі, щоб записати першу ідею, додати малюнок і почати створювати свою презентацію.</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Керування масштабом -->
+    <div class="zoom-dock">
+      <button class="zoom-btn" id="zoomOutBtn" title="Зменшити">−</button>
+      <span class="zoom-level" id="zoomValDisplay">100%</span>
+      <button class="zoom-btn" id="zoomInBtn" title="Збільшити">+</button>
+      <button class="zoom-btn" id="zoomResetBtn" title="Скинути масштаб" style="font-size:12px;">1:1</button>
+    </div>
+  </div>
+
+  <!-- Модальне вікно створення/редагування стікера -->
+  <div class="modal-overlay" id="stickerModalOverlay">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="modalStickerHeading">Створити стікер</h2>
+        <button class="close-btn" id="closeStickerModalBtn">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label for="inputStickerTitle">Заголовок стікера / Слайду</label>
+        <input type="text" id="inputStickerTitle" class="form-input" placeholder="Наприклад: Червона планета Марс" maxlength="80">
+      </div>
+
+      <div class="form-group">
+        <label>Тематичний бейдж (категорія)</label>
+        <div class="pill-group" id="catPills">
+          <button type="button" class="pill-opt active" data-cat="💡 Ідея">💡 Ідея</button>
+          <button type="button" class="pill-opt" data-cat="🔬 Дослідження">🔬 Дослідження</button>
+          <button type="button" class="pill-opt" data-cat="❓ Питання">❓ Питання</button>
+          <button type="button" class="pill-opt" data-cat="⭐ Важливо">⭐ Важливо</button>
+          <button type="button" class="pill-opt" data-cat="🎨 Творчість">🎨 Творчість</button>
+          <button type="button" class="pill-opt" data-cat="📝 Нотатка">📝 Нотатка</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Колір паперу</label>
+        <div class="color-swatches" id="colorSwatches">
+          <div class="swatch active" style="background:#fef9c3;" data-color="#fef9c3" title="Сонячно-жовтий"></div>
+          <div class="swatch" style="background:#dcfce7;" data-color="#dcfce7" title="М'ятний"></div>
+          <div class="swatch" style="background:#e0f2fe;" data-color="#e0f2fe" title="Небесний"></div>
+          <div class="swatch" style="background:#ffe4e6;" data-color="#ffe4e6" title="Рожевий"></div>
+          <div class="swatch" style="background:#f3e8ff;" data-color="#f3e8ff" title="Лавандовий"></div>
+          <div class="swatch" style="background:#ffedd5;" data-color="#ffedd5" title="Персиковий"></div>
+          <div class="swatch" style="background:#ffffff;" data-color="#ffffff" title="Білий аркуш"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Кріплення</label>
+        <div class="pill-group" id="attachmentPills">
+          <button type="button" class="pill-opt active" data-att="pin-red">📌 Червона кнопка</button>
+          <button type="button" class="pill-opt" data-att="pin-gold">🟡 Золота кнопка</button>
+          <button type="button" class="pill-opt" data-att="tape">🩹 Скотч</button>
+          <button type="button" class="pill-opt" data-att="star">⭐ Зірочка</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="inputStickerText">Опис / Зміст слайду</label>
+        <textarea id="inputStickerText" class="form-textarea" placeholder="Запишіть цікаві факти, думки або зміст для презентації..." maxlength="700"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Зображення (малюнок чи фото)</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" id="inputImgUrl" class="form-input" placeholder="Посилання на картинку або оберіть файл">
+          <label class="btn" style="background:#0f172a; cursor:pointer; flex-shrink:0;">
+            📁 З файлу
+            <input type="file" id="fileImgInput" accept="image/*" style="display:none;">
+          </label>
+          <button type="button" class="btn" id="openSearchImgBtn" style="background:#334155; flex-shrink:0;">🔍 Пошук</button>
+        </div>
+        <div class="image-preview-box" id="modalImgPreview">
+          <img id="modalImgTag" src="" alt="Попередній перегляд">
+          <button type="button" class="remove-img-btn" id="removeImgBtn" title="Видалити зображення">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn" id="deleteStickerModalBtn" style="color:#ef4444; border-color:rgba(239,68,68,0.3); display:none;">🗑 Видалити</button>
+        <div style="display:flex; gap:10px; margin-left:auto;">
+          <button type="button" class="btn" id="cancelStickerModalBtn" style="color:#0f172a; background:#e2e8f0;">Скасувати</button>
+          <button type="button" class="btn btn-primary" id="saveStickerBtn">Зберегти стікер</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальне вікно пошуку ілюстрацій -->
+  <div class="modal-overlay" id="searchImgModalOverlay">
+    <div class="modal-card" style="width:min(720px, 94vw); max-height:92vh; display:flex; flex-direction:column;">
+      <div class="modal-head" style="margin-bottom:14px; padding-bottom:10px;">
+        <div>
+          <h2>🔍 Пошук якісних фото для стікера</h2>
+          <div style="font-size:12px; color:#64748b; margin-top:2px;">Українська енциклопедія + відкритий медіабанк зображень</div>
+        </div>
+        <button class="close-btn" id="closeSearchImgBtn">✕</button>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="searchImgQuery" class="form-input" placeholder="Наприклад: марс, сонце, лев, козак, київ, вулкан, школа, космос...">
+        <button class="btn btn-primary" id="runSearchImgBtn" style="white-space:nowrap; padding:10px 18px;">Знайти</button>
+      </div>
+
+      <!-- Швидкий перехід у зовнішні пошуковики Google, DuckDuckGo, Unsplash -->
+      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:10px; padding:8px 12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; font-size:12px;">
+        <span style="font-weight:700; color:#475569;">Пошук в один клік:</span>
+        <button type="button" class="btn" id="searchGoogleBtn" title="Відкрити Google Зображення з цим словом" style="padding:4px 10px; font-size:12px; background:#ffffff; border-color:#cbd5e1; color:#1e293b; display:flex; align-items:center; gap:5px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/></svg>
+          Google Зображення ↗
+        </button>
+        <button type="button" class="btn" id="searchDuckBtn" title="Відкрити DuckDuckGo Images з цим словом" style="padding:4px 10px; font-size:12px; background:#ffffff; border-color:#cbd5e1; color:#1e293b; display:flex; align-items:center; gap:5px;">
+          <span>🦆</span>
+          DuckDuckGo Images ↗
+        </button>
+        <button type="button" class="btn" id="searchUnsplashBtn" title="Відкрити Unsplash з якісними фото" style="padding:4px 10px; font-size:12px; background:#ffffff; border-color:#cbd5e1; color:#1e293b; display:flex; align-items:center; gap:5px;">
+          <span>📷</span>
+          Unsplash ↗
+        </button>
+      </div>
+
+      <!-- Інструкція про швидку вставку з Google/DuckDuckGo через Ctrl+V -->
+      <div style="margin-top:8px; padding:7px 11px; background:#eff6ff; border-left:3px solid #3b82f6; border-radius:6px; font-size:11.5px; color:#1e3a8a; line-height:1.4;">
+        📋 <strong>Швидка вставка з Google / DuckDuckGo:</strong> знайдіть будь-яку картинку в інтернеті, натисніть правою кнопкою миші <strong>«Копіювати зображення»</strong> і просто натисніть <strong>Ctrl+V</strong> у будь-якому місці додатку!
+      </div>
+
+      <div class="search-grid" id="searchImgResults">
+        <div style="grid-column: 1/-1; text-align:center; padding:35px; color:#64748b;">
+          Введіть слово (наприклад, <strong>марс</strong>, <strong>сонце</strong>, <strong>київ</strong>, <strong>лев</strong>) та натисніть «Знайти»
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальне вікно налаштування власного стилю дошки -->
+  <div class="modal-overlay" id="customThemeModalOverlay">
+    <div class="modal-card" style="width: min(580px, 94vw);">
+      <div class="modal-head">
+        <h2>🎨 Налаштувати власний стиль дошки</h2>
+        <button class="close-btn" id="closeCustomThemeModalBtn">✕</button>
+      </div>
+
+      <!-- Попередній перегляд -->
+      <div class="form-group">
+        <label>Попередній перегляд фону</label>
+        <div style="position: relative; height: 110px; border-radius: 12px; overflow: hidden; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center;">
+          <div id="themeLivePreview" style="position: absolute; inset: 0; transition: background 0.15s ease;"></div>
+          <div style="position: relative; z-index: 2; background: #fef9c3; padding: 7px 14px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 13px; font-weight: 700; color: #1e293b; transform: rotate(-2deg); display: flex; align-items: center; gap: 6px;">
+            <span>📌</span>
+            <span>Твій стікер на дошці</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Основний колір фону -->
+      <div class="form-group">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+          <label style="margin-bottom: 0;">Колір фону</label>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <input type="color" id="customThemeBgPicker" value="#172d22" style="width: 30px; height: 30px; border: none; border-radius: 6px; cursor: pointer; background: transparent; padding: 0;">
+            <input type="text" id="customThemeBgHex" value="#172d22" maxlength="7" style="width: 80px; padding: 4px 8px; font-size: 13px; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 6px;">
+          </div>
+        </div>
+        <div class="color-swatches" id="customBgSwatches">
+          <div class="swatch active" style="background:#172d22;" data-color="#172d22" title="Крейдовий зелений"></div>
+          <div class="swatch" style="background:#925835;" data-color="#925835" title="Корок"></div>
+          <div class="swatch" style="background:#1e3a8a;" data-color="#1e3a8a" title="Глибокий синій"></div>
+          <div class="swatch" style="background:#0f172a;" data-color="#0f172a" title="Графітовий чорний"></div>
+          <div class="swatch" style="background:#180d2b;" data-color="#180d2b" title="Неоновий фіолетовий"></div>
+          <div class="swatch" style="background:#f5eedc;" data-color="#f5eedc" title="Пергамент"></div>
+          <div class="swatch" style="background:#ecfdf5;" data-color="#ecfdf5" title="М'ятний"></div>
+          <div class="swatch" style="background:#f0fdf4;" data-color="#f0fdf4" title="Світло-зелений"></div>
+          <div class="swatch" style="background:#e0f2fe;" data-color="#e0f2fe" title="Небесний"></div>
+          <div class="swatch" style="background:#fefce8;" data-color="#fefce8" title="Теплий кремовий"></div>
+          <div class="swatch" style="background:#ffffff;" data-color="#ffffff" title="Білий аркуш"></div>
+        </div>
+      </div>
+
+      <!-- Тип візерунка -->
+      <div class="form-group">
+        <label>Візерунок / Текстура дошки</label>
+        <div class="pill-group" id="customPatternPills">
+          <button type="button" class="pill-opt active" data-pattern="grid">📐 Клітинка</button>
+          <button type="button" class="pill-opt" data-pattern="lines">📝 Лінійка</button>
+          <button type="button" class="pill-opt" data-pattern="dots">✨ Крапки</button>
+          <button type="button" class="pill-opt" data-pattern="stripes">📏 Смужки</button>
+          <button type="button" class="pill-opt" data-pattern="gradient">🌈 Градієнт</button>
+          <button type="button" class="pill-opt" data-pattern="texture">📜 Текстура</button>
+          <button type="button" class="pill-opt" data-pattern="none">🚫 Однотонний</button>
+        </div>
+      </div>
+
+      <!-- Опції візерунка -->
+      <div id="patternControlsGroup">
+        <!-- Колір візерунка та прозорість -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+          <div>
+            <label style="display:block; font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">Колір візерунка</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="color" id="customPatternColorPicker" value="#ffffff" style="width:32px; height:32px; border:none; border-radius:6px; cursor:pointer; background:transparent; padding:0;">
+              <select id="customPatternColorPreset" class="form-input" style="padding:6px 10px; font-size:13px;">
+                <option value="#ffffff">Світлий (Білий)</option>
+                <option value="#000000">Темний (Чорний)</option>
+                <option value="#3b82f6">Шкільний синій</option>
+                <option value="#10b981">М'ятний смарагд</option>
+                <option value="#f59e0b">Золотистий / Теплий</option>
+                <option value="#ec4899">Рожевий акцент</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between;">
+              <label style="display:block; font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">Яскравість ліній</label>
+              <span id="patternOpacityVal" style="font-size:12px; font-weight:700; color:#0f172a;">15%</span>
+            </div>
+            <input type="range" id="customPatternOpacity" min="4" max="75" value="15" style="width:100%; accent-color:#f59e0b;">
+          </div>
+        </div>
+
+        <!-- Розмір клітинки/крапок -->
+        <div id="patternSizeRow" class="form-group" style="margin-bottom: 14px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <label style="margin-bottom:0;">Розмір клітинки / відстань ліній</label>
+            <span id="patternSizeVal" style="font-size:12px; font-weight:700; color:#0f172a;">28 px</span>
+          </div>
+          <input type="range" id="customPatternSize" min="16" max="60" step="2" value="28" style="width:100%; accent-color:#f59e0b;">
+        </div>
+
+        <!-- Опція для градієнта -->
+        <div id="gradientControlsRow" style="display:none; margin-bottom:14px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+              <label style="display:block; font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">Другий колір градієнта</label>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input type="color" id="customGradientColorPicker" value="#0f172a" style="width:32px; height:32px; border:none; border-radius:6px; cursor:pointer; background:transparent; padding:0;">
+                <input type="text" id="customGradientColorHex" value="#0f172a" maxlength="7" style="width:80px; padding:4px 8px; font-size:13px; font-family:monospace; border:1.5px solid #cbd5e1; border-radius:6px;">
+              </div>
+            </div>
+            <div>
+              <label style="display:block; font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">Напрямок градієнта</label>
+              <select id="customGradientDir" class="form-input" style="padding:6px 10px; font-size:13px;">
+                <option value="135deg">По діагоналі ↘</option>
+                <option value="180deg">Зверху вниз ↓</option>
+                <option value="90deg">Зліва направо →</option>
+                <option value="radial">Радіальний (із центру) ⊙</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 16px;">
+        <button type="button" class="btn" id="cancelCustomThemeBtn" style="color:#64748b; border-color:#cbd5e1;">Скасувати</button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn" id="resetCustomThemeBtn" style="color:#64748b; border-color:#cbd5e1;" title="Скинути до стандартних налаштувань">Скинути</button>
+          <button type="button" class="btn btn-primary" id="applyCustomThemeBtn">✨ Застосувати дошку</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальне вікно підтвердження закриття дошки з пропозицією зберегти -->
+  <div class="modal-overlay" id="closeBoardConfirmModal">
+    <div class="modal-card" style="width: min(460px, 94vw); text-align: left;">
+      <div class="modal-head" style="margin-bottom: 12px;">
+        <h2 style="font-size: 17px; display: flex; align-items: center; gap: 8px;">
+          <span>💾</span> Закрити цю дошку?
+        </h2>
+        <button class="close-btn" id="cancelCloseBoardIconBtn">✕</button>
+      </div>
+
+      <div style="font-size: 14px; color: #334155; line-height: 1.5; margin-bottom: 14px;">
+        Ви збираєтеся закрити дошку <strong id="closeBoardTargetTitle" style="color: #0f172a;">«Назва дошки»</strong>.
+        <div style="margin-top: 8px; padding: 10px 12px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; color: #92400e; font-size: 13px;">
+          Бажаєте спочатку зберегти зміни у файл <strong>.json</strong> на комп'ютер, щоб не втратити свої стікери?
+        </div>
+      </div>
+
+      <div class="modal-actions" style="display: flex; flex-direction: column; gap: 8px; margin-top: 18px;">
+        <button type="button" class="btn btn-primary" id="confirmCloseWithSaveBtn" style="width: 100%; justify-content: center; padding: 10px 16px; font-weight: 700; background: #10b981; border-color: #059669; font-size: 14px;">
+          💾 Зберегти дошку (.json) і закрити
+        </button>
+        <div style="display: flex; gap: 8px; width: 100%;">
+          <button type="button" class="btn" id="confirmCloseWithoutSaveBtn" style="flex: 1; justify-content: center; color: #ef4444; border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.06); font-weight: 600; font-size: 13px;" title="Закрити без збереження у файл">
+            Закрити без збереження
+          </button>
+          <button type="button" class="btn" id="cancelCloseBoardBtn" style="flex: 1; justify-content: center; color: #64748b; border-color: #cbd5e1; font-weight: 600; font-size: 13px;" title="Повернутися до перегляду дошки">
+            Скасувати
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Режим повноцінної інтерактивної презентації (16:9) -->
+  <div class="presentation-view" id="presOverlay">
+    <div class="pres-header">
+      <div class="pres-title-badge">
+        <span style="color:#f59e0b; font-weight:700;">Stickerbox</span>
+        <span style="opacity:0.5; margin:0 6px;">•</span>
+        <span id="presHeaderTitle">Назва проекту</span>
+      </div>
+      <div class="pres-controls-top">
+        <button class="btn" id="fullscreenToggleBtn">⛶ На весь екран</button>
+        <button class="btn" id="closePresBtn">✕ Закрити (Esc)</button>
+      </div>
+    </div>
+
+    <!-- Контейнер слайду (16:9) -->
+    <div class="slide-wrapper" id="presSlideWrapper">
+      <div class="slide-body" id="presSlideContent"></div>
+    </div>
+
+    <!-- Панель перегортання -->
+    <div class="pres-nav-bar">
+      <button class="pres-nav-btn" id="presPrevBtn" title="Попередній слайд (Стрілка вліво)">‹</button>
+      <div class="pres-counter" id="presCounterDisplay">1 / 5</div>
+      <button class="pres-nav-btn" id="presNextBtn" title="Наступний слайд (Стрілка вправо)">›</button>
+    </div>
+  </div>
+
+  <!-- Прихований контейнер для якісного векторного друку через браузер -->
+  <div id="printContainer"></div>
+
+  <!-- Індикатор прогресу -->
+  <div class="loading-toast" id="loadingToast">
+    <div class="spinner"></div>
+    <span id="loadingMsg">Генерація файлу...</span>
+  </div>
+
+  <input type="file" id="jsonFileInput" accept=".json" style="display:none;">
+
+  <!-- Логіка програми на чистому ванільному JavaScript -->
+  <script>
+    (function () {
+      "use strict";
+
+      const STORAGE_KEY = "school_sticker_boards_v4";
+      const LEGACY_STORAGE_KEY = "school_sticker_board_v3";
+
+      const DEFAULT_CUSTOM_THEME = {
+        bgColor: "#172d22",
+        pattern: "grid",
+        patternColor: "#ffffff",
+        patternOpacity: 15,
+        patternSize: 28,
+        gradientColor: "#0f172a",
+        gradientDir: "135deg"
+      };
+
+      // Початковий чистий стан з одним стікером-інструкцією
+      const DEFAULT_STATE = {
+        title: "Напиши свою тему",
+        author: "Вкажи автора презентації",
+        theme: "chalk",
+        customTheme: DEFAULT_CUSTOM_THEME,
+        stickers: [
+          {
+            id: "guide_sticker_1",
+            title: "Вітаємо у Stickerbox! 💡",
+            text: "1. Натисни вгорі на «Напиши свою тему» та «Вкажи автора презентації» ✏️\n2. Натискай кнопку «➕ Додати стікер», щоб писати факти та додавати власні малюнки або фото.\n3. Перетягуй стікери мишкою чи пальцем по дошці.\n4. Натискай «▶ Презентація» для показу або «📥 Експорт PDF» для збереження!\n\n(Ти можеш легко видалити цей стікер-підказку, просто натиснувши на червоний хрестик ✕ у його правому кутку).",
+            color: "#fef9c3",
+            category: "💡 Ідея",
+            attachment: "pin-red",
+            image: "",
+            x: 140,
+            y: 100,
+            rotation: -1
+          }
+        ]
+      };
+
+      function createBoardTemplate(customTitle = "Напиши свою тему") {
+        return {
+          id: "b_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+          title: customTitle,
+          author: "Вкажи автора презентації",
+          theme: "chalk",
+          customTheme: Object.assign({}, DEFAULT_CUSTOM_THEME),
+          stickers: [
+            {
+              id: "guide_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+              title: "Вітаємо у Stickerbox! 💡",
+              text: "1. Натисни вгорі на «Напиши свою тему» та «Вкажи автора презентації» ✏️\n2. Натискай кнопку «➕ Додати стікер», щоб писати факти та додавати власні малюнки або фото.\n3. Перетягуй стікери мишкою чи пальцем по дошці.\n4. Натискай «▶ Презентація» для показу або «📥 Експорт PDF» для збереження!\n\n(Ти можеш легко видалити цей стікер-підказку, просто натиснувши на червоний хрестик ✕ у його правому кутку).",
+              color: "#fef9c3",
+              category: "💡 Ідея",
+              attachment: "pin-red",
+              image: "",
+              x: 140,
+              y: 100,
+              rotation: -1
+            }
+          ],
+          createdAt: Date.now()
+        };
+      }
+
+      // Відновлення початкової інструкції на поточній дошці
+      function restoreGuideStickerOnCurrentBoard() {
+        appState.stickers = [
+          {
+            id: "guide_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+            title: "Вітаємо у Stickerbox! 💡",
+            text: "1. Натисни вгорі на «Напиши свою тему» та «Вкажи автора презентації» ✏️\n2. Натискай кнопку «➕ Додати стікер», щоб писати факти та додавати власні малюнки або фото.\n3. Перетягуй стікери мишкою чи пальцем по дошці.\n4. Натискай «▶ Презентація» для показу або «📥 Експорт PDF» для збереження!\n\n(Ти можеш легко видалити цей стікер-підказку, просто натиснувши на червоний хрестик ✕ у його правому кутку).",
+            color: "#fef9c3",
+            category: "💡 Ідея",
+            attachment: "pin-red",
+            image: "",
+            x: 140,
+            y: 100,
+            rotation: -1
+          }
+        ];
+
+        const idx = boardsData.boards.findIndex(b => b.id === boardsData.activeBoardId);
+        if (idx !== -1) {
+          boardsData.boards[idx].stickers = appState.stickers;
+        }
+
+        renderStickers();
+        renderBoardsDropdown();
+        saveToStorage();
+      }
+
+      // Повне очищення дошки від стікерів
+      function clearCurrentBoardStickers() {
+        appState.stickers = [];
+        const idx = boardsData.boards.findIndex(b => b.id === boardsData.activeBoardId);
+        if (idx !== -1) {
+          boardsData.boards[idx].stickers = [];
+        }
+
+        renderStickers();
+        renderBoardsDropdown();
+        saveToStorage();
+      }
+
+      // Скидання поточної дошки до первозданного вигляду першого запуску
+      function resetCurrentBoardToInitial() {
+        appState.title = "Напиши свою тему";
+        appState.author = "Вкажи автора презентації";
+        appState.theme = "chalk";
+        appState.customTheme = Object.assign({}, DEFAULT_CUSTOM_THEME);
+        appState.stickers = [
+          {
+            id: "guide_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+            title: "Вітаємо у Stickerbox! 💡",
+            text: "1. Натисни вгорі на «Напиши свою тему» та «Вкажи автора презентації» ✏️\n2. Натискай кнопку «➕ Додати стікер», щоб писати факти та додавати власні малюнки або фото.\n3. Перетягуй стікери мишкою чи пальцем по дошці.\n4. Натискай «▶ Презентація» для показу або «📥 Експорт PDF» для збереження!\n\n(Ти можеш легко видалити цей стікер-підказку, просто натиснувши на червоний хрестик ✕ у його правому кутку).",
+            color: "#fef9c3",
+            category: "💡 Ідея",
+            attachment: "pin-red",
+            image: "",
+            x: 140,
+            y: 100,
+            rotation: -1
+          }
+        ];
+
+        const idx = boardsData.boards.findIndex(b => b.id === boardsData.activeBoardId);
+        if (idx !== -1) {
+          boardsData.boards[idx] = appState;
+        }
+
+        applyTheme(appState.theme);
+        updateHeaderInfo();
+        renderStickers();
+        renderBoardsDropdown();
+        saveToStorage();
+      }
+
+      // Структура для кількох дощок одночасно
+      let boardsData = {
+        activeBoardId: "b_init_1",
+        boards: [
+          {
+            id: "b_init_1",
+            title: DEFAULT_STATE.title,
+            author: DEFAULT_STATE.author,
+            theme: DEFAULT_STATE.theme,
+            customTheme: Object.assign({}, DEFAULT_CUSTOM_THEME),
+            stickers: JSON.parse(JSON.stringify(DEFAULT_STATE.stickers)),
+            createdAt: Date.now()
+          }
+        ]
+      };
+
+      // Активна дошка, з якою працює інтерфейс
+      let appState = boardsData.boards[0];
+
+      let zoomLevel = 1.0;
+      let activeEditingId = null;
+      let modalDraft = {};
+      let presCurrentIndex = 0;
+
+      // DOM Елементи
+      const boardContainer = document.getElementById("boardContainer");
+      const boardCanvas = document.getElementById("boardCanvas");
+      const boardEmptyHint = document.getElementById("boardEmptyHint");
+      const projTitleDisplay = document.getElementById("projTitleDisplay");
+      const projAuthorDisplay = document.getElementById("projAuthorDisplay");
+      const loadingToast = document.getElementById("loadingToast");
+      const loadingMsg = document.getElementById("loadingMsg");
+
+      // Елементи перемикача дощок
+      const activeBoardTitleBadge = document.getElementById("activeBoardTitleBadge");
+      const boardsCountBadge = document.getElementById("boardsCountBadge");
+      const boardsListContainer = document.getElementById("boardsListContainer");
+      const createNewBoardBtn = document.getElementById("createNewBoardBtn");
+      const menuNewBoardBtn = document.getElementById("menuNewBoardBtn");
+
+      function getActiveBoard() {
+        let b = boardsData.boards.find(x => x.id === boardsData.activeBoardId);
+        if (!b) {
+          b = boardsData.boards[0] || createBoardTemplate();
+          boardsData.activeBoardId = b.id;
+        }
+        return b;
+      }
+
+      function switchBoard(boardId) {
+        const target = boardsData.boards.find(b => b.id === boardId);
+        if (!target) return;
+        boardsData.activeBoardId = target.id;
+        appState = target;
+        applyTheme(appState.theme || "chalk");
+        updateHeaderInfo();
+        renderStickers();
+        renderBoardsDropdown();
+        saveToStorage();
+        showToast(`Перемкнуто: «${appState.title || "Дошка"}» 📋`);
+      }
+
+      function createNewBoard() {
+        const newBoard = createBoardTemplate("Напиши свою тему");
+        boardsData.boards.push(newBoard);
+        boardsData.activeBoardId = newBoard.id;
+        appState = newBoard;
+        applyTheme(appState.theme);
+        updateHeaderInfo();
+        renderStickers();
+        renderBoardsDropdown();
+        saveToStorage();
+        showToast("Створено нову чисту дошку! 🎨");
+      }
+
+      let boardPendingDeletionId = null;
+
+      const closeBoardConfirmModal = document.getElementById("closeBoardConfirmModal");
+      const closeBoardTargetTitle = document.getElementById("closeBoardTargetTitle");
+      const confirmCloseWithSaveBtn = document.getElementById("confirmCloseWithSaveBtn");
+      const confirmCloseWithoutSaveBtn = document.getElementById("confirmCloseWithoutSaveBtn");
+      const cancelCloseBoardBtn = document.getElementById("cancelCloseBoardBtn");
+      const cancelCloseBoardIconBtn = document.getElementById("cancelCloseBoardIconBtn");
+
+      function openCloseBoardConfirm(boardId) {
+        boardPendingDeletionId = boardId;
+        const b = boardsData.boards.find(x => x.id === boardId);
+        const name = b && b.title && b.title !== "Напиши свою тему" ? `«${b.title}»` : "цю дошку";
+        if (closeBoardTargetTitle) closeBoardTargetTitle.textContent = name;
+        if (closeBoardConfirmModal) closeBoardConfirmModal.classList.add("open");
+      }
+
+      function hideCloseBoardConfirm() {
+        boardPendingDeletionId = null;
+        if (closeBoardConfirmModal) closeBoardConfirmModal.classList.remove("open");
+      }
+
+      function exportBoardToJson(boardObj) {
+        if (!boardObj) return;
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(boardObj, null, 2));
+        const a = document.createElement("a");
+        a.href = dataStr;
+        const cleanName = (boardObj.title && boardObj.title !== "Напиши свою тему" ? boardObj.title : "doshka").replace(/[^a-z0-9а-яіїєґ]/gi, "_");
+        a.download = `${cleanName}.json`;
+        a.click();
+      }
+
+      function executeDeleteBoard(boardId) {
+        if (boardsData.boards.length <= 1) {
+          showToast("Неможливо закрити єдину дошку. Ви можете її очистити! ℹ️");
+          return;
+        }
+        const b = boardsData.boards.find(x => x.id === boardId);
+        const name = b && b.title && b.title !== "Напиши свою тему" ? `«${b.title}»` : "дошку";
+
+        boardsData.boards = boardsData.boards.filter(x => x.id !== boardId);
+        if (boardsData.activeBoardId === boardId) {
+          boardsData.activeBoardId = boardsData.boards[0].id;
+          appState = boardsData.boards[0];
+          applyTheme(appState.theme || "chalk");
+          updateHeaderInfo();
+          renderStickers();
+        }
+        renderBoardsDropdown();
+        saveToStorage();
+        showToast(`Закрито ${name} 🗑`);
+      }
+
+      function requestDeleteBoard(boardId, e) {
+        if (e) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+        if (boardsData.boards.length <= 1) {
+          showToast("Неможливо закрити єдину дошку. Ви можете її очистити! ℹ️");
+          return;
+        }
+        // Закриваємо випадаюче меню дощок
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+        openCloseBoardConfirm(boardId);
+      }
+
+      if (confirmCloseWithSaveBtn) {
+        confirmCloseWithSaveBtn.addEventListener("click", () => {
+          if (boardPendingDeletionId) {
+            const targetBoard = boardsData.boards.find(b => b.id === boardPendingDeletionId);
+            if (targetBoard) {
+              // Якщо видаляємо поточну активну дошку, синхронізуємо стан перед експортом
+              if (targetBoard.id === boardsData.activeBoardId) {
+                Object.assign(targetBoard, appState);
+              }
+              exportBoardToJson(targetBoard);
+              showToast("Дошку збережено у файл .json! 💾");
+            }
+            executeDeleteBoard(boardPendingDeletionId);
+          }
+          hideCloseBoardConfirm();
+        });
+      }
+
+      if (confirmCloseWithoutSaveBtn) {
+        confirmCloseWithoutSaveBtn.addEventListener("click", () => {
+          if (boardPendingDeletionId) {
+            executeDeleteBoard(boardPendingDeletionId);
+          }
+          hideCloseBoardConfirm();
+        });
+      }
+
+      if (cancelCloseBoardBtn) cancelCloseBoardBtn.addEventListener("click", hideCloseBoardConfirm);
+      if (cancelCloseBoardIconBtn) cancelCloseBoardIconBtn.addEventListener("click", hideCloseBoardConfirm);
+      if (closeBoardConfirmModal) {
+        closeBoardConfirmModal.addEventListener("click", (e) => {
+          if (e.target === closeBoardConfirmModal) hideCloseBoardConfirm();
+        });
+      }
+
+      function renderBoardsDropdown() {
+        if (!activeBoardTitleBadge || !boardsListContainer) return;
+
+        const curTitle = appState.title || "Напиши свою тему";
+        activeBoardTitleBadge.textContent = curTitle;
+        activeBoardTitleBadge.title = curTitle;
+
+        if (boardsCountBadge) {
+          boardsCountBadge.textContent = boardsData.boards.length;
+        }
+
+        boardsListContainer.innerHTML = "";
+        boardsData.boards.forEach((b, idx) => {
+          const isActive = b.id === boardsData.activeBoardId;
+          const item = document.createElement("div");
+          item.className = "board-menu-item" + (isActive ? " active" : "");
+
+          const stickersCount = Array.isArray(b.stickers) ? b.stickers.length : 0;
+          const countText = stickersCount === 1 ? "1 стікер" :
+                            (stickersCount >= 2 && stickersCount <= 4 ? `${stickersCount} стікери` : `${stickersCount} стікерів`);
+
+          let delBtnHtml = "";
+          if (boardsData.boards.length > 1) {
+            delBtnHtml = `<button type="button" class="board-item-delete" title="Видалити цю дошку" data-id="${b.id}">✕</button>`;
+          }
+
+          item.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+              <span style="font-size:14px; opacity:${isActive ? '1' : '0.6'};">${isActive ? '📌' : '📋'}</span>
+              <div class="board-item-meta">
+                <span class="board-item-title">${escapeHtml(b.title || "Дошка " + (idx + 1))}</span>
+                <span class="board-item-sub">${countText} • ${escapeHtml(b.author && b.author !== "Вкажи автора презентації" ? b.author : "Без автора")}</span>
+              </div>
+            </div>
+            ${delBtnHtml}
+          `;
+
+          item.addEventListener("click", () => {
+            document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+            if (b.id !== boardsData.activeBoardId) {
+              switchBoard(b.id);
+            }
+          });
+
+          const delBtn = item.querySelector(".board-item-delete");
+          if (delBtn) {
+            delBtn.addEventListener("click", (evt) => {
+              evt.preventDefault();
+              evt.stopPropagation();
+              requestDeleteBoard(b.id, evt);
+            });
+          }
+
+          boardsListContainer.appendChild(item);
+        });
+      }
+
+      // Збереження / Завантаження (з міграцією зі старого сховища v3)
+      function loadFromStorage() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.boards) && parsed.boards.length > 0) {
+              boardsData = parsed;
+              boardsData.boards.forEach(b => {
+                if (!Array.isArray(b.stickers)) b.stickers = [];
+                if (!b.customTheme) b.customTheme = Object.assign({}, DEFAULT_CUSTOM_THEME);
+                if (!b.title) b.title = DEFAULT_STATE.title;
+                if (!b.author) b.author = DEFAULT_STATE.author;
+              });
+            }
+          } else {
+            // Перевіряємо старе сховище v3 та мігруємо
+            const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+            if (legacyRaw) {
+              const legacyParsed = JSON.parse(legacyRaw);
+              if (legacyParsed && Array.isArray(legacyParsed.stickers)) {
+                boardsData = {
+                  activeBoardId: "b_migrated_1",
+                  boards: [{
+                    id: "b_migrated_1",
+                    title: legacyParsed.title || DEFAULT_STATE.title,
+                    author: legacyParsed.author || DEFAULT_STATE.author,
+                    theme: legacyParsed.theme || DEFAULT_STATE.theme,
+                    customTheme: legacyParsed.customTheme || Object.assign({}, DEFAULT_CUSTOM_THEME),
+                    stickers: legacyParsed.stickers,
+                    createdAt: Date.now()
+                  }]
+                };
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Storage not accessible, using in-memory state", e);
+        }
+
+        appState = getActiveBoard();
+        applyTheme(appState.theme || "chalk");
+        updateHeaderInfo();
+        renderStickers();
+        renderBoardsDropdown();
+      }
+
+      function saveToStorage() {
+        try {
+          const idx = boardsData.boards.findIndex(b => b.id === boardsData.activeBoardId);
+          if (idx !== -1) {
+            boardsData.boards[idx] = appState;
+          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(boardsData));
+        } catch (e) {
+          console.warn("Could not save to localStorage", e);
+        }
+      }
+
+      function showToast(msg, duration = 2500) {
+        loadingMsg.textContent = msg;
+        loadingToast.classList.add("show");
+        if (duration > 0) {
+          setTimeout(() => loadingToast.classList.remove("show"), duration);
+        }
+      }
+      function hideToast() {
+        loadingToast.classList.remove("show");
+      }
+
+      // Оновлення заголовків проекту в шапці
+      function updateHeaderInfo() {
+        projTitleDisplay.textContent = appState.title || "Напиши свою тему";
+        if (!appState.author || appState.author === "Вкажи автора презентації") {
+          projAuthorDisplay.textContent = "Вкажи автора презентації";
+        } else {
+          projAuthorDisplay.textContent = "Автор: " + appState.author;
+        }
+        if (activeBoardTitleBadge) {
+          activeBoardTitleBadge.textContent = appState.title || "Напиши свою тему";
+        }
+      }
+
+      function editProjectField(field, element) {
+        const isDefaultTitle = appState.title === "Напиши свою тему" || appState.title === "Дивовижний Космос";
+        const isDefaultAuthor = appState.author === "Вкажи автора презентації" || appState.author === "Учні 6-А класу";
+        
+        let initialVal = "";
+        if (field === "title") {
+          initialVal = isDefaultTitle ? "" : (appState.title || "");
+        } else {
+          initialVal = isDefaultAuthor ? "" : (appState.author || "");
+        }
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = initialVal;
+        input.placeholder = field === "title" ? "Напиши свою тему..." : "Вкажи автора (ім'я, клас)...";
+        input.className = field === "title" ? "title-input" : "author-input";
+        input.maxLength = 70;
+        element.replaceWith(input);
+        input.focus();
+        if (initialVal) {
+          input.select();
+        }
+
+        function commit() {
+          const val = input.value.trim();
+          if (field === "title") {
+            appState.title = val || "Напиши свою тему";
+          } else {
+            appState.author = val || "Вкажи автора презентації";
+          }
+          input.replaceWith(element);
+          updateHeaderInfo();
+          renderBoardsDropdown();
+          saveToStorage();
+        }
+
+        input.addEventListener("blur", commit);
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+          if (e.key === "Escape") { input.value = initialVal; input.blur(); }
+        });
+      }
+
+      projTitleDisplay.addEventListener("click", () => editProjectField("title", projTitleDisplay));
+      projAuthorDisplay.addEventListener("click", () => editProjectField("author", projAuthorDisplay));
+
+      if (createNewBoardBtn) createNewBoardBtn.addEventListener("click", createNewBoard);
+      if (menuNewBoardBtn) menuNewBoardBtn.addEventListener("click", () => {
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+        createNewBoard();
+      });
+
+      function hexToRgba(hex, alpha) {
+        if (!hex) return `rgba(255, 255, 255, ${alpha})`;
+        let c = hex.replace("#", "");
+        if (c.length === 3) c = c.split("").map(x => x + x).join("");
+        const num = parseInt(c, 16) || 0;
+        const r = (num >> 16) & 255;
+        const g = (num >> 8) & 255;
+        const b = num & 255;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      function computeThemeStyles(cfg) {
+        if (!cfg) cfg = DEFAULT_CUSTOM_THEME;
+        const bg = cfg.bgColor || "#172d22";
+        const pat = cfg.pattern || "grid";
+        const patCol = cfg.patternColor || "#ffffff";
+        const opacity = (cfg.patternOpacity !== undefined ? cfg.patternOpacity : 15) / 100;
+        const size = cfg.patternSize || 28;
+        const color = hexToRgba(patCol, opacity);
+
+        let bgImage = "";
+        let bgSize = "";
+
+        if (pat === "none") {
+          bgImage = "none";
+          bgSize = "";
+        } else if (pat === "grid") {
+          bgImage = `linear-gradient(${color} 1px, transparent 1px), linear-gradient(90deg, ${color} 1px, transparent 1px)`;
+          bgSize = `${size}px ${size}px`;
+        } else if (pat === "lines") {
+          const marginCol = hexToRgba("#ef4444", Math.min(0.4, opacity * 1.6));
+          bgImage = `linear-gradient(90deg, transparent 79px, ${marginCol} 79px, ${marginCol} 81px, transparent 81px), linear-gradient(${color} 1px, transparent 1px)`;
+          bgSize = `100% 100%, 100% ${size}px`;
+        } else if (pat === "dots") {
+          bgImage = `radial-gradient(circle, ${color} 1.6px, transparent 1.6px)`;
+          bgSize = `${size}px ${size}px`;
+        } else if (pat === "stripes") {
+          bgImage = `repeating-linear-gradient(45deg, ${color} 0, ${color} 2px, transparent 2px, transparent ${size}px)`;
+          bgSize = "";
+        } else if (pat === "gradient") {
+          const dir = cfg.gradientDir || "135deg";
+          const gCol = cfg.gradientColor || "#0f172a";
+          if (dir === "radial") {
+            bgImage = `radial-gradient(circle at 50% 50%, ${bg} 0%, ${gCol} 100%)`;
+          } else {
+            bgImage = `linear-gradient(${dir}, ${bg} 0%, ${gCol} 100%)`;
+          }
+          bgSize = "";
+        } else if (pat === "texture") {
+          bgImage = `radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 80%), repeating-radial-gradient(circle at 20% 30%, ${color} 0, ${color} 3px, transparent 3px, transparent 16px)`;
+          bgSize = "";
+        }
+
+        return {
+          backgroundColor: bg,
+          backgroundImage: bgImage,
+          backgroundSize: bgSize
+        };
+      }
+
+      function updateActiveThemeInMenu() {
+        const current = appState.theme || "chalk";
+        document.querySelectorAll("#themeMenu .dropdown-item[data-theme]").forEach(btn => {
+          if (btn.dataset.theme === current) {
+            btn.style.backgroundColor = "rgba(245,158,11,0.22)";
+            btn.style.fontWeight = "700";
+            btn.style.color = "#fef08a";
+          } else {
+            btn.style.backgroundColor = "";
+            btn.style.fontWeight = "";
+            btn.style.color = "";
+          }
+        });
+
+        const customItem = document.getElementById("customSavedThemeItem");
+        if (customItem) {
+          if (appState.customTheme) {
+            customItem.style.display = "block";
+          }
+        }
+      }
+
+      // Зміна теми дошки
+      function applyTheme(themeName, customConfig) {
+        if (customConfig) {
+          appState.customTheme = Object.assign({}, appState.customTheme || DEFAULT_CUSTOM_THEME, customConfig);
+        }
+        appState.theme = themeName;
+
+        if (themeName === "custom") {
+          const styles = computeThemeStyles(appState.customTheme);
+          boardCanvas.className = "theme-custom";
+          boardCanvas.style.backgroundColor = styles.backgroundColor;
+          boardCanvas.style.backgroundImage = styles.backgroundImage;
+          boardCanvas.style.backgroundSize = styles.backgroundSize;
+        } else {
+          boardCanvas.style.backgroundColor = "";
+          boardCanvas.style.backgroundImage = "";
+          boardCanvas.style.backgroundSize = "";
+          boardCanvas.className = "theme-" + themeName;
+        }
+
+        updateActiveThemeInMenu();
+        saveToStorage();
+      }
+
+      // Відмальовка стікерів на дошці
+      function renderStickers() {
+        // Видаляємо старі елементи
+        const existing = boardCanvas.querySelectorAll(".sticker-card");
+        existing.forEach(el => el.remove());
+
+        if (appState.stickers.length === 0) {
+          boardEmptyHint.style.display = "block";
+          return;
+        }
+        boardEmptyHint.style.display = "none";
+
+        appState.stickers.forEach((sticker, index) => {
+          const el = createStickerElement(sticker, index);
+          boardCanvas.appendChild(el);
+        });
+      }
+
+      function createStickerElement(sticker, index) {
+        const card = document.createElement("div");
+        card.className = "sticker-card";
+        card.id = "card_" + sticker.id;
+        card.style.left = (sticker.x || 80) + "px";
+        card.style.top = (sticker.y || 80) + "px";
+        card.style.backgroundColor = sticker.color || "#fef9c3";
+        card.style.transform = `rotate(${sticker.rotation || 0}deg)`;
+
+        // Кріплення
+        let attHtml = "";
+        if (sticker.attachment === "pin-red") attHtml = '<div class="card-attachment pin-red"></div>';
+        else if (sticker.attachment === "pin-gold") attHtml = '<div class="card-attachment pin-gold"></div>';
+        else if (sticker.attachment === "tape") attHtml = '<div class="card-attachment tape"></div>';
+        else if (sticker.attachment === "star") attHtml = '<div class="card-attachment star-pin">⭐</div>';
+
+        // Зображення
+        let imgHtml = "";
+        if (sticker.image) {
+          imgHtml = `<div class="card-img-wrap"><img src="${escapeHtml(sticker.image)}" alt="" loading="lazy"></div>`;
+        }
+
+        card.innerHTML = `
+          ${attHtml}
+          <div class="card-header">
+            <div class="card-slide-pill">#${index + 1}</div>
+            <div class="card-cat-badge">${escapeHtml(sticker.category || "💡 Ідея")}</div>
+            <div class="card-actions-quick">
+              <button class="card-mini-btn" title="Перемістити раніше (вгору)" data-act="up">▲</button>
+              <button class="card-mini-btn" title="Перемістити пізніше (вниз)" data-act="down">▼</button>
+              <button class="card-mini-btn" title="Редагувати" data-act="edit">✎</button>
+              <button class="card-mini-btn del" title="Видалити" data-act="del">✕</button>
+            </div>
+          </div>
+          <div class="card-title">${escapeHtml(sticker.title || "Без назви")}</div>
+          ${imgHtml}
+          <div class="card-text">${escapeHtml(sticker.text || "")}</div>
+        `;
+
+        // Обробники кнопок дій
+        card.querySelectorAll(".card-mini-btn").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const act = btn.dataset.act;
+            if (act === "edit") openStickerModal(sticker.id);
+            else if (act === "del") deleteSticker(sticker.id);
+            else if (act === "up") moveStickerOrder(sticker.id, -1);
+            else if (act === "down") moveStickerOrder(sticker.id, 1);
+          });
+        });
+
+        // Перетягування (Drag & Drop) мишкою або тачем
+        setupDraggable(card, sticker);
+
+        return card;
+      }
+
+      function setupDraggable(el, sticker) {
+        let isDragging = false;
+        let startX = 0, startY = 0;
+        let initialX = 0, initialY = 0;
+        let moved = false;
+
+        el.addEventListener("pointerdown", (e) => {
+          if (e.target.closest(".card-mini-btn")) return;
+          isDragging = true;
+          moved = false;
+          el.setPointerCapture(e.pointerId);
+          startX = e.clientX;
+          startY = e.clientY;
+          initialX = sticker.x || 0;
+          initialY = sticker.y || 0;
+          el.classList.add("dragging");
+
+          function onPointerMove(ev) {
+            if (!isDragging) return;
+            const dx = (ev.clientX - startX) / zoomLevel;
+            const dy = (ev.clientY - startY) / zoomLevel;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+
+            let nextX = Math.max(10, Math.min(3200 - 300, initialX + dx));
+            let nextY = Math.max(10, Math.min(2200 - 300, initialY + dy));
+            sticker.x = nextX;
+            sticker.y = nextY;
+            el.style.left = nextX + "px";
+            el.style.top = nextY + "px";
+          }
+
+          function onPointerUp(ev) {
+            if (!isDragging) return;
+            isDragging = false;
+            el.releasePointerCapture(ev.pointerId);
+            el.removeEventListener("pointermove", onPointerMove);
+            el.removeEventListener("pointerup", onPointerUp);
+            el.classList.remove("dragging");
+            if (moved) {
+              saveToStorage();
+            } else {
+              openStickerModal(sticker.id);
+            }
+          }
+
+          el.addEventListener("pointermove", onPointerMove);
+          el.addEventListener("pointerup", onPointerUp);
+        });
+      }
+
+      function deleteSticker(id) {
+        appState.stickers = appState.stickers.filter(s => s.id !== id);
+        renderStickers();
+        saveToStorage();
+      }
+
+      function moveStickerOrder(id, delta) {
+        const idx = appState.stickers.findIndex(s => s.id === id);
+        if (idx === -1) return;
+        const targetIdx = idx + delta;
+        if (targetIdx < 0 || targetIdx >= appState.stickers.length) return;
+        const temp = appState.stickers[idx];
+        appState.stickers[idx] = appState.stickers[targetIdx];
+        appState.stickers[targetIdx] = temp;
+        renderStickers();
+        saveToStorage();
+      }
+
+      // Модальне вікно стікера
+      const stickerModalOverlay = document.getElementById("stickerModalOverlay");
+      const modalStickerHeading = document.getElementById("modalStickerHeading");
+      const inputStickerTitle = document.getElementById("inputStickerTitle");
+      const inputStickerText = document.getElementById("inputStickerText");
+      const inputImgUrl = document.getElementById("inputImgUrl");
+      const fileImgInput = document.getElementById("fileImgInput");
+      const modalImgPreview = document.getElementById("modalImgPreview");
+      const modalImgTag = document.getElementById("modalImgTag");
+      const removeImgBtn = document.getElementById("removeImgBtn");
+      const deleteStickerModalBtn = document.getElementById("deleteStickerModalBtn");
+      const saveStickerBtn = document.getElementById("saveStickerBtn");
+      const cancelStickerModalBtn = document.getElementById("cancelStickerModalBtn");
+      const closeStickerModalBtn = document.getElementById("closeStickerModalBtn");
+
+      function openStickerModal(id = null) {
+        activeEditingId = id;
+        if (id) {
+          const existing = appState.stickers.find(s => s.id === id);
+          if (!existing) return;
+          modalDraft = JSON.parse(JSON.stringify(existing));
+          modalStickerHeading.textContent = "Редагувати стікер";
+          deleteStickerModalBtn.style.display = "block";
+        } else {
+          modalDraft = {
+            id: "s_" + Date.now(),
+            title: "",
+            text: "",
+            category: "💡 Ідея",
+            color: "#fef9c3",
+            attachment: "pin-red",
+            image: "",
+            x: Math.min(2600, boardContainer.scrollLeft + 160 + Math.random() * 80),
+            y: Math.min(1700, boardContainer.scrollTop + 140 + Math.random() * 80),
+            rotation: (Math.random() * 6 - 3)
+          };
+          modalStickerHeading.textContent = "Новий стікер";
+          deleteStickerModalBtn.style.display = "none";
+        }
+
+        inputStickerTitle.value = modalDraft.title || "";
+        inputStickerText.value = modalDraft.text || "";
+        inputImgUrl.value = modalDraft.image || "";
+
+        // Вибір кольору
+        document.querySelectorAll("#colorSwatches .swatch").forEach(sw => {
+          sw.classList.toggle("active", sw.dataset.color === modalDraft.color);
+        });
+
+        // Вибір категорії
+        document.querySelectorAll("#catPills .pill-opt").forEach(p => {
+          p.classList.toggle("active", p.dataset.cat === modalDraft.category);
+        });
+
+        // Вибір кріплення
+        document.querySelectorAll("#attachmentPills .pill-opt").forEach(p => {
+          p.classList.toggle("active", p.dataset.att === modalDraft.attachment);
+        });
+
+        updateModalImgPreview(modalDraft.image);
+        stickerModalOverlay.classList.add("open");
+        inputStickerTitle.focus();
+      }
+
+      function closeStickerModal() {
+        stickerModalOverlay.classList.remove("open");
+        activeEditingId = null;
+      }
+
+      function updateModalImgPreview(url) {
+        if (url) {
+          modalImgTag.src = url;
+          modalImgPreview.classList.add("has-img");
+        } else {
+          modalImgTag.src = "";
+          modalImgPreview.classList.remove("has-img");
+        }
+      }
+
+      // Клік по палітрі кольорів
+      document.getElementById("colorSwatches").addEventListener("click", (e) => {
+        const sw = e.target.closest(".swatch");
+        if (!sw) return;
+        document.querySelectorAll("#colorSwatches .swatch").forEach(s => s.classList.remove("active"));
+        sw.classList.add("active");
+        modalDraft.color = sw.dataset.color;
+      });
+
+      // Клік по категоріях
+      document.getElementById("catPills").addEventListener("click", (e) => {
+        const p = e.target.closest(".pill-opt");
+        if (!p) return;
+        document.querySelectorAll("#catPills .pill-opt").forEach(el => el.classList.remove("active"));
+        p.classList.add("active");
+        modalDraft.category = p.dataset.cat;
+      });
+
+      // Клік по кріпленнях
+      document.getElementById("attachmentPills").addEventListener("click", (e) => {
+        const p = e.target.closest(".pill-opt");
+        if (!p) return;
+        document.querySelectorAll("#attachmentPills .pill-opt").forEach(el => el.classList.remove("active"));
+        p.classList.add("active");
+        modalDraft.attachment = p.dataset.att;
+      });
+
+      // Завантаження власного малюнка учня через FileReader (100% автономно)
+      fileImgInput.addEventListener("change", () => {
+        const file = fileImgInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          modalDraft.image = ev.target.result;
+          inputImgUrl.value = "";
+          updateModalImgPreview(modalDraft.image);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      inputImgUrl.addEventListener("input", () => {
+        modalDraft.image = inputImgUrl.value.trim();
+        updateModalImgPreview(modalDraft.image);
+      });
+
+      removeImgBtn.addEventListener("click", () => {
+        modalDraft.image = "";
+        inputImgUrl.value = "";
+        fileImgInput.value = "";
+        updateModalImgPreview("");
+      });
+
+      saveStickerBtn.addEventListener("click", () => {
+        modalDraft.title = inputStickerTitle.value.trim();
+        modalDraft.text = inputStickerText.value.trim();
+        if (!modalDraft.title && !modalDraft.text && !modalDraft.image) {
+          inputStickerTitle.focus();
+          return;
+        }
+        if (activeEditingId) {
+          const idx = appState.stickers.findIndex(s => s.id === activeEditingId);
+          if (idx !== -1) appState.stickers[idx] = modalDraft;
+        } else {
+          appState.stickers.push(modalDraft);
+        }
+        renderStickers();
+        saveToStorage();
+        closeStickerModal();
+      });
+
+      deleteStickerModalBtn.addEventListener("click", () => {
+        if (activeEditingId) deleteSticker(activeEditingId);
+        closeStickerModal();
+      });
+
+      document.getElementById("addStickerBtn").addEventListener("click", () => openStickerModal(null));
+      cancelStickerModalBtn.addEventListener("click", closeStickerModal);
+      closeStickerModalBtn.addEventListener("click", closeStickerModal);
+      stickerModalOverlay.addEventListener("click", (e) => {
+        if (e.target === stickerModalOverlay) closeStickerModal();
+      });
+
+      // Пошук картинок (Українська Вікіпедія + Wikimedia Commons з фільтром растрових фото)
+      const searchImgModalOverlay = document.getElementById("searchImgModalOverlay");
+      const openSearchImgBtn = document.getElementById("openSearchImgBtn");
+      const closeSearchImgBtn = document.getElementById("closeSearchImgBtn");
+      const searchImgQuery = document.getElementById("searchImgQuery");
+      const runSearchImgBtn = document.getElementById("runSearchImgBtn");
+      const searchImgResults = document.getElementById("searchImgResults");
+      const searchGoogleBtn = document.getElementById("searchGoogleBtn");
+      const searchDuckBtn = document.getElementById("searchDuckBtn");
+      const searchUnsplashBtn = document.getElementById("searchUnsplashBtn");
+
+      openSearchImgBtn.addEventListener("click", () => {
+        // Якщо поле стікера має заголовок, автоматично підставити його у пошук
+        if (!searchImgQuery.value.trim() && inputStickerTitle.value.trim()) {
+          searchImgQuery.value = inputStickerTitle.value.trim();
+        }
+        searchImgModalOverlay.classList.add("open");
+        searchImgQuery.focus();
+        searchImgQuery.select();
+        if (searchImgQuery.value.trim()) {
+          performImageSearch();
+        }
+      });
+      closeSearchImgBtn.addEventListener("click", () => searchImgModalOverlay.classList.remove("open"));
+      searchImgModalOverlay.addEventListener("click", (e) => {
+        if (e.target === searchImgModalOverlay) searchImgModalOverlay.classList.remove("open");
+      });
+
+      function getActiveSearchWord() {
+        return searchImgQuery.value.trim() ||
+               inputStickerTitle.value.trim() ||
+               (appState.title && appState.title !== "Напиши свою тему" ? appState.title : "") ||
+               "природа";
+      }
+
+      // Кнопки швидкого переходу до популярних пошуковиків
+      if (searchGoogleBtn) {
+        searchGoogleBtn.addEventListener("click", () => {
+          const w = getActiveSearchWord();
+          window.open("https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(w), "_blank");
+        });
+      }
+      if (searchDuckBtn) {
+        searchDuckBtn.addEventListener("click", () => {
+          const w = getActiveSearchWord();
+          window.open("https://duckduckgo.com/?iax=images&ia=images&q=" + encodeURIComponent(w), "_blank");
+        });
+      }
+      if (searchUnsplashBtn) {
+        searchUnsplashBtn.addEventListener("click", () => {
+          const w = getActiveSearchWord();
+          window.open("https://unsplash.com/s/photos/" + encodeURIComponent(w), "_blank");
+        });
+      }
+
+      async function performImageSearch() {
+        const q = searchImgQuery.value.trim();
+        if (!q) return;
+        searchImgResults.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:35px; color:#f59e0b; font-weight:600;">🔍 Шукаємо фотографії в енциклопедії та відкритому архіві...</div>';
+
+        const results = [];
+        const seenUrls = new Set();
+
+        function addResult(thumbUrl, fullUrl, title) {
+          if (!thumbUrl || seenUrls.has(thumbUrl)) return;
+          seenUrls.add(thumbUrl);
+          // Відфільтровуємо аудіофайли, відео, скани документів pdf/djvu
+          if (/\.(ogg|oga|ogv|webm|mid|midi|pdf|djvu|mp3|wav|flac)(\?|$)/i.test(thumbUrl) ||
+              /\.(ogg|oga|ogv|webm|mid|midi|pdf|djvu|mp3|wav|flac)(\?|$)/i.test(fullUrl)) {
+            return;
+          }
+          results.push({ thumbUrl, fullUrl: fullUrl || thumbUrl, title: title || "" });
+        }
+
+        try {
+          // 1. Пошук в Українській Вікіпедії (офіційні головні ілюстрації статей, найвища релевантність)
+          const ukWikiUrl = "https://uk.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=" +
+            encodeURIComponent(q) + "&gsrlimit=14&prop=pageimages&piprop=thumbnail|original&pithumbsize=400";
+          const reqUk = fetch(ukWikiUrl).then(r => r.ok ? r.json() : null).catch(() => null);
+
+          // 2. Пошук суто растрових фото (filetype:bitmap) на Wikimedia Commons (без pdf/ogg)
+          const commUrl = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=" +
+            encodeURIComponent(q + " filetype:bitmap") + "&gsrnamespace=6&gsrlimit=18&prop=imageinfo&iiprop=url&iiurlwidth=400";
+          const reqComm = fetch(commUrl).then(r => r.ok ? r.json() : null).catch(() => null);
+
+          // 3. Англійська Вікіпедія як підтримка
+          const enWikiUrl = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=" +
+            encodeURIComponent(q) + "&gsrlimit=8&prop=pageimages&piprop=thumbnail|original&pithumbsize=400";
+          const reqEn = fetch(enWikiUrl).then(r => r.ok ? r.json() : null).catch(() => null);
+
+          const [dataUk, dataComm, dataEn] = await Promise.all([reqUk, reqComm, reqEn]);
+
+          // Додаємо з Української Вікіпедії
+          if (dataUk && dataUk.query && dataUk.query.pages) {
+            Object.values(dataUk.query.pages).forEach(p => {
+              if (p.thumbnail && p.thumbnail.source) {
+                const full = p.original && p.original.source ? p.original.source : p.thumbnail.source;
+                addResult(p.thumbnail.source, full, p.title);
+              }
+            });
+          }
+
+          // Додаємо з Wikimedia Commons
+          if (dataComm && dataComm.query && dataComm.query.pages) {
+            Object.values(dataComm.query.pages).forEach(p => {
+              const info = p.imageinfo && p.imageinfo[0];
+              if (info) {
+                const thumb = info.thumburl || info.url;
+                const full = info.url;
+                const cleanTitle = (p.title || "").replace(/^File:/i, "").replace(/\.[^/.]+$/, "");
+                addResult(thumb, full, cleanTitle);
+              }
+            });
+          }
+
+          // Додаємо з Англійської Вікіпедії
+          if (results.length < 8 && dataEn && dataEn.query && dataEn.query.pages) {
+            Object.values(dataEn.query.pages).forEach(p => {
+              if (p.thumbnail && p.thumbnail.source) {
+                const full = p.original && p.original.source ? p.original.source : p.thumbnail.source;
+                addResult(p.thumbnail.source, full, p.title);
+              }
+            });
+          }
+
+          if (results.length === 0) {
+            searchImgResults.innerHTML = `
+              <div style="grid-column:1/-1; text-align:center; padding:30px; color:#64748b;">
+                <p style="margin-bottom:12px; font-size:14px;">Нічого не знайдено за запитом «<strong>${escapeHtml(q)}</strong>».</p>
+                <div style="display:flex; justify-content:center; gap:8px;">
+                  <button type="button" class="btn btn-primary" style="font-size:13px;" onclick="document.getElementById('searchGoogleBtn').click()">🔍 Знайти «${escapeHtml(q)}» у Google Зображеннях</button>
+                </div>
+              </div>
+            `;
+            return;
+          }
+
+          searchImgResults.innerHTML = "";
+          results.forEach(item => {
+            const el = document.createElement("div");
+            el.className = "search-thumb";
+            el.title = item.title;
+            el.innerHTML = `
+              <img src="${item.thumbUrl}" alt="${escapeHtml(item.title)}" loading="lazy">
+              ${item.title ? `<div class="search-thumb-title">${escapeHtml(item.title)}</div>` : ""}
+            `;
+            el.addEventListener("click", () => {
+              modalDraft.image = item.fullUrl;
+              inputImgUrl.value = item.fullUrl;
+              updateModalImgPreview(item.fullUrl);
+              searchImgModalOverlay.classList.remove("open");
+              showToast("Ілюстрацію успішно додано! 🖼️");
+            });
+            searchImgResults.appendChild(el);
+          });
+        } catch (err) {
+          searchImgResults.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#ef4444;">Помилка пошуку зображень. Перевірте з\'єднання з інтернетом.</div>';
+        }
+      }
+      runSearchImgBtn.addEventListener("click", performImageSearch);
+      searchImgQuery.addEventListener("keydown", (e) => { if (e.key === "Enter") performImageSearch(); });
+
+      // Підтримка вставки картинок через буфер обміну (Ctrl+V з Google, DuckDuckGo, скріншотів)
+      document.addEventListener("paste", (e) => {
+        const items = (e.clipboardData || window.clipboardData)?.items;
+        if (!items) return;
+
+        let hasImage = false;
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.type.indexOf("image") !== -1) {
+            hasImage = true;
+            const blob = item.getAsFile();
+            if (!blob) continue;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const dataUrl = ev.target.result;
+              if (stickerModalOverlay.classList.contains("open")) {
+                modalDraft.image = dataUrl;
+                inputImgUrl.value = "";
+                updateModalImgPreview(dataUrl);
+                showToast("Картинку вставлено з буфера обміну! 📋");
+              } else {
+                const newSticker = {
+                  id: "s_" + Date.now(),
+                  title: "Вставлене зображення",
+                  text: "",
+                  category: "🎨 Творчість",
+                  color: "#ffffff",
+                  attachment: "tape-top",
+                  image: dataUrl,
+                  x: Math.min(2600, boardContainer.scrollLeft + 180 + Math.random() * 40),
+                  y: Math.min(1700, boardContainer.scrollTop + 140 + Math.random() * 40),
+                  rotation: (Math.random() * 4 - 2)
+                };
+                appState.stickers.push(newSticker);
+                renderStickers();
+                saveToStorage();
+                showToast("Створено новий стікер зі скопійованого фото! 📋");
+              }
+            };
+            reader.readAsDataURL(blob);
+            e.preventDefault();
+            break;
+          }
+        }
+
+        if (!hasImage && stickerModalOverlay.classList.contains("open")) {
+          const text = (e.clipboardData || window.clipboardData)?.getData("text");
+          if (text && /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?.*)?)$/i.test(text.trim())) {
+            modalDraft.image = text.trim();
+            inputImgUrl.value = text.trim();
+            updateModalImgPreview(text.trim());
+            showToast("Посилання на фото додано! 🔗");
+          }
+        }
+      });
+
+      // Перетягування файлів зображень прямо на дошку (Drag & Drop)
+      boardContainer.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+      });
+      boardContainer.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0 && files[0].type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const rect = boardCanvas.getBoundingClientRect();
+            const dropX = Math.max(40, (e.clientX - rect.left) / zoomLevel - 130);
+            const dropY = Math.max(40, (e.clientY - rect.top) / zoomLevel - 100);
+            const newSticker = {
+              id: "s_" + Date.now(),
+              title: files[0].name.replace(/\.[^/.]+$/, ""),
+              text: "",
+              category: "🎨 Творчість",
+              color: "#ffffff",
+              attachment: "pin-red",
+              image: ev.target.result,
+              x: Math.round(dropX),
+              y: Math.round(dropY),
+              rotation: (Math.random() * 4 - 2)
+            };
+            appState.stickers.push(newSticker);
+            renderStickers();
+            saveToStorage();
+            showToast("Зображення успішно перетягнуто на дошку! 🖼️");
+          };
+          reader.readAsDataURL(files[0]);
+        }
+      });
+
+      // РЕЖИМ ЖИВОЇ ПРЕЗЕНТАЦІЇ (16:9)
+      const presOverlay = document.getElementById("presOverlay");
+      const presHeaderTitle = document.getElementById("presHeaderTitle");
+      const presSlideWrapper = document.getElementById("presSlideWrapper");
+      const presSlideContent = document.getElementById("presSlideContent");
+      const presCounterDisplay = document.getElementById("presCounterDisplay");
+      const presPrevBtn = document.getElementById("presPrevBtn");
+      const presNextBtn = document.getElementById("presNextBtn");
+      const closePresBtn = document.getElementById("closePresBtn");
+      const fullscreenToggleBtn = document.getElementById("fullscreenToggleBtn");
+
+      function openPresentation() {
+        if (appState.stickers.length === 0) {
+          alert("Будь ласка, додайте хоча б один стікер перед показом презентації!");
+          return;
+        }
+        presCurrentIndex = 0;
+        presHeaderTitle.textContent = appState.title || "Презентація";
+        renderSlide();
+        presOverlay.classList.add("open");
+      }
+
+      function closePresentation() {
+        presOverlay.classList.remove("open");
+      }
+
+      function renderSlide() {
+        const totalSlides = 1 + appState.stickers.length; // 1 титульний + стікери
+        presCounterDisplay.textContent = `${presCurrentIndex + 1} / ${totalSlides}`;
+        presPrevBtn.disabled = presCurrentIndex === 0;
+        presNextBtn.disabled = presCurrentIndex === totalSlides - 1;
+
+        if (presCurrentIndex === 0) {
+          // ТИТУЛЬНИЙ СЛАЙД
+          presSlideWrapper.style.backgroundColor = "#fef9c3";
+          presSlideContent.innerHTML = `
+            <div class="slide-title-layout">
+              <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(245,158,11,0.18); border:1px solid rgba(217,119,6,0.3); padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700; color:#b45309; margin-bottom:12px;">🎨 Stickerbox Presentation</div>
+              <h1>${escapeHtml(appState.title || "Напиши свою тему")}</h1>
+              <div class="author-tag">Автор: ${escapeHtml(appState.author || "Вкажи автора презентації")}</div>
+              <div class="date-tag">${new Date().toLocaleDateString("uk-UA", { year: "numeric", month: "long", day: "numeric" })}</div>
+            </div>
+          `;
+        } else {
+          // ЗМІСТОВНИЙ СЛАЙД
+          const sticker = appState.stickers[presCurrentIndex - 1];
+          presSlideWrapper.style.backgroundColor = sticker.color || "#fef9c3";
+
+          let mediaHtml = "";
+          if (sticker.image) {
+            mediaHtml = `<div class="slide-media"><img src="${escapeHtml(sticker.image)}" alt=""></div>`;
+          }
+
+          presSlideContent.innerHTML = `
+            ${mediaHtml}
+            <div class="slide-content">
+              <div class="slide-badge-row">
+                <span class="slide-num-tag">Слайд #${presCurrentIndex}</span>
+                <span class="card-cat-badge">${escapeHtml(sticker.category || "💡 Ідея")}</span>
+              </div>
+              <h2 class="slide-h1">${escapeHtml(sticker.title || "Без назви")}</h2>
+              <p class="slide-p">${escapeHtml(sticker.text || "")}</p>
+            </div>
+          `;
+        }
+      }
+
+      document.getElementById("startPresentationBtn").addEventListener("click", openPresentation);
+      closePresBtn.addEventListener("click", closePresentation);
+      presPrevBtn.addEventListener("click", () => {
+        if (presCurrentIndex > 0) { presCurrentIndex--; renderSlide(); }
+      });
+      presNextBtn.addEventListener("click", () => {
+        if (presCurrentIndex < appState.stickers.length) { presCurrentIndex++; renderSlide(); }
+      });
+
+      fullscreenToggleBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (!presOverlay.classList.contains("open")) return;
+        if (e.key === "Escape") closePresentation();
+        else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+          if (presCurrentIndex > 0) { presCurrentIndex--; renderSlide(); }
+        } else if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ") {
+          if (presCurrentIndex < appState.stickers.length) { presCurrentIndex++; renderSlide(); }
+        }
+      });
+
+      // ЕКСПОРТ У PDF (100% Ліцензійно чистий, відкритий)
+      // Функція динамічного підключення бібліотеки (якщо є інтернет) або переходу до друку
+      function loadExternalScript(src) {
+        return new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = src;
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      // 1. Експорт якісних 16:9 слайдів у файл .pdf через jsPDF (MIT License)
+      async function exportPresentation169Pdf() {
+        if (appState.stickers.length === 0) {
+          alert("Додайте стікери перед експортом!");
+          return;
+        }
+        showToast("Створення слайдів презентації 16:9...", 0);
+        try {
+          if (!window.jspdf) {
+            await loadExternalScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+          }
+          const { jsPDF } = window.jspdf;
+          const SLIDE_W = 1280, SLIDE_H = 720;
+          const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: [SLIDE_W, SLIDE_H] });
+
+          // Підготовка зображень
+          const loadedImgs = {};
+          for (const s of appState.stickers) {
+            if (s.image && !(s.image in loadedImgs)) {
+              loadedImgs[s.image] = await preloadImage(s.image);
+            }
+          }
+
+          // Титульний слайд
+          const titleCanvas = document.createElement("canvas");
+          titleCanvas.width = SLIDE_W;
+          titleCanvas.height = SLIDE_H;
+          const tCtx = titleCanvas.getContext("2d");
+
+          // Фон титульного слайду
+          tCtx.fillStyle = "#1e293b";
+          tCtx.fillRect(0, 0, SLIDE_W, SLIDE_H);
+
+          // Декоративна смужка
+          const grad = tCtx.createLinearGradient(0, 0, SLIDE_W, 0);
+          grad.addColorStop(0, "#f59e0b");
+          grad.addColorStop(1, "#ef4444");
+          tCtx.fillStyle = grad;
+          tCtx.fillRect(0, 0, SLIDE_W, 14);
+
+          // Назва
+          tCtx.fillStyle = "#fef08a";
+          tCtx.font = "bold 54px 'Plus Jakarta Sans', Arial, sans-serif";
+          tCtx.textAlign = "center";
+          tCtx.textBaseline = "middle";
+
+          wrapTextCanvas(tCtx, appState.title || "Напиши свою тему", SLIDE_W / 2, SLIDE_H / 2 - 40, SLIDE_W - 180, 68);
+
+          // Автор
+          tCtx.fillStyle = "#f8fafc";
+          tCtx.font = "600 24px 'Plus Jakarta Sans', Arial, sans-serif";
+          tCtx.fillText("Автор: " + (appState.author || "Вкажи автора презентації"), SLIDE_W / 2, SLIDE_H / 2 + 60);
+
+          // Дата
+          tCtx.fillStyle = "#94a3b8";
+          tCtx.font = "400 18px 'Plus Jakarta Sans', Arial, sans-serif";
+          tCtx.fillText(new Date().toLocaleDateString("uk-UA", { year: "numeric", month: "long", day: "numeric" }), SLIDE_W / 2, SLIDE_H / 2 + 105);
+
+          doc.addImage(titleCanvas.toDataURL("image/jpeg", 0.94), "JPEG", 0, 0, SLIDE_W, SLIDE_H);
+
+          // Змістовні слайди
+          for (let i = 0; i < appState.stickers.length; i++) {
+            const st = appState.stickers[i];
+            const sc = document.createElement("canvas");
+            sc.width = SLIDE_W;
+            sc.height = SLIDE_H;
+            const ctx = sc.getContext("2d");
+
+            // Фон слайда з кольору стікера
+            ctx.fillStyle = st.color || "#fef9c3";
+            ctx.fillRect(0, 0, SLIDE_W, SLIDE_H);
+
+            // Верхня лінія акценту
+            ctx.fillStyle = "rgba(0,0,0,0.06)";
+            ctx.fillRect(0, 0, SLIDE_W, 60);
+
+            // Номер слайду та категорія
+            ctx.fillStyle = "#1e293b";
+            ctx.font = "bold 20px 'Plus Jakarta Sans', Arial, sans-serif";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(`Слайд #${i + 1}  •  ${st.category || "Ідея"}`, 50, 30);
+
+            const imgEl = st.image ? loadedImgs[st.image] : null;
+
+            if (imgEl && imgEl.naturalWidth) {
+              // Зображення ліворуч, текст праворуч
+              const areaW = SLIDE_W * 0.44;
+              const areaH = SLIDE_H - 140;
+              const scale = Math.min(areaW / imgEl.naturalWidth, areaH / imgEl.naturalHeight);
+              const dw = imgEl.naturalWidth * scale;
+              const dh = imgEl.naturalHeight * scale;
+              const dx = 50 + (areaW - dw) / 2;
+              const dy = 90 + (areaH - dh) / 2;
+
+              ctx.drawImage(imgEl, dx, dy, dw, dh);
+
+              // Заголовок
+              const tx = 50 + areaW + 40;
+              const tw = SLIDE_W - tx - 50;
+              ctx.fillStyle = "#0f172a";
+              ctx.font = "bold 38px 'Plus Jakarta Sans', Arial, sans-serif";
+              ctx.textAlign = "left";
+              ctx.textBaseline = "top";
+              const nextY = wrapTextCanvas(ctx, st.title || "Без назви", tx, 100, tw, 48);
+
+              // Текст
+              ctx.fillStyle = "#334155";
+              ctx.font = "400 22px 'Plus Jakarta Sans', Arial, sans-serif";
+              wrapTextCanvas(ctx, st.text || "", tx, nextY + 24, tw, 34);
+            } else {
+              // Без зображення: центрований великий макет
+              ctx.fillStyle = "#0f172a";
+              ctx.font = "bold 44px 'Plus Jakarta Sans', Arial, sans-serif";
+              ctx.textAlign = "center";
+              ctx.textBaseline = "top";
+              const nextY = wrapTextCanvas(ctx, st.title || "Без назви", SLIDE_W / 2, 160, SLIDE_W - 200, 56);
+
+              ctx.fillStyle = "#334155";
+              ctx.font = "400 24px 'Plus Jakarta Sans', Arial, sans-serif";
+              wrapTextCanvas(ctx, st.text || "", SLIDE_W / 2, nextY + 36, SLIDE_W - 240, 38);
+            }
+
+            // Футер слайду
+            ctx.fillStyle = "rgba(0,0,0,0.35)";
+            ctx.font = "500 15px 'Plus Jakarta Sans', Arial, sans-serif";
+            ctx.textAlign = "right";
+            ctx.textBaseline = "bottom";
+            ctx.fillText(`${appState.title || "Презентація"}  |  Сторінка ${i + 2} з ${appState.stickers.length + 1}`, SLIDE_W - 50, SLIDE_H - 24);
+
+            doc.addPage([SLIDE_W, SLIDE_H], "landscape");
+            doc.addImage(sc.toDataURL("image/jpeg", 0.94), "JPEG", 0, 0, SLIDE_W, SLIDE_H);
+          }
+
+          doc.save((appState.title && appState.title !== "Напиши свою тему" ? appState.title.replace(/[^a-z0-9а-яіїєґ]/gi, "_") : "stickerbox-presentation") + ".pdf");
+          showToast("Презентацію успішно збережено в PDF! 🎉");
+        } catch (err) {
+          console.error(err);
+          // Автоматичний запасний план (fallback): відкриваємо рідний якісний друк
+          fallbackToNativePrint();
+        }
+      }
+
+      function preloadImage(src) {
+        return new Promise((resolve) => {
+          if (!src) return resolve(null);
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => resolve(img);
+          img.onerror = () => {
+            // Спроба через відкритий проксі картинок у випадку обмежень CORS
+            const proxy = "https://images.weserv.nl/?url=" + encodeURIComponent(src.replace(/^https?:\/\//, ""));
+            const img2 = new Image();
+            img2.crossOrigin = "anonymous";
+            img2.onload = () => resolve(img2);
+            img2.onerror = () => resolve(null);
+            img2.src = proxy;
+          };
+          img.src = src;
+        });
+      }
+
+      function wrapTextCanvas(ctx, text, x, y, maxW, lineH) {
+        if (!text) return y;
+        const words = text.split(/\s+/);
+        let line = "";
+        let currY = y;
+        for (let i = 0; i < words.length; i++) {
+          const testLine = line + (line ? " " : "") + words[i];
+          if (ctx.measureText(testLine).width > maxW && line !== "") {
+            ctx.fillText(line, x, currY);
+            line = words[i];
+            currY += lineH;
+          } else {
+            line = testLine;
+          }
+        }
+        if (line) {
+          ctx.fillText(line, x, currY);
+          currY += lineH;
+        }
+        return currY;
+      }
+
+      // 2. Експорт дошки повністю як цілісний постер
+      async function exportBoardPosterPdf() {
+        if (appState.stickers.length === 0) {
+          alert("Додайте хоча б один стікер перед експортом!");
+          return;
+        }
+        showToast("Створення постера дошки...", 0);
+        try {
+          if (!window.html2canvas) {
+            await loadExternalScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+          }
+          if (!window.jspdf) {
+            await loadExternalScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+          }
+
+          // Обчислюємо видиму площу зі стікерами
+          let maxX = 1200, maxY = 800;
+          appState.stickers.forEach(s => {
+            maxX = Math.max(maxX, (s.x || 0) + 360);
+            maxY = Math.max(maxY, (s.y || 0) + 340);
+          });
+
+          const canvas = await window.html2canvas(boardCanvas, {
+            scale: 1.5,
+            useCORS: true,
+            width: Math.min(3000, maxX + 80),
+            height: Math.min(2000, maxY + 80)
+          });
+
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+          const pw = doc.internal.pageSize.getWidth();
+          const ph = doc.internal.pageSize.getHeight();
+          const imgH = (canvas.height * pw) / canvas.width;
+
+          doc.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, pw, Math.min(ph, imgH));
+          doc.save("doshka-poster.pdf");
+          showToast("Постер збережено в PDF! 🎉");
+        } catch (e) {
+          console.error(e);
+          fallbackToNativePrint();
+        }
+      }
+
+      // 3. Роздрукувати / Зберегти як векторний PDF через браузер (100% офлайн, без сторонніх скриптів)
+      function fallbackToNativePrint() {
+        hideToast();
+        const printContainer = document.getElementById("printContainer");
+        printContainer.innerHTML = "";
+
+        // Створюємо слайди 16:9 для друку
+        // Титульний
+        const tSlide = document.createElement("div");
+        tSlide.className = "print-slide";
+        tSlide.style.textAlign = "center";
+        tSlide.innerHTML = `
+          <h1 style="font-size:36pt; margin-bottom:14pt; color:#0f172a;">${escapeHtml(appState.title || "Напиши свою тему")}</h1>
+          <h2 style="font-size:20pt; color:#d97706; margin-bottom:18pt;">Автор: ${escapeHtml(appState.author || "Вкажи автора презентації")}</h2>
+          <p style="font-size:14pt; color:#64748b;">${new Date().toLocaleDateString("uk-UA", { year: "numeric", month: "long", day: "numeric" })}</p>
+        `;
+        printContainer.appendChild(tSlide);
+
+        // Змістовні
+        appState.stickers.forEach((s, idx) => {
+          const slide = document.createElement("div");
+          slide.className = "print-slide";
+          slide.style.backgroundColor = s.color || "#fef9c3";
+
+          let imgHtml = "";
+          if (s.image) {
+            imgHtml = `<div style="max-height:90mm; margin-bottom:10mm;"><img src="${escapeHtml(s.image)}" style="max-height:85mm; border-radius:6px;" alt=""></div>`;
+          }
+
+          slide.innerHTML = `
+            <div style="font-size:12pt; font-weight:bold; margin-bottom:6mm; color:#475569;">#${idx + 1} • ${escapeHtml(s.category || "")}</div>
+            <h2 style="font-size:26pt; margin-bottom:8mm; color:#0f172a;">${escapeHtml(s.title || "")}</h2>
+            ${imgHtml}
+            <p style="font-size:16pt; line-height:1.6; color:#334155;">${escapeHtml(s.text || "")}</p>
+          `;
+          printContainer.appendChild(slide);
+        });
+
+        window.print();
+      }
+
+      document.getElementById("exportPdf169Btn").addEventListener("click", exportPresentation169Pdf);
+      document.getElementById("exportBoardPosterBtn").addEventListener("click", exportBoardPosterPdf);
+      document.getElementById("printDirectBtn").addEventListener("click", fallbackToNativePrint);
+
+      // Керування випадаючими меню
+      function setupDropdown(btnId, menuId) {
+        const btn = document.getElementById(btnId);
+        const menu = document.getElementById(menuId);
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          document.querySelectorAll(".dropdown-menu").forEach(m => {
+            if (m !== menu) m.classList.remove("show");
+          });
+          menu.classList.toggle("show");
+        });
+      }
+      setupDropdown("boardsDropdownBtn", "boardsMenu");
+      setupDropdown("themeDropdownBtn", "themeMenu");
+      setupDropdown("exportDropdownBtn", "exportMenu");
+      setupDropdown("fileDropdownBtn", "fileMenu");
+
+      document.addEventListener("click", () => {
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+      });
+
+      // Вибір фону
+      document.getElementById("themeMenu").addEventListener("click", (e) => {
+        const item = e.target.closest(".dropdown-item");
+        if (!item) return;
+        if (item.id === "openCustomThemeMenuItem") {
+          return;
+        }
+        if (item.dataset.theme) {
+          applyTheme(item.dataset.theme);
+        }
+      });
+
+      // Логіка модального вікна власного стилю дошки
+      const customThemeModalOverlay = document.getElementById("customThemeModalOverlay");
+      const closeCustomThemeModalBtn = document.getElementById("closeCustomThemeModalBtn");
+      const cancelCustomThemeBtn = document.getElementById("cancelCustomThemeBtn");
+      const resetCustomThemeBtn = document.getElementById("resetCustomThemeBtn");
+      const applyCustomThemeBtn = document.getElementById("applyCustomThemeBtn");
+      const themeLivePreview = document.getElementById("themeLivePreview");
+
+      const customThemeBgPicker = document.getElementById("customThemeBgPicker");
+      const customThemeBgHex = document.getElementById("customThemeBgHex");
+      const customBgSwatches = document.getElementById("customBgSwatches");
+      const customPatternPills = document.getElementById("customPatternPills");
+      const patternControlsGroup = document.getElementById("patternControlsGroup");
+      const customPatternColorPicker = document.getElementById("customPatternColorPicker");
+      const customPatternColorPreset = document.getElementById("customPatternColorPreset");
+      const customPatternOpacity = document.getElementById("customPatternOpacity");
+      const patternOpacityVal = document.getElementById("patternOpacityVal");
+      const customPatternSize = document.getElementById("customPatternSize");
+      const patternSizeVal = document.getElementById("patternSizeVal");
+      const patternSizeRow = document.getElementById("patternSizeRow");
+      const gradientControlsRow = document.getElementById("gradientControlsRow");
+      const customGradientColorPicker = document.getElementById("customGradientColorPicker");
+      const customGradientColorHex = document.getElementById("customGradientColorHex");
+      const customGradientDir = document.getElementById("customGradientDir");
+
+      let currentCustomDraft = Object.assign({}, DEFAULT_CUSTOM_THEME);
+
+      function updateThemeLivePreview() {
+        const styles = computeThemeStyles(currentCustomDraft);
+        themeLivePreview.style.backgroundColor = styles.backgroundColor;
+        themeLivePreview.style.backgroundImage = styles.backgroundImage;
+        themeLivePreview.style.backgroundSize = styles.backgroundSize;
+      }
+
+      function togglePatternControls(pattern) {
+        const isNone = pattern === "none";
+        const isGradient = pattern === "gradient";
+        const isGridOrLinesOrDots = ["grid", "lines", "dots", "stripes"].includes(pattern);
+
+        patternControlsGroup.style.display = isNone ? "none" : "block";
+        gradientControlsRow.style.display = isGradient ? "block" : "none";
+        patternSizeRow.style.display = isGridOrLinesOrDots ? "block" : "none";
+      }
+
+      function syncCustomThemeInputsFromDraft() {
+        customThemeBgPicker.value = currentCustomDraft.bgColor || "#172d22";
+        customThemeBgHex.value = currentCustomDraft.bgColor || "#172d22";
+
+        // Swatches
+        customBgSwatches.querySelectorAll(".swatch").forEach(s => {
+          s.classList.toggle("active", s.dataset.color.toLowerCase() === (currentCustomDraft.bgColor || "").toLowerCase());
+        });
+
+        // Pattern pills
+        customPatternPills.querySelectorAll(".pill-opt").forEach(p => {
+          p.classList.toggle("active", p.dataset.pattern === currentCustomDraft.pattern);
+        });
+
+        // Pattern color & opacity
+        customPatternColorPicker.value = currentCustomDraft.patternColor || "#ffffff";
+        customPatternColorPreset.value = currentCustomDraft.patternColor || "#ffffff";
+        customPatternOpacity.value = currentCustomDraft.patternOpacity !== undefined ? currentCustomDraft.patternOpacity : 15;
+        patternOpacityVal.textContent = customPatternOpacity.value + "%";
+
+        // Size
+        customPatternSize.value = currentCustomDraft.patternSize || 28;
+        patternSizeVal.textContent = customPatternSize.value + " px";
+
+        // Gradient
+        customGradientColorPicker.value = currentCustomDraft.gradientColor || "#0f172a";
+        customGradientColorHex.value = currentCustomDraft.gradientColor || "#0f172a";
+        customGradientDir.value = currentCustomDraft.gradientDir || "135deg";
+
+        togglePatternControls(currentCustomDraft.pattern);
+        updateThemeLivePreview();
+      }
+
+      function openCustomThemeModal() {
+        currentCustomDraft = Object.assign({}, DEFAULT_CUSTOM_THEME, appState.customTheme || {});
+        syncCustomThemeInputsFromDraft();
+        customThemeModalOverlay.classList.add("open");
+      }
+
+      function closeCustomThemeModal() {
+        customThemeModalOverlay.classList.remove("open");
+      }
+
+      customThemeBgPicker.addEventListener("input", (e) => {
+        currentCustomDraft.bgColor = e.target.value;
+        customThemeBgHex.value = e.target.value;
+        syncCustomThemeInputsFromDraft();
+      });
+
+      customThemeBgHex.addEventListener("change", (e) => {
+        let val = e.target.value.trim();
+        if (!val.startsWith("#")) val = "#" + val;
+        if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+          currentCustomDraft.bgColor = val;
+          customThemeBgPicker.value = val;
+          syncCustomThemeInputsFromDraft();
+        }
+      });
+
+      customBgSwatches.addEventListener("click", (e) => {
+        const swatch = e.target.closest(".swatch");
+        if (!swatch) return;
+        currentCustomDraft.bgColor = swatch.dataset.color;
+        syncCustomThemeInputsFromDraft();
+      });
+
+      customPatternPills.addEventListener("click", (e) => {
+        const pill = e.target.closest(".pill-opt");
+        if (!pill) return;
+        currentCustomDraft.pattern = pill.dataset.pattern;
+        syncCustomThemeInputsFromDraft();
+      });
+
+      customPatternColorPicker.addEventListener("input", (e) => {
+        currentCustomDraft.patternColor = e.target.value;
+        updateThemeLivePreview();
+      });
+
+      customPatternColorPreset.addEventListener("change", (e) => {
+        currentCustomDraft.patternColor = e.target.value;
+        customPatternColorPicker.value = e.target.value;
+        updateThemeLivePreview();
+      });
+
+      customPatternOpacity.addEventListener("input", (e) => {
+        currentCustomDraft.patternOpacity = parseInt(e.target.value, 10);
+        patternOpacityVal.textContent = e.target.value + "%";
+        updateThemeLivePreview();
+      });
+
+      customPatternSize.addEventListener("input", (e) => {
+        currentCustomDraft.patternSize = parseInt(e.target.value, 10);
+        patternSizeVal.textContent = e.target.value + " px";
+        updateThemeLivePreview();
+      });
+
+      customGradientColorPicker.addEventListener("input", (e) => {
+        currentCustomDraft.gradientColor = e.target.value;
+        customGradientColorHex.value = e.target.value;
+        updateThemeLivePreview();
+      });
+
+      customGradientColorHex.addEventListener("change", (e) => {
+        let val = e.target.value.trim();
+        if (!val.startsWith("#")) val = "#" + val;
+        if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+          currentCustomDraft.gradientColor = val;
+          customGradientColorPicker.value = val;
+          updateThemeLivePreview();
+        }
+      });
+
+      customGradientDir.addEventListener("change", (e) => {
+        currentCustomDraft.gradientDir = e.target.value;
+        updateThemeLivePreview();
+      });
+
+      resetCustomThemeBtn.addEventListener("click", () => {
+        currentCustomDraft = Object.assign({}, DEFAULT_CUSTOM_THEME);
+        syncCustomThemeInputsFromDraft();
+      });
+
+      applyCustomThemeBtn.addEventListener("click", () => {
+        applyTheme("custom", currentCustomDraft);
+        closeCustomThemeModal();
+        showToast("Стиль дошки успішно збережено! 🎨");
+      });
+
+      closeCustomThemeModalBtn.addEventListener("click", closeCustomThemeModal);
+      cancelCustomThemeBtn.addEventListener("click", closeCustomThemeModal);
+      customThemeModalOverlay.addEventListener("click", (e) => {
+        if (e.target === customThemeModalOverlay) closeCustomThemeModal();
+      });
+
+      const quickThemeBtn = document.getElementById("quickCustomThemeBtn");
+      if (quickThemeBtn) quickThemeBtn.addEventListener("click", openCustomThemeModal);
+      document.getElementById("openCustomThemeMenuItem").addEventListener("click", () => {
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+        openCustomThemeModal();
+      });
+
+      // Збереження / Завантаження JSON-файлу
+      document.getElementById("saveJsonBtn").addEventListener("click", () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+        const a = document.createElement("a");
+        a.href = dataStr;
+        const cleanName = (appState.title && appState.title !== "Напиши свою тему" ? appState.title : "doshka").replace(/[^a-z0-9а-яіїєґ]/gi, "_");
+        a.download = `${cleanName}.json`;
+        a.click();
+        showToast("Поточну дошку збережено у JSON! 💾");
+      });
+
+      const saveAllBoardsJsonBtn = document.getElementById("saveAllBoardsJsonBtn");
+      if (saveAllBoardsJsonBtn) {
+        saveAllBoardsJsonBtn.addEventListener("click", () => {
+          // Синхронізуємо активну дошку
+          const idx = boardsData.boards.findIndex(b => b.id === boardsData.activeBoardId);
+          if (idx !== -1) {
+            boardsData.boards[idx] = appState;
+          }
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(boardsData, null, 2));
+          const a = document.createElement("a");
+          a.href = dataStr;
+          const dateStr = new Date().toISOString().slice(0, 10);
+          a.download = `stickerbox_vsi_doshky_${dateStr}.json`;
+          a.click();
+          showToast("Усі дошки збережено в один файл! 📦");
+        });
+      }
+
+      const jsonFileInput = document.getElementById("jsonFileInput");
+      document.getElementById("loadJsonBtn").addEventListener("click", () => jsonFileInput.click());
+      jsonFileInput.addEventListener("change", () => {
+        const file = jsonFileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            // Випадок 1: файл містить колекцію кількох дощок
+            if (parsed && Array.isArray(parsed.boards) && parsed.boards.length > 0) {
+              boardsData = parsed;
+              boardsData.boards.forEach(b => {
+                if (!Array.isArray(b.stickers)) b.stickers = [];
+                if (!b.customTheme) b.customTheme = Object.assign({}, DEFAULT_CUSTOM_THEME);
+              });
+              if (!boardsData.activeBoardId || !boardsData.boards.some(b => b.id === boardsData.activeBoardId)) {
+                boardsData.activeBoardId = boardsData.boards[0].id;
+              }
+              appState = getActiveBoard();
+              applyTheme(appState.theme || "chalk");
+              updateHeaderInfo();
+              renderStickers();
+              renderBoardsDropdown();
+              saveToStorage();
+              showToast(`Завантажено набір з ${boardsData.boards.length} дощок! 📦`);
+            } 
+            // Випадок 2: файл містить одну окрему дошку
+            else if (parsed && Array.isArray(parsed.stickers)) {
+              const newBoard = {
+                id: "b_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+                title: parsed.title || "Імпортована дошка",
+                author: parsed.author || "Вкажи автора презентації",
+                theme: parsed.theme || "chalk",
+                customTheme: parsed.customTheme || Object.assign({}, DEFAULT_CUSTOM_THEME),
+                stickers: parsed.stickers,
+                createdAt: Date.now()
+              };
+              boardsData.boards.push(newBoard);
+              switchBoard(newBoard.id);
+              showToast("Дошку успішно відкрито як нову! 📂");
+            } else {
+              showToast("Помилка: невірний формат JSON-файлу ⚠️");
+            }
+          } catch (err) {
+            showToast("Помилка читання JSON-файлу ⚠️");
+          }
+          jsonFileInput.value = "";
+        };
+        reader.readAsText(file);
+      });
+
+      // Відновлення інструкції на цій дошці
+      document.getElementById("loadDemoBtn").addEventListener("click", () => {
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+        restoreGuideStickerOnCurrentBoard();
+        showToast("Інструкцію на дошці відновлено! ✨");
+      });
+
+      // Очищення дошки: видалення всіх стікерів з поточної дошки
+      document.getElementById("clearBoardBtn").addEventListener("click", () => {
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+        clearCurrentBoardStickers();
+        showToast("Дошку очищено від стікерів! 🗑");
+      });
+
+      // Закриття поточної дошки з меню файлу
+      const closeCurrentBoardFileMenuBtn = document.getElementById("closeCurrentBoardFileMenuBtn");
+      if (closeCurrentBoardFileMenuBtn) {
+        closeCurrentBoardFileMenuBtn.addEventListener("click", () => {
+          document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+          requestDeleteBoard(boardsData.activeBoardId);
+        });
+      }
+
+      // Зум дошки
+      const zoomValDisplay = document.getElementById("zoomValDisplay");
+      function applyZoom(z) {
+        zoomLevel = Math.max(0.5, Math.min(1.8, z));
+        boardCanvas.style.transform = `scale(${zoomLevel})`;
+        zoomValDisplay.textContent = Math.round(zoomLevel * 100) + "%";
+      }
+      document.getElementById("zoomInBtn").addEventListener("click", () => applyZoom(zoomLevel + 0.15));
+      document.getElementById("zoomOutBtn").addEventListener("click", () => applyZoom(zoomLevel - 0.15));
+      document.getElementById("zoomResetBtn").addEventListener("click", () => applyZoom(1.0));
+
+      function escapeHtml(str) {
+        if (!str) return "";
+        return String(str).replace(/[&<>"']/g, m => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        })[m]);
+      }
+
+      // Старт програми
+      loadFromStorage();
+    })();
+  </script>
+</body>
+</html>

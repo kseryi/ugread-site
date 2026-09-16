@@ -31,8 +31,12 @@
       --font-title: 'Comfortaa', cursive, system-ui, sans-serif;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; font-family: var(--font-body); color: var(--ink); background: var(--bg-dark); overflow: hidden; user-select: none; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      height: 100%; font-family: var(--font-body); color: var(--ink); background: var(--bg-dark);
+      overflow: hidden; user-select: none; -webkit-user-select: none; -ms-user-select: none;
+      -webkit-touch-callout: none; touch-action: manipulation;
+    }
 
     #app { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: relative; }
 
@@ -159,6 +163,7 @@
     #boardContainer {
       flex: 1; overflow: auto; position: relative; background: var(--bg-board);
       transition: background 0.25s; cursor: grab;
+      touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
     }
     #boardContainer:active { cursor: grabbing; }
     #boardCanvas {
@@ -268,6 +273,7 @@
       padding: 16px 16px 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.32), 0 2px 5px rgba(0,0,0,0.15);
       cursor: grab; transition: transform 0.15s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.15s ease;
       user-select: none; z-index: 10;
+      touch-action: none; -webkit-touch-callout: none;
     }
     .sticker-card:hover {
       transform: scale(1.025) translateY(-3px) !important;
@@ -327,10 +333,16 @@
       width: 24px; height: 24px; border-radius: 6px; border: none;
       background: rgba(0,0,0,0.08); color: #1e293b; font-size: 12px;
       display: flex; align-items: center; justify-content: center; cursor: pointer;
-      transition: background 0.12s;
+      transition: background 0.12s; touch-action: manipulation;
     }
     .card-mini-btn:hover { background: rgba(0,0,0,0.2); }
     .card-mini-btn.del:hover { background: #fee2e2; color: #b91c1c; }
+    /* Сенсорні екрани та мультимедійні дошки не мають hover, тому кнопки завжди видимі
+       і мають збільшену зону дотику для впевненого натискання пальцем/стилусом */
+    @media (hover: none), (pointer: coarse) {
+      .card-actions-quick { opacity: 1; }
+      .card-mini-btn { width: 32px; height: 32px; font-size: 14px; }
+    }
 
     .card-title {
       font-family: var(--font-title); font-size: 16px; font-weight: 700;
@@ -573,6 +585,33 @@
       }
     }
     #printContainer { display: none; }
+
+    /* ===== Підтримка сенсорних екранів та мультимедійних (інтерактивних) дошок ===== */
+    /* Клікабельні елементи керування реагують миттєво (без затримки подвійного тапу)
+       і не викликають браузерних жестів масштабування/виділення тексту. */
+    .btn, .zoom-btn, .swatch, .pill-opt, .dropdown-item, .board-menu-item,
+    .board-item-delete, .card-mini-btn, .remove-img-btn, .search-thumb,
+    .project-title, .project-author, .close-btn, input[type="color"],
+    input[type="range"], input[type="checkbox"], input[type="radio"] {
+      touch-action: manipulation;
+      -webkit-touch-callout: none;
+    }
+    /* Довге натискання пальцем/стилусом на дошці чи стікерах не відкриває
+       системне контекстне меню (важливо для інтерактивних дощок SMART/Promethean тощо). */
+    #boardContainer, #boardCanvas, .sticker-card { -webkit-touch-callout: none; }
+
+    /* На тач-пристроях і мультимедійних дошках hover недоступний, тож збільшуємо
+       зони дотику дрібних елементів керування, щоб влучати пальцем впевнено. */
+    @media (hover: none), (pointer: coarse) {
+      .btn { padding: 10px 16px; font-size: 14.5px; }
+      .zoom-btn { width: 38px; height: 38px; font-size: 17px; }
+      .swatch { width: 40px; height: 40px; }
+      .pill-opt { padding: 9px 14px; font-size: 14px; }
+      .dropdown-item { padding: 12px 14px; font-size: 14.5px; }
+      .board-item-delete { width: 32px; height: 32px; }
+      .remove-img-btn { width: 32px; height: 32px; }
+      .close-btn { width: 40px; height: 40px; }
+    }
   </style>
 </head>
 <body>
@@ -2888,6 +2927,62 @@
       document.getElementById("zoomInBtn").addEventListener("click", () => applyZoom(zoomLevel + 0.15));
       document.getElementById("zoomOutBtn").addEventListener("click", () => applyZoom(zoomLevel - 0.15));
       document.getElementById("zoomResetBtn").addEventListener("click", () => applyZoom(1.0));
+
+      // ===== Підтримка сенсорних екранів та мультимедійних (інтерактивних) дощок =====
+
+      // Масштабування дошки жестом «двома пальцями» (pinch-to-zoom) — природний жест
+      // на тачскринах і мультимедійних дошках. Працює через Pointer Events, тому
+      // однаково підтримує палець, стилус і мишу з натиснутою кнопкою.
+      (function setupPinchZoom() {
+        const activePointers = new Map();
+        let pinchStartDist = null;
+        let pinchStartZoom = 1;
+
+        function currentDistance() {
+          const pts = Array.from(activePointers.values());
+          if (pts.length < 2) return null;
+          return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        }
+
+        boardContainer.addEventListener("pointerdown", (e) => {
+          if (e.pointerType === "mouse") return;
+          activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          if (activePointers.size === 2) {
+            pinchStartDist = currentDistance();
+            pinchStartZoom = zoomLevel;
+          }
+        });
+
+        boardContainer.addEventListener("pointermove", (e) => {
+          if (!activePointers.has(e.pointerId)) return;
+          activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          if (activePointers.size === 2 && pinchStartDist) {
+            const dist = currentDistance();
+            if (dist) {
+              e.preventDefault();
+              applyZoom(pinchStartZoom * (dist / pinchStartDist));
+            }
+          }
+        }, { passive: false });
+
+        function releasePointer(e) {
+          activePointers.delete(e.pointerId);
+          if (activePointers.size < 2) pinchStartDist = null;
+        }
+        boardContainer.addEventListener("pointerup", releasePointer);
+        boardContainer.addEventListener("pointercancel", releasePointer);
+        boardContainer.addEventListener("pointerleave", releasePointer);
+      })();
+
+      // Блокуємо старий жестовий API Safari/iPadOS (gesturestart/gesturechange),
+      // щоб дотик двома пальцями масштабував саму дошку, а не всю сторінку.
+      document.addEventListener("gesturestart", (e) => e.preventDefault());
+      document.addEventListener("gesturechange", (e) => e.preventDefault());
+
+      // На деяких Android-браузерах та мультимедійних дошках довге утримання пальця
+      // чи стилуса відкриває системне контекстне меню — прибираємо це для полотна,
+      // щоб не заважало перетягуванню й малюванню стікерів.
+      boardContainer.addEventListener("contextmenu", (e) => e.preventDefault());
 
       function escapeHtml(str) {
         if (!str) return "";

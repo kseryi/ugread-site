@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐛 Клавіатурний тренажер — Хробачки</title>
+    <meta name="description" content="🐛 Клавіатурний тренажер — Хробачки" />
+    <meta property="og:title" content="🐛 Клавіатурний тренажер — Хробачки" />
+    <meta property="og:description" content="🐛 Клавіатурний тренажер — Хробачки" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- ① МОВА -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+            <!-- ГЛОБАЛЬНІ ДЕФІНІЦІЇ ГРАДІЄНТІВ ДЛЯ ПЕРСОНАЖІВ (Завжди активні в DOM, уникають збоїв при display:none) -->
+    <svg id="globalHeroDefs" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;opacity:0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+      <defs>
+
+    <!-- === PANDA DEFS === -->
+<!-- Тіні та градієнти для Пандочки -->
+    <radialGradient id="pnd_white" cx="45%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="75%" stop-color="#f0f3f6"/>
+      <stop offset="100%" stop-color="#dde2e8"/>
+    </radialGradient>
+    <radialGradient id="pnd_tummy" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="85%" stop-color="#f5f7fa"/>
+      <stop offset="100%" stop-color="#e3e7ee"/>
+    </radialGradient>
+    <linearGradient id="pnd_dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3d4451"/>
+      <stop offset="60%" stop-color="#22262f"/>
+      <stop offset="100%" stop-color="#14171d"/>
+    </linearGradient>
+    <radialGradient id="pnd_ear" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#ffb8c6"/>
+      <stop offset="100%" stop-color="#f07289"/>
+    </radialGradient>
+    <radialGradient id="pnd_cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff8fa3" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#ff8fa3" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pnd_scarf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff5252"/>
+      <stop offset="100%" stop-color="#c62828"/>
+    </linearGradient>
+    <radialGradient id="pnd_bell" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#fff59d"/>
+      <stop offset="60%" stop-color="#fbc02d"/>
+      <stop offset="100%" stop-color="#f57f17"/>
+    </radialGradient>
+    <linearGradient id="pnd_bamboo" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#81c784"/>
+      <stop offset="60%" stop-color="#4caf50"/>
+      <stop offset="100%" stop-color="#2e7d32"/>
+    </linearGradient>
+
+    <!-- === KNIGHT DEFS === -->
+<!-- Градієнти для Лицаря -->
+    <radialGradient id="knt_skin" cx="45%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#fff5eb"/>
+      <stop offset="75%" stop-color="#fde3cd"/>
+      <stop offset="100%" stop-color="#f6cca9"/>
+    </radialGradient>
+    <linearGradient id="knt_steel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#d9e2ec"/>
+      <stop offset="70%" stop-color="#9fb3c8"/>
+      <stop offset="100%" stop-color="#627d98"/>
+    </linearGradient>
+    <linearGradient id="knt_steel_dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#829ab1"/>
+      <stop offset="100%" stop-color="#334e68"/>
+    </linearGradient>
+    <linearGradient id="knt_gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff9db"/>
+      <stop offset="45%" stop-color="#f59f00"/>
+      <stop offset="100%" stop-color="#d9480f"/>
+    </linearGradient>
+    <linearGradient id="knt_cape" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff4757"/>
+      <stop offset="60%" stop-color="#d63031"/>
+      <stop offset="100%" stop-color="#800e13"/>
+    </linearGradient>
+    <linearGradient id="knt_plume" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff6b81"/>
+      <stop offset="50%" stop-color="#ff4757"/>
+      <stop offset="100%" stop-color="#b71540"/>
+    </linearGradient>
+    <linearGradient id="knt_sword" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f0f4f8"/>
+      <stop offset="50%" stop-color="#bcccdc"/>
+      <stop offset="100%" stop-color="#486581"/>
+    </linearGradient>
+    <radialGradient id="knt_gem" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#64b5f6"/>
+      <stop offset="60%" stop-color="#1e88e5"/>
+      <stop offset="100%" stop-color="#0d47a1"/>
+    </radialGradient>
+    <radialGradient id="knt_cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff7675" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#ff7675" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- === ELF DEFS === -->
+<!-- Градієнти для Ельфа -->
+    <radialGradient
+       id="elf_skin"
+       cx="45%"
+       cy="40%"
+       r="55%">
+      <stop
+         offset="0%"
+         stop-color="#fff4e8"
+         id="stop2" />
+      <stop
+         offset="75%"
+         stop-color="#fde0c8"
+         id="stop4" />
+      <stop
+         offset="100%"
+         stop-color="#f5caa8"
+         id="stop6" />
+    </radialGradient>
+    <linearGradient
+       id="elf_hair"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#fcd770"
+         id="stop9" />
+      <stop
+         offset="60%"
+         stop-color="#e5a93b"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#b87314"
+         id="stop13" />
+    </linearGradient>
+    <linearGradient
+       id="elf_tunic"
+       x1="0%"
+       y1="0%"
+       x2="0%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#43a047"
+         id="stop16" />
+      <stop
+         offset="60%"
+         stop-color="#2e7d32"
+         id="stop18" />
+      <stop
+         offset="100%"
+         stop-color="#1b5e20"
+         id="stop20" />
+    </linearGradient>
+    <linearGradient
+       id="elf_cape"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#66bb6a"
+         id="stop23" />
+      <stop
+         offset="100%"
+         stop-color="#2e7d32"
+         id="stop25" />
+    </linearGradient>
+    <linearGradient
+       id="elf_leather"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#8d6e63"
+         id="stop28" />
+      <stop
+         offset="60%"
+         stop-color="#5d4037"
+         id="stop30" />
+      <stop
+         offset="100%"
+         stop-color="#3e2723"
+         id="stop32" />
+    </linearGradient>
+    <linearGradient
+       id="elf_gold"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#fff176"
+         id="stop35" />
+      <stop
+         offset="50%"
+         stop-color="#fbc02d"
+         id="stop37" />
+      <stop
+         offset="100%"
+         stop-color="#f57f17"
+         id="stop39" />
+    </linearGradient>
+    <linearGradient
+       id="elf_bow"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#d7ccc8"
+         id="stop42" />
+      <stop
+         offset="40%"
+         stop-color="#8d6e63"
+         id="stop44" />
+      <stop
+         offset="100%"
+         stop-color="#4e342e"
+         id="stop46" />
+    </linearGradient>
+    <radialGradient
+       id="elf_eye"
+       cx="40%"
+       cy="40%"
+       r="60%">
+      <stop
+         offset="0%"
+         stop-color="#81c784"
+         id="stop49" />
+      <stop
+         offset="50%"
+         stop-color="#2e7d32"
+         id="stop51" />
+      <stop
+         offset="100%"
+         stop-color="#1b5e20"
+         id="stop53" />
+    </radialGradient>
+    <radialGradient
+       id="elf_cheek"
+       cx="50%"
+       cy="50%"
+       r="50%">
+      <stop
+         offset="0%"
+         stop-color="#ff8a80"
+         stop-opacity="0.45"
+         id="stop56" />
+      <stop
+         offset="100%"
+         stop-color="#ff8a80"
+         stop-opacity="0"
+         id="stop58" />
+    </radialGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#elf_hair" xlink:href="#elf_hair"
+       id="linearGradient1026"
+       x1="12.416674"
+       y1="19.53385"
+       x2="30.771758"
+       y2="37.888934"
+       gradientTransform="matrix(1.8523479,0,0,0.5398554,0,-4)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#fcd770"
+         id="stop9" />
+      <stop
+         offset="60%"
+         stop-color="#e5a93b"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#b87314"
+         id="stop13" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#elf_hair" xlink:href="#elf_hair"
+       id="linearGradient1245"
+       x1="30.122354"
+       y1="12.002331"
+       x2="43.324918"
+       y2="25.204895"
+       gradientTransform="matrix(0.60011654,0,0,1.9776247,-0.28416951,-11.498358)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#fcd770"
+         id="stop9" />
+      <stop
+         offset="60%"
+         stop-color="#e5a93b"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#b87314"
+         id="stop13" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#elf_hair" xlink:href="#elf_hair"
+       id="linearGradient1247"
+       x1="89.982523"
+       y1="12.002331"
+       x2="103.18509"
+       y2="25.204895"
+       gradientTransform="matrix(0.60011654,0,0,1.9344583,0.44077555,-10.40261)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#fcd770"
+         id="stop9" />
+      <stop
+         offset="60%"
+         stop-color="#e5a93b"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#b87314"
+         id="stop13" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#elf_leather" xlink:href="#elf_leather"
+       id="linearGradient1249"
+       x1="15.874508"
+       y1="45.859689"
+       x2="23.811762"
+       y2="53.796943"
+       gradientTransform="matrix(0.8819171,0,0,1.1338934,11.657205,-5.1144369)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#8d6e63"
+         id="stop28" />
+      <stop
+         offset="60%"
+         stop-color="#5d4037"
+         id="stop30" />
+      <stop
+         offset="100%"
+         stop-color="#3e2723"
+         id="stop32" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#elf_leather" xlink:href="#elf_leather"
+       id="linearGradient1251"
+       x1="66.899712"
+       y1="45.859689"
+       x2="74.836966"
+       y2="53.796943"
+       gradientTransform="matrix(0.8819171,0,0,1.1338934,-14.303555,12.585223)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#8d6e63"
+         id="stop28" />
+      <stop
+         offset="60%"
+         stop-color="#5d4037"
+         id="stop30" />
+      <stop
+         offset="100%"
+         stop-color="#3e2723"
+         id="stop32" />
+    
+  </linearGradient>
+
+    <!-- === VIKING DEFS === -->
+<!-- Градієнти для Вікінга -->
+    <radialGradient
+       id="vik_skin"
+       cx="45%"
+       cy="40%"
+       r="55%">
+      <stop
+         offset="0%"
+         stop-color="#fff2e6"
+         id="stop2" />
+      <stop
+         offset="75%"
+         stop-color="#fdd7bf"
+         id="stop4" />
+      <stop
+         offset="100%"
+         stop-color="#f5bea0"
+         id="stop6" />
+    </radialGradient>
+    <linearGradient
+       id="vik_hair"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#ff793f"
+         id="stop9" />
+      <stop
+         offset="50%"
+         stop-color="#cd6133"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#842e12"
+         id="stop13" />
+    </linearGradient>
+    <linearGradient
+       id="vik_iron"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#cfd8dc"
+         id="stop16" />
+      <stop
+         offset="50%"
+         stop-color="#78909c"
+         id="stop18" />
+      <stop
+         offset="100%"
+         stop-color="#37474f"
+         id="stop20" />
+    </linearGradient>
+    <linearGradient
+       id="vik_bronze"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#ffeaa7"
+         id="stop23" />
+      <stop
+         offset="50%"
+         stop-color="#d35400"
+         id="stop25" />
+      <stop
+         offset="100%"
+         stop-color="#7e2a06"
+         id="stop27" />
+    </linearGradient>
+    <linearGradient
+       id="vik_horn"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#ffffff"
+         id="stop30" />
+      <stop
+         offset="50%"
+         stop-color="#fff8e1"
+         id="stop32" />
+      <stop
+         offset="85%"
+         stop-color="#ffe082"
+         id="stop34" />
+      <stop
+         offset="100%"
+         stop-color="#8d6e63"
+         id="stop36" />
+    </linearGradient>
+    <linearGradient
+       id="vik_tunic"
+       x1="0%"
+       y1="0%"
+       x2="0%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#2980b9"
+         id="stop39" />
+      <stop
+         offset="60%"
+         stop-color="#1f618d"
+         id="stop41" />
+      <stop
+         offset="100%"
+         stop-color="#154360"
+         id="stop43" />
+    </linearGradient>
+    <radialGradient
+       id="vik_fur"
+       cx="50%"
+       cy="40%"
+       r="60%">
+      <stop
+         offset="0%"
+         stop-color="#b0bec5"
+         id="stop46" />
+      <stop
+         offset="60%"
+         stop-color="#78909c"
+         id="stop48" />
+      <stop
+         offset="100%"
+         stop-color="#455a64"
+         id="stop50" />
+    </radialGradient>
+    <linearGradient
+       id="vik_leather"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#a0522d"
+         id="stop53" />
+      <stop
+         offset="60%"
+         stop-color="#6e2c00"
+         id="stop55" />
+      <stop
+         offset="100%"
+         stop-color="#3e1a00"
+         id="stop57" />
+    </linearGradient>
+    <linearGradient
+       id="vik_axe_head"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#eceff1"
+         id="stop60" />
+      <stop
+         offset="50%"
+         stop-color="#90a4ae"
+         id="stop62" />
+      <stop
+         offset="100%"
+         stop-color="#455a64"
+         id="stop64" />
+    </linearGradient>
+    <radialGradient
+       id="vik_cheek"
+       cx="50%"
+       cy="50%"
+       r="50%">
+      <stop
+         offset="0%"
+         stop-color="#ff7675"
+         stop-opacity="0.5"
+         id="stop67" />
+      <stop
+         offset="100%"
+         stop-color="#ff7675"
+         stop-opacity="0"
+         id="stop69" />
+    </radialGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_hair" xlink:href="#vik_hair"
+       id="linearGradient1081"
+       x1="22.305782"
+       y1="35.702117"
+       x2="44.917123"
+       y2="58.313458"
+       gradientTransform="matrix(1.1900706,0,0,0.84028631,0,-2)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ff793f"
+         id="stop9" />
+      <stop
+         offset="50%"
+         stop-color="#cd6133"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#842e12"
+         id="stop13" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_hair" xlink:href="#vik_hair"
+       id="linearGradient1083"
+       x1="49.5"
+       y1="29.333333"
+       x2="55.5"
+       y2="35.333333"
+       gradientTransform="scale(0.66666667,1.5)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ff793f"
+         id="stop9" />
+      <stop
+         offset="50%"
+         stop-color="#cd6133"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#842e12"
+         id="stop13" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_bronze" xlink:href="#vik_bronze"
+       id="linearGradient1085"
+       x1="22.627417"
+       y1="66.468037"
+       x2="26.870058"
+       y2="70.710678"
+       gradientTransform="scale(1.4142136,0.70710678)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ffeaa7"
+         id="stop23" />
+      <stop
+         offset="50%"
+         stop-color="#d35400"
+         id="stop25" />
+      <stop
+         offset="100%"
+         stop-color="#7e2a06"
+         id="stop27" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_hair" xlink:href="#vik_hair"
+       id="linearGradient1087"
+       x1="64.5"
+       y1="29.333333"
+       x2="70.5"
+       y2="35.333333"
+       gradientTransform="scale(0.66666667,1.5)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ff793f"
+         id="stop9" />
+      <stop
+         offset="50%"
+         stop-color="#cd6133"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#842e12"
+         id="stop13" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_bronze" xlink:href="#vik_bronze"
+       id="linearGradient1089"
+       x1="29.698485"
+       y1="66.468037"
+       x2="33.941125"
+       y2="70.710678"
+       gradientTransform="scale(1.4142136,0.70710678)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ffeaa7"
+         id="stop23" />
+      <stop
+         offset="50%"
+         stop-color="#d35400"
+         id="stop25" />
+      <stop
+         offset="100%"
+         stop-color="#7e2a06"
+         id="stop27" />
+    
+  </linearGradient>
+    <radialGradient
+       inkscape:collect="always"
+       href="#vik_fur" xlink:href="#vik_fur"
+       id="radialGradient1091"
+       cx="16.137431"
+       cy="126.25926"
+       r="4.6475802"
+       gradientTransform="scale(1.5491933,0.64549722)"
+       fx="16.137431"
+       fy="126.25926"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#b0bec5"
+         id="stop46" />
+      <stop
+         offset="60%"
+         stop-color="#78909c"
+         id="stop48" />
+      <stop
+         offset="100%"
+         stop-color="#455a64"
+         id="stop50" />
+    
+  </radialGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_leather" xlink:href="#vik_leather"
+       id="linearGradient1093"
+       x1="13.168143"
+       y1="108.44353"
+       x2="24.787093"
+       y2="120.06248"
+       gradientTransform="scale(1.2909944,0.77459667)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#a0522d"
+         id="stop53" />
+      <stop
+         offset="60%"
+         stop-color="#6e2c00"
+         id="stop55" />
+      <stop
+         offset="100%"
+         stop-color="#3e1a00"
+         id="stop57" />
+    
+  </linearGradient>
+    <radialGradient
+       inkscape:collect="always"
+       href="#vik_fur" xlink:href="#vik_fur"
+       id="radialGradient1095"
+       cx="35.502347"
+       cy="126.25926"
+       r="4.6475802"
+       gradientTransform="scale(1.5491933,0.64549722)"
+       fx="35.502347"
+       fy="126.25926"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#b0bec5"
+         id="stop46" />
+      <stop
+         offset="60%"
+         stop-color="#78909c"
+         id="stop48" />
+      <stop
+         offset="100%"
+         stop-color="#455a64"
+         id="stop50" />
+    
+  </radialGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_leather" xlink:href="#vik_leather"
+       id="linearGradient1097"
+       x1="36.406043"
+       y1="108.44353"
+       x2="48.024993"
+       y2="120.06248"
+       gradientTransform="scale(1.2909944,0.77459667)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#a0522d"
+         id="stop53" />
+      <stop
+         offset="60%"
+         stop-color="#6e2c00"
+         id="stop55" />
+      <stop
+         offset="100%"
+         stop-color="#3e1a00"
+         id="stop57" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_iron" xlink:href="#vik_iron"
+       id="linearGradient1099"
+       x1="9.7848567"
+       y1="20.925191"
+       x2="27.490788"
+       y2="38.631123"
+       gradientTransform="scale(2.1461735,0.46594556)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#cfd8dc"
+         id="stop16" />
+      <stop
+         offset="50%"
+         stop-color="#78909c"
+         id="stop18" />
+      <stop
+         offset="100%"
+         stop-color="#37474f"
+         id="stop20" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_iron" xlink:href="#vik_iron"
+       id="linearGradient1101"
+       x1="48.946399"
+       y1="5.6694671"
+       x2="56.883653"
+       y2="13.606721"
+       gradientTransform="scale(0.75592895,1.3228757)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#cfd8dc"
+         id="stop16" />
+      <stop
+         offset="50%"
+         stop-color="#78909c"
+         id="stop18" />
+      <stop
+         offset="100%"
+         stop-color="#37474f"
+         id="stop20" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_bronze" xlink:href="#vik_bronze"
+       id="linearGradient1103"
+       x1="7.2265956"
+       y1="42.136023"
+       x2="20.303292"
+       y2="55.21272"
+       gradientTransform="scale(2.9059326,0.3441236)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ffeaa7"
+         id="stop23" />
+      <stop
+         offset="50%"
+         stop-color="#d35400"
+         id="stop25" />
+      <stop
+         offset="100%"
+         stop-color="#7e2a06"
+         id="stop27" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_bronze" xlink:href="#vik_bronze"
+       id="linearGradient1105"
+       x1="50.269275"
+       y1="12.094863"
+       x2="55.560778"
+       y2="17.386366"
+       gradientTransform="scale(0.75592895,1.3228757)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ffeaa7"
+         id="stop23" />
+      <stop
+         offset="50%"
+         stop-color="#d35400"
+         id="stop25" />
+      <stop
+         offset="100%"
+         stop-color="#7e2a06"
+         id="stop27" />
+    
+  </linearGradient>
+
+    <!-- === PRINCESS DEFS === -->
+<!-- Градієнти для Принцеси -->
+    <radialGradient
+       id="prn_skin"
+       cx="45%"
+       cy="40%"
+       r="55%">
+      <stop
+         offset="0%"
+         stop-color="#fff0e6"
+         id="stop2" />
+      <stop
+         offset="75%"
+         stop-color="#fddbcc"
+         id="stop4" />
+      <stop
+         offset="100%"
+         stop-color="#f7c5b2"
+         id="stop6" />
+    </radialGradient>
+    <linearGradient
+       id="prn_hair"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#ffe680"
+         id="stop9" />
+      <stop
+         offset="50%"
+         stop-color="#ffcc33"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#e69500"
+         id="stop13" />
+    </linearGradient>
+    <linearGradient
+       id="prn_dress"
+       x1="0%"
+       y1="0%"
+       x2="0%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#ff7eb3"
+         id="stop16" />
+      <stop
+         offset="60%"
+         stop-color="#e91e63"
+         id="stop18" />
+      <stop
+         offset="100%"
+         stop-color="#ad1457"
+         id="stop20" />
+    </linearGradient>
+    <linearGradient
+       id="prn_petticoat"
+       x1="0%"
+       y1="0%"
+       x2="0%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#ffffff"
+         id="stop23" />
+      <stop
+         offset="100%"
+         stop-color="#ffd5e5"
+         id="stop25" />
+    </linearGradient>
+    <linearGradient
+       id="prn_gold"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#fff9c4"
+         id="stop28" />
+      <stop
+         offset="50%"
+         stop-color="#ffd700"
+         id="stop30" />
+      <stop
+         offset="100%"
+         stop-color="#ff9800"
+         id="stop32" />
+    </linearGradient>
+    <radialGradient
+       id="prn_gem_ruby"
+       cx="35%"
+       cy="35%"
+       r="65%">
+      <stop
+         offset="0%"
+         stop-color="#ff80ab"
+         id="stop35" />
+      <stop
+         offset="60%"
+         stop-color="#f50057"
+         id="stop37" />
+      <stop
+         offset="100%"
+         stop-color="#880e4f"
+         id="stop39" />
+    </radialGradient>
+    <radialGradient
+       id="prn_gem_blue"
+       cx="35%"
+       cy="35%"
+       r="65%">
+      <stop
+         offset="0%"
+         stop-color="#80d8ff"
+         id="stop42" />
+      <stop
+         offset="60%"
+         stop-color="#00b0ff"
+         id="stop44" />
+      <stop
+         offset="100%"
+         stop-color="#0077c2"
+         id="stop46" />
+    </radialGradient>
+    <radialGradient
+       id="prn_cheek"
+       cx="50%"
+       cy="50%"
+       r="50%">
+      <stop
+         offset="0%"
+         stop-color="#ff6b8b"
+         stop-opacity="0.5"
+         id="stop49" />
+      <stop
+         offset="100%"
+         stop-color="#ff6b8b"
+         stop-opacity="0"
+         id="stop51" />
+    </radialGradient>
+    <radialGradient
+       id="prn_star_glow"
+       cx="66"
+       cy="34"
+       r="9"
+       fx="66"
+       fy="34"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#ffffff"
+         id="stop54" />
+      <stop
+         offset="40%"
+         stop-color="#ffe57f"
+         id="stop56" />
+      <stop
+         offset="100%"
+         stop-color="#ffd700"
+         stop-opacity="0"
+         id="stop58" />
+    </radialGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#prn_hair" xlink:href="#prn_hair"
+       id="linearGradient1024"
+       x1="11.094419"
+       y1="24.090738"
+       x2="31.170033"
+       y2="44.166352"
+       gradientTransform="matrix(1.8928437,0,0,0.52830565,0,-9)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ffe680"
+         id="stop9" />
+      <stop
+         offset="50%"
+         stop-color="#ffcc33"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#e69500"
+         id="stop13" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#prn_dress" xlink:href="#prn_dress"
+       id="linearGradient42332"
+       x1="22.135944"
+       y1="58.185909"
+       x2="22.135944"
+       y2="77.159575"
+       gradientTransform="matrix(1.2649111,0,0,0.79056942,0,-8)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ff7eb3"
+         id="stop16" />
+      <stop
+         offset="60%"
+         stop-color="#e91e63"
+         id="stop18" />
+      <stop
+         offset="100%"
+         stop-color="#ad1457"
+         id="stop20" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#prn_gold" xlink:href="#prn_gold"
+       id="linearGradient42334"
+       x1="14.222517"
+       y1="52.499691"
+       x2="16.515829"
+       y2="54.793003"
+       gradientTransform="scale(1.1061102,0.90406901)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#fff9c4"
+         id="stop28" />
+      <stop
+         offset="50%"
+         stop-color="#ffd700"
+         id="stop30" />
+      <stop
+         offset="100%"
+         stop-color="#ff9800"
+         id="stop32" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#prn_gold" xlink:href="#prn_gold"
+       id="linearGradient42336"
+       x1="275.77164"
+       y1="8.2495791"
+       x2="284.25693"
+       y2="16.73486"
+       gradientTransform="scale(0.23570226,4.2426407)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#fff9c4"
+         id="stop28" />
+      <stop
+         offset="50%"
+         stop-color="#ffd700"
+         id="stop30" />
+      <stop
+         offset="100%"
+         stop-color="#ff9800"
+         id="stop32" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#prn_gold" xlink:href="#prn_gold"
+       id="linearGradient42338"
+       x1="57.086557"
+       y1="27.432027"
+       x2="72.834573"
+       y2="43.180043"
+       gradientTransform="scale(1.016001,0.98425098)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#fff9c4"
+         id="stop28" />
+      <stop
+         offset="50%"
+         stop-color="#ffd700"
+         id="stop30" />
+      <stop
+         offset="100%"
+         stop-color="#ff9800"
+         id="stop32" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#prn_hair" xlink:href="#prn_hair"
+       id="linearGradient42340"
+       x1="31.658691"
+       y1="11.055416"
+       x2="41.608566"
+       y2="21.00529"
+       gradientTransform="matrix(0.53799873,0.12693668,-0.59673847,2.5291709,10.378929,-22.213349)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ffe680"
+         id="stop9" />
+      <stop
+         offset="50%"
+         stop-color="#ffcc33"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#e69500"
+         id="stop13" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#prn_hair" xlink:href="#prn_hair"
+       id="linearGradient42441"
+       x1="103.11688"
+       y1="11.055416"
+       x2="113.06675"
+       y2="21.00529"
+       gradientTransform="matrix(0.52550053,-0.17147813,0.74139559,2.2720319,-8.9371408,4.2241222)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ffe680"
+         id="stop9" />
+      <stop
+         offset="50%"
+         stop-color="#ffcc33"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#e69500"
+         id="stop13" />
+    
+  </linearGradient>
+      </defs>
+    </svg>
+
+    <section id="s-lang" class="scr on">
+        <h1>🐛 Клавіатурний тренажер</h1>
+        <p class="sub">Оберіть мову навчання — це визначає тексти уроків і розкладку клавіатури</p>
+        <div class="row">
+            <div class="flag-btn" id="flag-ua"><span>🇺🇦</span>Українська</div>
+            <div class="flag-btn" id="flag-en"><span>🇬🇧</span>English</div>
+        </div>
+        <button class="btn theme-toggle" id="themeToggle">🎨 Змінити тему</button>
+        <button class="btn creator-btn" id="openCreator">✏️ Створити власний урок</button>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- ⑦ РЕДАКТОР УРОКІВ (ВЧИТЕЛЬ) -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="s-creator" class="scr" style="position:relative">
+        <button class="back" id="backFromCreator">←</button>
+        <h1>✏️ Створити власний урок</h1>
+
+        <div class="creator-form">
+
+            <div class="creator-field">
+                <label>📚 Назва уроку</label>
+                <input type="text" id="cr-title" class="creator-input" placeholder="Введіть назву уроку...">
+            </div>
+
+            <div class="creator-guide">
+                <span class="guide-item run">а</span> рівна дорога &nbsp;
+                <span class="guide-item step">А</span> підйом (Shift) &nbsp;
+                <span class="guide-item gap">__</span> прірва &nbsp;
+                <span class="guide-item hit">.,</span> підйом+фіксація &nbsp;
+                <span class="guide-item down">↵</span> Enter — натисни для переходу на новий рядок (спуск)
+            </div>
+
+            <div class="creator-field">
+                <label>📝 Текст рівня</label>
+                <textarea id="cr-text" class="creator-textarea" rows="6"
+                    placeholder="Введіть текст уроку...&#10;Кожен новий рядок — спуск на рівень нижче.&#10;Великі літери — підйом. Пробіл — прірва.&#10;Приклад:&#10;мама і тато.&#10;Ми велика родина!"></textarea>
+                <div class="creator-stats" id="cr-stats">0 символів</div>
+            </div>
+
+            <div class="creator-field">
+                <label>🐛 Словничок — боси рівня (необов'язково)</label>
+                <div class="creator-words" id="cr-words"></div>
+                <button class="btn sm" id="cr-add-word" style="align-self:flex-start;margin-top:4px">+ Додати слово-боса</button>
+            </div>
+
+            <div class="file-note" id="cr-file-note">
+                💡 Завантажений JSON можна відкрити в грі через кнопку <strong>«📂 Обрати JSON вручну»</strong> на екрані вибору уроку.
+            </div>
+
+            <div class="row">
+                <button class="btn primary" id="cr-play">▶ Грати зараз</button>
+                <button class="btn" id="cr-download">📥 Завантажити JSON</button>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- ② КЛАС (вчитель) -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="s-grade" class="scr" style="position:relative">
+        <button class="back" id="backToLang">←</button>
+        <h1 id="gradeTitle">Оберіть клас</h1>
+        <div class="grade-grid" id="gradeGrid"></div>
+        
+        <!-- ПОВЗУНОК ШВИДКОСТІ ХРОБАКА -->
+        <div class="difficulty-section">
+            <label>
+                🐛 Швидкість хробаків
+                <span><span class="diff-value" id="diffValue">3</span>/5</span>
+            </label>
+            <input type="range" id="difficultySlider" min="0" max="5" value="3" step="1">
+            <div class="diff-labels">
+                <span>0: 🛑 Нерухомий</span>
+                <span>1: 🐢 Дуже повільний</span>
+                <span>2: 🐛 Повільний</span>
+                <span>3: ⚡ Середній</span>
+                <span>4: 🔥 Швидкий</span>
+                <span>5: 🚀 Макс</span>
+            </div>
+            <div class="diff-type" id="diffType">🐛 Швидкість: <strong>3 — Середній</strong> ⚡</div>
+        </div>
+        
+        <div class="bg-preview" id="bgPreview">
+            <div class="bg-preview-inner" id="bgPreviewInner">
+                <div class="bg-preview-label">🎨 Попередній перегляд фону</div>
+                <div class="bg-options" id="bgOptions">
+                    <button class="bg-opt" data-bg="space">🚀 Космос</button>
+                    <button class="bg-opt" data-bg="dungeon">🏰 Підземелля</button>
+                    <button class="bg-opt" data-bg="forest">🌲 Таємничий ліс</button>
+                    <button class="bg-opt" data-bg="underwater">🌊 Підводне царство</button>
+                    <button class="bg-opt" data-bg="kingdom">👑 Королівство</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- ③ УРОК (вчитель) -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="s-lesson" class="scr" style="position:relative">
+        <button class="back" id="backToGrade">←</button>
+        <h1 id="lessonTitle">Оберіть урок</h1>
+        <div class="lesson-list" id="lessonList"></div>
+        <div id="lessonActions" style="display:none;flex-direction:column;gap:12px;align-items:center;width:100%;max-width:540px;">
+            <div class="lesson-location-bar" style="width:100%;background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:8px;align-items:center;">
+                <div style="font-size:13px;color:var(--dim);display:flex;gap:6px;align-items:center;">
+                    <span>🌍 Локація уроку:</span>
+                    <strong id="lessonCurrentBg" style="color:var(--text);font-size:14px;">🚀 Космос</strong>
+                </div>
+                <div class="bg-options" id="bgOptionsLesson">
+                    <button class="bg-opt" data-bg="space">🚀 Космос</button>
+                    <button class="bg-opt" data-bg="dungeon">🏰 Підземелля</button>
+                    <button class="bg-opt" data-bg="forest">🌲 Таємничий ліс</button>
+                    <button class="bg-opt" data-bg="underwater">🌊 Підводне царство</button>
+                    <button class="bg-opt" data-bg="kingdom">👑 Королівство</button>
+                </div>
+                <!-- ПОВЗУНОК ШВИДКОСТІ ХРОБАКА ДЛЯ УРОКУ -->
+                <div class="difficulty-section" style="width:100%;max-width:100%;box-sizing:border-box;margin-top:10px;padding:12px 16px;border-top:1px solid var(--edge);">
+                    <label style="display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--dim);margin-bottom:8px;">
+                        <span style="display:flex;align-items:center;gap:6px;">🐛 Швидкість хробака</span>
+                        <span><span class="diff-value" id="lessonDiffVal">3</span>/5</span>
+                    </label>
+                    <input type="range" id="lessonDiffSlider" min="0" max="5" value="3" step="1" style="width:100%;cursor:pointer;">
+                    <div class="diff-labels" style="display:flex;justify-content:space-between;font-size:11px;color:var(--dim);margin-top:4px;">
+                        <span>0: 🛑 Стоїть</span>
+                        <span>1: 🐢 Дуже повільно</span>
+                        <span>2: 🐛 Повільно</span>
+                        <span>3: ⚡ Середній</span>
+                        <span>4: 🔥 Швидко</span>
+                        <span>5: 🚀 Макс</span>
+                    </div>
+                    <div class="diff-type" id="lessonDiffType" style="margin-top:8px;font-size:13px;text-align:center;">
+                        Швидкість: <strong id="lessonCurrentDiff">3 — Середній ⚡</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="link-box"><span id="linkText"></span>
+                <button class="btn sm" id="copyBtn">Копіювати</button>
+            </div>
+            <div class="row">
+                <button class="btn primary" id="teacherPlay">▶ Почати гру</button>
+            </div>
+            <label class="file-label">
+                <input type="file" id="fileTeacher" accept=".json">
+                📂 Обрати JSON вручну (якщо file://)
+            </label>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- 👤 ВИБІР ІМЕНІ УЧНЯ -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="s-name" class="scr">
+        <h1>👋 Привіт!</h1>
+        <p class="sub">Введи своє ім'я, щоб зберігати свій прогрес, або обери його зі списку раніше введених.</p>
+        <div class="name-list" id="nameList"></div>
+        <div class="name-entry-row">
+            <input type="text" id="nameInput" class="creator-input" placeholder="Введи ім'я...">
+            <button class="btn primary" id="nameConfirm">Продовжити ▶</button>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- ④ УЧЕНЬ -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="s-student" class="scr">
+        <div class="badge" id="studentBadge">Урок</div>
+        <div class="name-badge" id="studentNameBadge">👤</div>
+        <h1 id="studentTitle">—</h1>
+        <h2 id="studentSub"></h2>
+        
+        <!-- ВИБІР ГЕРОЯ -->
+        <div class="hero-selector">
+            <div class="hero-selector-header">
+                <label class="hero-label">🦸 Оберіть героя для гри:</label>
+                <span class="hero-selected-tag" id="heroSelectedTag">🐼 Пандочка</span>
+            </div>
+            <div class="hero-grid" id="heroGrid">
+                <!-- Картки героїв з векторними SVG-аватарами генеруються автоматично -->
+            </div>
+        </div>
+        
+        <div class="difficulty-display">
+            🐛 Швидкість хробака: <span id="studentDiff">3</span>/5
+            <span id="studentDiffType" style="margin-left:8px;font-size:12px;color:var(--dim);">(Середній)</span>
+        </div>
+        <div class="difficulty-display" id="studentBgDisplay" style="margin-top:6px;">
+            🌍 Локація: <strong id="studentBgName" style="color:var(--worm);margin-left:4px;">🚀 Космос</strong>
+        </div>
+        
+        <!-- ШКАЛА ПРОГРЕСУ -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <span>📊 Прогрес уроків</span>
+                <span class="progress-stats" id="progressStats">0/0</span>
+            </div>
+            <div class="progress-grid" id="progressGrid"></div>
+        </div>
+        
+        <button class="btn primary" id="studentPlay">▶ Почати гру</button>
+        <div class="row">
+            <button class="btn sm" id="openStats">📊 Статистика помилок</button>
+            <button class="btn sm" id="openHistory">📜 Історія спроб</button>
+            <button class="btn sm" id="changeProfileBtn">🔄 Змінити профіль</button>
+        </div>
+        <label class="file-label">
+            <input type="file" id="fileStudent" accept=".json">
+            📂 Обрати JSON вручну (якщо file://)
+        </label>
+        <button class="btn theme-toggle" id="themeToggle2">🎨 Змінити тему</button>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- ⑤ ГРА -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="sg" class="scr">
+        <div class="hud">
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <div class="hud-hero" id="hudHero" title="Ваш герой">
+                    <div class="hud-hero-avatar" id="hudHeroAvatar"></div>
+                    <span class="hud-hero-name" id="hudHeroName">Пандочка</span>
+                </div>
+                <div class="hearts" id="heartsEl"></div>
+                <div class="coins-hud" id="coinsEl"></div>
+            </div>
+            <div class="stats"><span id="progEl">0/0</span><span id="errEl">Помилки: 0</span></div>
+        </div>
+        <div class="stage" id="stage">
+            <div class="bg-layer" id="bgLayer">
+                <div class="parallax-layer" id="parallax1"></div>
+                <div class="parallax-layer" id="parallax2"></div>
+                <div class="parallax-layer" id="parallax3"></div>
+            </div>
+            <div class="sun"></div>
+            <div class="clouds" id="clouds"></div>
+            <div class="ridge rfar" id="rfar"></div>
+            <div class="ridge rnear" id="rnear"></div>
+            <div class="trees" id="trees"></div>
+            <div class="ground"></div>
+            <div class="prompt" id="promptEl"><span>→</span><span class="pkey" id="pkeyEl">—</span></div>
+            
+            <div class="bpanel" id="bpanel">
+                <div class="bptitle">⚔️ ХРОБАК АТАКУЄ!</div>
+                <div class="blets" id="blets"></div>
+            </div>
+            
+            <div class="toast" id="toastEl"></div>
+            <div class="track" id="track"></div>
+            <div class="pwrap" id="pwrap">
+                <div class="player" id="player">
+                    <svg class="psvg" id="playerSvg" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
+                </div>
+            </div>
+        </div>
+        <div class="kbpanel">
+            <div class="hand hand-left" id="hL"></div>
+            <div class="kbrows" id="kbrows"></div>
+            <div class="hand hand-right" id="hR"></div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- ⑥ РЕЗУЛЬТАТ -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="s-result" class="scr">
+        <h1 id="resTitle">🎉</h1>
+        <div class="res-hero-card" id="resHeroCard">
+            <div class="res-hero-avatar" id="resHeroAvatar"></div>
+            <div class="res-hero-text">
+                <div class="res-hero-name" id="resHeroName">Пандочка</div>
+                <div class="res-hero-speech" id="resHeroSpeech">«Хрумкий бамбук за твою швидкість! Чудова робота!»</div>
+            </div>
+        </div>
+        <div class="resbox">
+            <div class="rrow" id="rAttemptRow" style="display:none;"><span>🔁 Спроба №</span><span id="rAttempt">1</span></div>
+            <div class="rrow"><span>Правильних символів</span><span id="rTotal">0</span></div>
+            <div class="rrow"><span>Символів за хвилину</span><span id="rCpm">0</span></div>
+            <div class="rrow"><span>Помилок</span><span id="rErr">0</span></div>
+            <div class="rrow"><span>Монет зібрано</span><span id="rCoins">0</span></div>
+            <div class="rrow"><span>Залишилось життів</span><span id="rLives">0</span></div>
+            <div class="rrow"><span>Хробаків переможено</span><span id="rBoss">0</span></div>
+            <div class="rrow" id="rDeltaRow" style="display:none;"><span>Порівняно з минулою спробою</span><span id="rDelta"></span></div>
+        </div>
+        <div class="row">
+            <button class="btn" id="retryBtn">Спробувати знову</button>
+            <button class="btn" id="menuBtn">До меню</button>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- 📊 ДЕТАЛЬНА СТАТИСТИКА ПОМИЛОК -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="s-stats" class="scr" style="position:relative">
+        <button class="back" id="backFromStats">←</button>
+        <h1>📊 Статистика помилок</h1>
+        <p class="sub">Символи та пальці, на яких найчастіше трапляються помилки</p>
+        <div class="stats-panel">
+            <h2 class="stats-subtitle">🔤 Проблемні символи</h2>
+            <div class="stats-list" id="statsLetters"></div>
+        </div>
+        <div class="stats-panel">
+            <h2 class="stats-subtitle">🖐️ Проблемні пальці</h2>
+            <div class="stats-list" id="statsFingers"></div>
+        </div>
+        <button class="btn" id="menuFromStats" onclick="show('s-student')">До меню</button>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- 📜 ІСТОРІЯ СПРОБ -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <section id="s-history" class="scr" style="position:relative">
+        <button class="back" id="backFromHistory">←</button>
+        <h1>📜 Історія спроб</h1>
+        <p class="sub">Всі пройдені уроки та порівняння результатів між спробами</p>
+        <div class="history-container" id="historyList"></div>
+    </section>
+
+    <script src="heroes.js"></script>
+    <script src="scenery.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

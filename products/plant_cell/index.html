@@ -1,0 +1,2958 @@
+<!DOCTYPE html>
+<html lang="ua">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>plant cell organelles compressed</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    /* CSS Variables for Dark / Light Themes */
+    :root {
+      --bg-color: #09090b;
+      --surface-bg: rgba(18, 18, 22, 0.85);
+      --surface-border: rgba(63, 63, 70, 0.6);
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent-color: #10b981;
+      --accent-hover: #059669;
+      --accent-glow: rgba(16, 185, 129, 0.35);
+      --btn-bg: rgba(28, 28, 34, 0.85);
+      --btn-hover: rgba(45, 45, 55, 0.95);
+      --btn-border: rgba(75, 75, 85, 0.6);
+      --chip-bg: rgba(24, 24, 27, 0.85);
+      --chip-text: #d4d4d8;
+      --shadow-elevation: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    body.theme-light {
+      --bg-color: #f8fafc;
+      --surface-bg: rgba(255, 255, 255, 0.92);
+      --surface-border: rgba(203, 213, 225, 0.85);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --accent-color: #059669;
+      --accent-hover: #047857;
+      --accent-glow: rgba(5, 150, 105, 0.25);
+      --btn-bg: rgba(241, 245, 249, 0.95);
+      --btn-hover: rgba(226, 232, 240, 1);
+      --btn-border: rgba(203, 213, 225, 0.9);
+      --chip-bg: rgba(255, 255, 255, 0.95);
+      --chip-text: #334155;
+      --shadow-elevation: 0 10px 30px rgba(15, 23, 42, 0.12);
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      user-select: none;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    #viewport-container {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      outline: none;
+    }
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    /* Header Bar */
+    header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--surface-border);
+      z-index: 20;
+      box-shadow: var(--shadow-elevation);
+      transition: all 0.25s ease;
+    }
+
+    .header-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 55%;
+    }
+    .header-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .model-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--accent-color);
+      color: #ffffff;
+    }
+    .header-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .header-subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn:hover {
+      background: var(--btn-hover);
+      border-color: var(--text-muted);
+    }
+    .btn-icon {
+      padding: 6px 10px;
+    }
+    .btn-emerald {
+      background: var(--accent-color);
+      border-color: var(--accent-hover);
+      color: #ffffff !important;
+    }
+    .btn-emerald:hover {
+      background: var(--accent-hover);
+    }
+
+    /* 3D Hotspot Pins */
+    .hotspot-pin {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      pointer-events: auto;
+      cursor: pointer;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .pin-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 0 16px var(--accent-glow), 0 3px 8px rgba(0, 0, 0, 0.4);
+      border: 2px solid #ffffff;
+      transition: all 0.2s ease;
+    }
+    .hotspot-pin:hover .pin-circle,
+    .hotspot-pin.active .pin-circle {
+      transform: scale(1.18);
+      box-shadow: 0 0 24px var(--accent-color), 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+    .pin-tooltip {
+      position: absolute;
+      left: 36px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--surface-bg);
+      border: 1px solid var(--surface-border);
+      color: var(--text-primary);
+      padding: 5px 11px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: var(--shadow-elevation);
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+    .hotspot-pin:hover .pin-tooltip {
+      opacity: 1;
+    }
+    body.show-labels .pin-tooltip {
+      opacity: 1;
+    }
+
+    /* Slide-out Hotspot Detail Panel */
+    #info-panel {
+      position: absolute;
+      top: 76px;
+      right: 20px;
+      width: 360px;
+      max-width: calc(100vw - 40px);
+      background: var(--surface-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: var(--shadow-elevation);
+      z-index: 25;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #info-panel.visible {
+      display: flex;
+    }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(25px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .panel-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-color);
+      background: var(--accent-glow);
+      border: 1px solid var(--accent-color);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+    }
+    .panel-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
+    .panel-btn-icon {
+      background: var(--btn-bg);
+      border: 1px solid var(--surface-border);
+      color: var(--text-secondary);
+      font-size: 13px;
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+      line-height: 1;
+    }
+    .panel-btn-icon:hover {
+      color: var(--text-primary);
+      background: var(--btn-hover);
+      border-color: var(--accent-color);
+    }
+    .panel-btn-icon.active {
+      background: var(--accent-color);
+      color: #ffffff;
+      border-color: var(--accent-hover);
+    }
+    .panel-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 3px 6px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+    .panel-close:hover {
+      color: var(--text-primary);
+      background: var(--btn-hover);
+    }
+    .panel-body {
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--text-secondary);
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 4px;
+      word-break: break-word;
+    }
+    .panel-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--surface-border);
+      padding-top: 12px;
+      gap: 6px;
+    }
+
+    /* Markdown Formatted Elements in Panels & Modals */
+    .node-heading-2 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-top: 14px;
+      margin-bottom: 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .node-heading-3 {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+    .node-strong {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .node-em {
+      font-style: italic;
+      color: var(--text-secondary);
+    }
+    .node-code {
+      font-family: monospace;
+      font-size: 11px;
+      background: var(--btn-bg);
+      border: 1px solid var(--surface-border);
+      color: var(--accent-color);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    .node-quote {
+      border-left: 3px solid var(--accent-color);
+      background: var(--accent-glow);
+      padding: 6px 12px;
+      margin: 8px 0;
+      border-radius: 0 6px 6px 0;
+      font-style: italic;
+      color: var(--text-secondary);
+    }
+    .node-list-ul {
+      list-style-type: disc;
+      padding-left: 18px;
+      margin: 6px 0;
+    }
+    .node-list-ol {
+      list-style-type: decimal;
+      padding-left: 18px;
+      margin: 6px 0;
+    }
+    .node-list-item {
+      margin-bottom: 3px;
+      line-height: 1.5;
+    }
+    .node-divider {
+      border: 0;
+      border-top: 1px solid var(--surface-border);
+      margin: 12px 0;
+    }
+
+    /* Nodes List & Visibility Floating Panel */
+    #nodes-list-panel {
+      position: absolute;
+      top: 76px;
+      left: 20px;
+      width: 320px;
+      max-width: calc(100vw - 40px);
+      max-height: calc(100vh - 140px);
+      background: var(--surface-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: var(--shadow-elevation);
+      z-index: 26;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      animation: slideInLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #nodes-list-panel.visible {
+      display: flex;
+    }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-25px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .nodes-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--surface-border);
+      padding-bottom: 8px;
+    }
+    .nodes-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .nodes-count-badge {
+      font-size: 10px;
+      background: var(--btn-bg);
+      border: 1px solid var(--surface-border);
+      color: var(--accent-color);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .nodes-panel-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nodes-panel-items {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+      max-height: 420px;
+      padding-right: 2px;
+    }
+    .node-row-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: var(--btn-bg);
+      border: 1px solid var(--surface-border);
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .node-row-item:hover {
+      background: var(--btn-hover);
+      border-color: var(--accent-color);
+    }
+    .node-row-item.active {
+      border-color: var(--accent-color);
+      background: var(--accent-glow);
+    }
+    .node-row-item.hidden-node {
+      opacity: 0.5;
+    }
+    .node-row-item.hidden-node .node-row-title {
+      text-decoration: line-through;
+    }
+    .node-row-title-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+    .node-row-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-color);
+      min-width: 20px;
+      font-family: monospace;
+    }
+    .node-row-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .node-row-btns {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .node-action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 3px 5px;
+      border-radius: 4px;
+      font-size: 13px;
+      line-height: 1;
+      color: var(--text-secondary);
+      transition: all 0.15s ease;
+    }
+    .node-action-btn:hover {
+      color: var(--text-primary);
+      background: var(--btn-hover);
+    }
+    .tour-chip.hidden-chip {
+      opacity: 0.45;
+      text-decoration: line-through;
+      border-style: dashed;
+    }
+
+    /* Expanded Node View Modal (Rozshyrenyj perehliad elementu) */
+    #node-expanded-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 55;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeIn 0.2s ease;
+    }
+    #node-expanded-modal.visible {
+      display: flex;
+    }
+    .expanded-modal-box {
+      background: var(--surface-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 720px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
+      overflow: hidden;
+      animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .expanded-modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--surface-border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .expanded-modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+    .expanded-modal-body {
+      padding: 20px 24px;
+      overflow-y: auto;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      flex: 1;
+      word-break: break-word;
+    }
+    .expanded-modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--surface-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* Bottom Tour Chips */
+    #tour-bar {
+      position: absolute;
+      bottom: 44px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--surface-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--surface-border);
+      border-radius: 30px;
+      z-index: 20;
+      max-width: 92vw;
+      overflow-x: auto;
+      box-shadow: var(--shadow-elevation);
+    }
+    .tour-chip {
+      background: var(--chip-bg);
+      border: 1px solid var(--surface-border);
+      color: var(--chip-text);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .tour-chip:hover {
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
+    .tour-chip.active {
+      background: var(--accent-color);
+      color: #ffffff;
+      border-color: var(--accent-hover);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    /* Controls Hint Bar at Bottom */
+    #controls-hint-bar {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 11px;
+      color: var(--text-muted);
+      z-index: 15;
+      pointer-events: none;
+      white-space: nowrap;
+      background: var(--surface-bg);
+      padding: 3px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--surface-border);
+      backdrop-filter: blur(8px);
+    }
+    .hint-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .hint-key {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    /* Loading Indicator & Progress Bar */
+    #loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      background: var(--surface-bg);
+      padding: 24px 32px;
+      border-radius: 16px;
+      border: 1px solid var(--surface-border);
+      box-shadow: var(--shadow-elevation);
+      min-width: 280px;
+      text-align: center;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(125, 125, 125, 0.2);
+      border-top-color: var(--accent-color);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(125, 125, 125, 0.2);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .progress-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--accent-color);
+      transition: width 0.15s ease;
+    }
+
+    /* Fallback file picker modal */
+    #fallback-file-modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #fallback-file-modal.visible {
+      display: flex;
+    }
+    .modal-box {
+      background: var(--surface-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 14px;
+      max-width: 460px;
+      width: 100%;
+      padding: 24px;
+      text-align: center;
+      box-shadow: var(--shadow-elevation);
+    }
+    .modal-box h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .modal-box p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    /* Floating Attribution & Help Question Mark Button (Bottom-Right) */
+    #btn-attribution-modal {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--surface-bg);
+      border: 1px solid var(--surface-border);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 25;
+      box-shadow: var(--shadow-elevation);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+    }
+    #btn-attribution-modal:hover {
+      background: var(--btn-hover);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+      transform: scale(1.08);
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+    #btn-attribution-modal:active {
+      transform: scale(0.95);
+    }
+
+    /* Attribution & Help Modal */
+    #attribution-modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 60;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #attribution-modal.visible {
+      display: flex;
+    }
+    .attribution-card {
+      background: var(--surface-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 16px;
+      max-width: 480px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: var(--shadow-elevation);
+      animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalPop {
+      from { transform: scale(0.94); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .attribution-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--surface-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .attribution-body {
+      padding: 18px 20px;
+      max-height: 72vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .attr-section {
+      background: rgba(125, 125, 125, 0.05);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .attr-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent-color);
+      margin-bottom: 2px;
+    }
+    .attr-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 12px;
+    }
+    .attr-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .attr-value {
+      color: var(--text-primary);
+      word-break: break-all;
+    }
+    .attr-value a {
+      color: var(--accent-color);
+      text-decoration: none;
+      word-break: break-all;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+    }
+    .attr-value a:hover {
+      text-decoration: underline;
+    }
+    .guide-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .guide-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+    }
+    .guide-key {
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      min-width: 90px;
+      text-align: center;
+    }
+    .guide-desc {
+      color: var(--text-secondary);
+    }
+    .attribution-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--surface-border);
+      background: rgba(0, 0, 0, 0.12);
+    }
+
+    /* Animation Controls Bar */
+    #anim-controls-bar {
+      position: absolute;
+      top: 66px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      padding: 6px 14px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: var(--shadow-elevation);
+      z-index: 25;
+      font-size: 12px;
+      max-width: 94vw;
+      overflow-x: auto;
+      transition: all 0.2s ease;
+    }
+    #anim-controls-bar.visible {
+      display: flex;
+    }
+    .anim-badge {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent-color);
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 2px 7px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .anim-select {
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--text-primary);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      max-width: 220px;
+      transition: border-color 0.15s ease;
+    }
+    .anim-select:hover, .anim-select:focus {
+      border-color: var(--accent-color);
+    }
+    .anim-btn {
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--text-primary);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+    .anim-btn:hover {
+      background: var(--btn-hover);
+      border-color: var(--text-muted);
+    }
+    .anim-btn.active {
+      background: var(--accent-color);
+      border-color: var(--accent-hover);
+      color: #ffffff;
+    }
+    .anim-speed-btn {
+      padding: 3px 7px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 5px;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .anim-speed-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
+  </style>
+
+  <!-- Three.js and Loaders via fast CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+</head>
+<body class="theme-dark">
+  <div id="viewport-container">
+    <canvas id="webgl-canvas"></canvas>
+  </div>
+
+  <header>
+    <div class="header-info">
+      <div class="header-title-row">
+        <span class="model-badge">3D</span>
+        <h1 class="header-title" id="header-title-text">plant cell organelles compressed</h1>
+      </div>
+      <div class="header-subtitle" id="header-subtitle-text">
+        Обертайте модель та натискайте на мітки для детального огляду вузлів
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Theme Switcher (Dark / Light) -->
+      <button class="btn btn-icon" id="btn-theme-toggle" title="Змінити тему / Toggle Theme">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-text">Тема</span>
+      </button>
+
+      <!-- Language Switcher (UA / EN) -->
+      <button class="btn" id="btn-lang-toggle" title="Змінити мову / Switch Language">
+        <span>🌐</span>
+        <span id="lang-label">UA</span>
+      </button>
+
+      <!-- Hotspots / Marker Pins Toggle (Show/Hide 3D Marker Pins) -->
+      <button class="btn btn-emerald" id="btn-hotspots-toggle"  title="Показати/приховати мітки на моделі / Toggle 3D Pins">
+        <span>📍</span>
+        <span id="lbl-hotspots">Мітки</span>
+      </button>
+
+      <!-- Hotspots Labels Toggle (Show/Hide 3D Node Labels) -->
+      <button class="btn " id="btn-labels-toggle"  title="Показати/приховати підписи вузлів / Toggle Node Labels">
+        <span>🏷️</span>
+        <span id="lbl-labels">Підписи</span>
+      </button>
+
+      <!-- Nodes List & Visibility Panel Toggle -->
+      <button class="btn" id="btn-nodes-list"  title="Керування видимістю вузлів / Toggle Node Visibility">
+        <span>📑</span>
+        <span id="lbl-nodes-list">Вузли</span>
+      </button>
+
+      <!-- Grid Toggle (Show/Hide Grid) -->
+      <button class="btn" id="btn-grid-toggle" title="Сітка простору / Toggle Grid">
+        <span>⊞</span>
+        <span id="lbl-grid">Сітка</span>
+      </button>
+
+      <!-- Animation Toggle (Show/Hide / Play animations if model has them) -->
+      <button class="btn" id="btn-anim-toggle" style="display: none;" title="Анімації моделі / Model Animations">
+        <span>▶</span>
+        <span id="lbl-anim-toggle">Анімації</span>
+      </button>
+
+      <!-- Camera Reset -->
+      <button class="btn" id="btn-reset-cam">
+        <span id="lbl-reset-cam">Скинути</span>
+      </button>
+
+      <!-- Auto Rotate -->
+      <button class="btn" id="btn-autorotate">
+        <span id="lbl-autorotate">Обертання</span>
+      </button>
+
+      <!-- Fullscreen -->
+      <button class="btn btn-icon" id="btn-fullscreen" title="Повний екран / Fullscreen">
+        ⛶
+      </button>
+    </div>
+  </header>
+
+  <!-- Hotspots HTML overlay layer -->
+  <div id="hotspots-layer"></div>
+
+  <!-- Floating Animation Controls Bar -->
+  <div id="anim-controls-bar">
+    <span class="anim-badge" id="anim-badge-label">Анімація</span>
+    <button class="anim-btn" id="anim-btn-play" title="Відтворити / Пауза">
+      <span id="anim-play-icon">⏸</span>
+    </button>
+    <select class="anim-select" id="anim-clip-select"></select>
+    <button class="anim-speed-btn" id="anim-speed-btn" title="Швидкість відтворення">
+      <span id="anim-speed-label">1x</span>
+    </button>
+  </div>
+
+  <!-- Slide-out Info Panel -->
+  <div id="info-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-tag" id="panel-badge">Вузол #1</div>
+        <h2 class="panel-title" id="panel-title">Назва вузла</h2>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px;">
+        <button class="panel-btn-icon" id="btn-panel-toggle-vis" title="Показати/приховати цей вузол на 3D сцені / Toggle node visibility">👁️</button>
+        <button class="panel-btn-icon" id="btn-expand-node" title="Розширений перегляд елементу / Expanded view">⛶</button>
+        <button class="panel-close" id="panel-close-btn">&times;</button>
+      </div>
+    </div>
+    <div class="panel-body" id="panel-body">
+      Опис вузла...
+    </div>
+    <div class="panel-footer">
+      <button class="btn" id="btn-prev-spot">
+        <span id="lbl-prev">&larr; Попередній</span>
+      </button>
+      <button class="btn" id="btn-open-expanded-modal" title="Розширений перегляд вузла">
+        <span>🔍</span>
+        <span id="lbl-expand">Розгорнути</span>
+      </button>
+      <span style="font-size: 11px; color: var(--text-muted);" id="tour-step-counter">1 / 5</span>
+      <button class="btn btn-emerald" id="btn-next-spot">
+        <span id="lbl-next">Наступний &rarr;</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Nodes List & Visibility Manager Panel -->
+  <div id="nodes-list-panel">
+    <div class="nodes-panel-header">
+      <div class="nodes-panel-title">
+        <span>📑</span>
+        <span id="lbl-nodes-panel-title">Вузли моделі</span>
+        <span class="nodes-count-badge" id="nodes-count-badge">0</span>
+      </div>
+      <button class="panel-close" id="btn-close-nodes-panel">&times;</button>
+    </div>
+    <div class="nodes-panel-actions">
+      <button class="btn btn-xs btn-emerald" id="btn-show-all-nodes">
+        <span>👁️</span>
+        <span id="lbl-show-all">Усі</span>
+      </button>
+      <button class="btn btn-xs" id="btn-hide-all-nodes">
+        <span>🚫</span>
+        <span id="lbl-hide-all">Приховати всі</span>
+      </button>
+    </div>
+    <div class="nodes-panel-items" id="nodes-panel-items">
+      <!-- Dynamically generated rows -->
+    </div>
+  </div>
+
+  <!-- Expanded Node View Modal (Rozshyrenyj perehliad elementu) -->
+  <div id="node-expanded-modal">
+    <div class="expanded-modal-box">
+      <div class="expanded-modal-header">
+        <div>
+          <div class="panel-tag" id="exp-modal-badge">Вузол #1</div>
+          <h2 class="expanded-modal-title" id="exp-modal-title">Назва вузла</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="btn btn-sm" id="exp-modal-vis-btn" title="Видимість на 3D сцені">
+            <span id="exp-vis-icon">👁️</span>
+            <span id="exp-vis-label">Видимий</span>
+          </button>
+          <button class="btn btn-sm btn-emerald" id="exp-modal-fly-btn" title="Фокусувати камеру на вузлі">
+            <span>🎯</span>
+            <span id="exp-fly-label">Фокус</span>
+          </button>
+          <button class="panel-close" id="exp-modal-close-btn">&times;</button>
+        </div>
+      </div>
+      <div class="expanded-modal-body" id="exp-modal-body">
+        <!-- Rendered rich markdown formatted description -->
+      </div>
+      <div class="expanded-modal-footer">
+        <button class="btn" id="exp-btn-prev">
+          <span id="exp-lbl-prev">&larr; Попередній</span>
+        </button>
+        <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;" id="exp-step-counter">1 / 5</span>
+        <button class="btn btn-emerald" id="exp-btn-next">
+          <span id="exp-lbl-next">Наступний &rarr;</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom quick tour bar -->
+  <div id="tour-bar"></div>
+
+  <!-- Bottom mouse interaction hint bar -->
+  <div id="controls-hint-bar">
+    <div class="hint-item">
+      <span class="hint-key" id="hint-rot-key">ЛКМ:</span>
+      <span id="hint-rot-val">обертання</span>
+    </div>
+    <div class="hint-item">
+      <span class="hint-key" id="hint-pan-key">Скрол-клік / ПКМ:</span>
+      <span id="hint-pan-val">переміщення</span>
+    </div>
+    <div class="hint-item">
+      <span class="hint-key" id="hint-zoom-key">Скрол:</span>
+      <span id="hint-zoom-val">масштабування</span>
+    </div>
+  </div>
+
+  <!-- Loading indicator with progress bar -->
+  <div id="loader">
+    <div class="spinner"></div>
+    <span id="loader-text">Завантаження 3D моделі (plant_cell_organelles-compressed.glb)...</span>
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="loader-progress-bar"></div>
+    </div>
+  </div>
+
+  <!-- Fallback modal if local browser protocol blocks fetch -->
+  <div id="fallback-file-modal">
+    <div class="modal-box">
+      <h3 id="fb-modal-title">Виберіть файл моделі</h3>
+      <p id="fb-modal-desc">
+        Файл <strong>plant_cell_organelles-compressed.glb</strong> повинен знаходитись поруч із цією HTML-сторінкою на сервері.<br>
+        Якщо ви відкрили сторінку локально без веб-сервера через протокол <code>file://</code>, вкажіть цей файл з диска:
+      </p>
+      <input type="file" id="local-file-picker" accept=".glb,.gltf" style="display: none;">
+      <button class="btn btn-emerald" style="width: 100%; justify-content: center; padding: 10px; font-weight: 600;" onclick="document.getElementById('local-file-picker').click();">
+        <span id="fb-modal-btn">Обрати plant_cell_organelles-compressed.glb</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Attribution & Help Question Mark Button (Bottom-Right) -->
+  <button id="btn-attribution-modal" title="Атрибути моделі, авторство та довідка / Model attribution & help">
+    ?
+  </button>
+
+  <!-- Attribution & Help Modal -->
+  <div id="attribution-modal">
+    <div class="attribution-card">
+      <div class="attribution-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">ℹ️</span>
+          <h3 id="attr-modal-title" style="font-size: 15px; font-weight: 700; color: var(--text-primary);">
+            Атрибути моделі та довідка
+          </h3>
+        </div>
+        <button id="attr-modal-close" class="panel-close">&times;</button>
+      </div>
+      
+      <div class="attribution-body">
+        <!-- Model Attribution Section -->
+        <div class="attr-section">
+          <div class="attr-section-title" id="attr-sec-model-title">Інформація про 3D модель</div>
+          <div class="attr-item">
+            <span class="attr-label" id="attr-lbl-author">Автор / Правовласник:</span>
+            <span class="attr-value" id="attr-val-author"></span>
+          </div>
+          <div class="attr-item">
+            <span class="attr-label" id="attr-lbl-license">Ліцензія:</span>
+            <span class="attr-value" id="attr-val-license"></span>
+          </div>
+          <div class="attr-item" id="attr-row-source">
+            <span class="attr-label" id="attr-lbl-source">Джерело / Посилання:</span>
+            <span class="attr-value" id="attr-val-source"></span>
+          </div>
+        </div>
+
+        <!-- Controls & Navigation Guide Section -->
+        <div class="attr-section">
+          <div class="attr-section-title" id="attr-sec-nav-title">Керування та навігація</div>
+          <div class="guide-grid">
+            <div class="guide-item">
+              <span class="guide-key">ЛКМ</span>
+              <span class="guide-desc" id="guide-rot">Обертання моделі в 3D просторі</span>
+            </div>
+            <div class="guide-item">
+              <span class="guide-key">Скрол-клік / ПКМ</span>
+              <span class="guide-desc" id="guide-pan">Панорамування (переміщення вгору, вниз, вліво, вправо)</span>
+            </div>
+            <div class="guide-item">
+              <span class="guide-key">Скрол</span>
+              <span class="guide-desc" id="guide-zoom">Плавне масштабування (зум) без обмежень</span>
+            </div>
+            <div class="guide-item">
+              <span class="guide-key">Мітка на моделі</span>
+              <span class="guide-desc" id="guide-hotspot">Плавний переліт камери до обраного вузла</span>
+            </div>
+            <div class="guide-item">
+              <span class="guide-key">📍 Мітки</span>
+              <span class="guide-desc" id="guide-pins">Увімкнення та вимкнення цифрових міток над моделлю</span>
+            </div>
+            <div class="guide-item">
+              <span class="guide-key">🏷️ Підписи</span>
+              <span class="guide-desc" id="guide-labels">Увімкнення та вимкнення текстових підписів деталей біля міток</span>
+            </div>
+            <div class="guide-item">
+              <span class="guide-key">📑 Вузли</span>
+              <span class="guide-desc" id="guide-nodes-list">Список вузлів та перемикання їх видимості на моделі</span>
+            </div>
+            <div class="guide-item">
+              <span class="guide-key">🔍 Розгорнути</span>
+              <span class="guide-desc" id="guide-expand">Розширений перегляд із повним форматованим описом</span>
+            </div>
+            <div class="guide-item">
+              <span class="guide-key">⊞ Сітка</span>
+              <span class="guide-desc" id="guide-grid">Увімкнення та вимкнення координатної сітки</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="attribution-footer">
+        <button class="btn btn-emerald" id="attr-modal-ok-btn" style="width: 100%; justify-content: center; padding: 9px; font-weight: 600;">
+          <span id="attr-btn-close-lbl">Зрозуміло</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      titleUa: "plant cell organelles compressed",
+      titleEn: "plant cell organelles compressed",
+      subtitleUa: "Обертайте модель та натискайте на мітки для детального огляду вузлів",
+      subtitleEn: "Rotate the model and click hotspots to inspect component details",
+      modelFileName: "plant_cell_organelles-compressed.glb",
+      modelDataUri: null,
+      hotspots: [{"id":"spot-1789575748176","number":1,"title":"Вакуоля","description":"**Вакуоля** — це велика одномембранна органела рослинної клітини, заповнена клітинним соком, яка займає від 30% до 90% її об'єму. \n## Будова вакуолі\n• Тонопласт — спеціальна мембрана, що відокремлює вакуолю від цитоплазми та контролює перенос речовин.\n• Клітинний сік — водянистий розчин, що містить воду, мінеральні солі, цукри, органічні кислоти, пігменти (наприклад, антоціани) та запасні або токсичні речовини.\n## Основні функції\n• Підтримання тургору: Створює внутрішньоклітинний тиск, який тримає форму рослини пружною та вертикальною.\n• Зберігання речовин: Накопичує поживні речовини, воду та кінцеві продукти обміну (токсини чи відходи), захищаючи інші частини клітини.\n• Ростання клітини: Забезпечує швидке збільшення розмірів клітини завдяки поглинанню води без витрат енергії на синтез нової цитоплазми.\n• Травна функція: Завдяки ферментам подібна до лізосом, розщеплює власні старі компоненти клітини.\n\n\n","position":[-38.9976,83.8957,4.2991],"normal":[0.1337,0.8961,0.4232],"cameraPosition":[-234.05651618862643,319.48818141226724,51.231892815630644],"cameraTarget":[-14.118931402842232,16.987335652408962,11.963557347208381],"descriptionEn":""},{"id":"spot-1789575751209","number":2,"title":"Ядро","description":"Ядро — це головна двомембранна органела еукаріотичної клітини (включаючи рослинну), яка містить генетичний матеріал (ДНК) та керує всіма процесами життєдіяльності клітини.\n## Будова ядра\n• Ядерна оболонка (каріолема): Складається з двох мембран (зовнішньої та внутрішньої). Зовнішня мембрана переходить у шорстку ендоплазматичну сітку.\n• ЕЯдерні пори: Спеціальні отвори в оболонці, через які відбувається обмін речовинами між ядром та цитоплазмою (наприклад, вихід молекул іРНК).\n• Каріоплазма (ядерний сік): Напіврідке внутрішнє середовище ядра, в якому містяться всі інші структури.\n• Хроматин: Комплекс ДНК та білків. Під час поділу клітини хроматин ущільнюється, формуючи хромосоми.\n• Ядерце: Щільне округле тіло всередині ядра, де відбувається синтез рРНК і збирання субодиниць рибосом.\n## Основні функції\n• Збереження інформації: Надійно зберігає спадкову інформацію організму у формі ДНК.\n• Передача інформації: Забезпечує подвоєння ДНК (реплікацію) для передачі генетичного коду наступним поколінням клітин під час поділу.\n• Регуляція процесів: Контролює синтез білків, надсилаючи інструкції (іРНК) у цитоплазму, чим регулює обмін речовин і ріст всієї клітини.\n\n\n\n","position":[15.2098,70.2641,88.834],"normal":[-0.1283,0.983,-0.1315],"cameraPosition":[-44.07451381284512,204.30590920510735,166.78646263398656],"cameraTarget":[39.99080428965936,15.072531921412853,104.92577757287151],"descriptionEn":""},{"id":"spot-1789575755544","number":3,"title":"Шорстка ендоплазматична сітка","description":"Шорстка ендоплазматична сітка (шорстка ЕПС, або гранулярна ЕПС) — це система з'єднаних між собою мембранних канальців, цистерн і мішечків, поверхня якої вкрита рибосомами, що надають їй характерного «шорсткого» вигляду.\n## Функції шорсткої ЕПС\n• Синтез білків: Рибосоми на її поверхні створюють білки, які призначені для виведення з клітини (секреції), вбудовування в клітинну мембрану або для використання всередині лізосом чи вакуолей.\n• Транспорт речовин: Вона працює як «внутрішньоклітинний конвеєр», переміщуючи новосинтезовані білки всередину своїх канальців.\n• Модифікація білків (фолдинг): Всередині цистерн ЕПС білки набувають своєї правильної тривимірної форми (згортаються) та можуть сполучатися з вуглеводами, утворюючи глікопротеїни.\n• Формування транспортних міхурців: Модифіковані білки пакуються в маленькі мембранні пухирці (везикули) і відправляються до комплексу Гольджі для подальшого сортування.\n\n","position":[-32.7099,46.5737,99.4003],"normal":[-0.9774,0.0222,0.2101],"cameraPosition":[25.190857752181365,200.2319207907041,269.18925107920535],"cameraTarget":[43.023011447591195,0.3994747107948672,54.29765253567955],"descriptionEn":""},{"id":"spot-1789575773069","number":4,"title":"Рибосоми","description":"Рибосоми — це найдрібніші немембранні органели клітини, які складаються з РНК та білків і відповідають за біосинтез білка (трансляцію).\n## Будова рибосоми\nКожна рибосома складається з двох частин, які з'єднуються разом лише під час роботи:\n• Велика субодиниця: Містить каталітичний центр для зшивання амінокислот у пептидний ланцюг.\n• Мала субодиниця: Відповідає за зчитування коду з матричної РНК (мРНК).\n## Функція\nПроцес створення білка називається трансляцією:\n1. Мала субодиниця прикріплюється до нитки мРНК (копії генетичної інструкції з ядра).\n2. Транспортні РНК (тРНК) приносять до рибосоми потрібні амінокислоти.\n3. Рибосома зчитує код мРНК і крок за кроком з'єднує амінокислоти у довгий ланцюжок — майбутній білок.\n\n\n\n","position":[30.8432,47.8507,146.3799],"normal":[-0.4248,0.6193,0.6603],"cameraPosition":[-21.366380708467965,100.21904347963226,175.14815033366284],"cameraTarget":[40.80081929153294,2.92724347963389,129.40145033366036],"descriptionEn":""},{"id":"spot-1789575782891","number":5,"title":"Клітинна мембрана","description":"Клітинна мембрана (плазматична мембрана, або плазмалема) — це тонка напівпроникна бар'єрна структура, яка оточує цитоплазму клітини та регулює обмін речовинами з навколишнім середовищем.У рослинних клітинах вона знаходиться відразу під жорсткою клітинною стінкою з целюлози.\n## Будова мембрани (Рідинно-мозаїчна модель)\nМембрана не є статичною, вона нагадує рухливу рідину, в якій плавають білки.\n• Біліпідний шар: Складається з фосфоліпідів. Вони мають гідрофільні «головки» (повернуті назовні, до води) та гідрофобні «хвости» (заховані всередину). Цей шар утворює основний непроникний бар'єр.\n• Вбудовані білки:\n1. Інтегральні (пронизують мембрану наскрізь) — утворюють іонні канали та насоси для транспорту речовин.\n2. Периферійні (лежать на поверхні) — часто виконують роль ферментів або кріпляться до цитоскелета.\n• Вуглеводний комплекс (глікокалікс/глікопротеїни): Короткі ланцюжки вуглеводів на зовнішній поверхні. Вони працюють як «антени» або «паспорти» клітини для розпізнавання інших клітин та молекул.\n## Основні функції\n• Бар'єрна (захисна): Відокремлює внутрішній вміст клітини від зовнішнього середовища.\n• Вибіркова проникність: Пропускає всередину клітини лише потрібні речовини (воду, кисень, поживні елементи) і виводить назовні відходи, затримуючи шкідливі сполуки.\n• Транспортна: Забезпечує перенесення речовин за допомогою пасивного транспорту (дифузія, осмос без витрат енергії) або активного транспорту (через білкові насоси з витратою енергії АТФ).\n• Рецепторна (сигнальна): Сприймає сигнали з навколишнього середовища (наприклад, гормони) за допомогою білків-рецепторів і передає їх всередину клітини.\n\n\n\n\n","position":[-43.9313,48.4589,176.2067],"normal":[-0.5647,0.0317,0.8247],"cameraPosition":[-193.8894503304289,337.27841317374265,254.03441708946536],"cameraTarget":[19.019949669571055,4.075013173742685,97.36171708946539],"descriptionEn":""},{"id":"spot-1789575790535","number":6,"title":"Цитоплазма","description":"Цитоплазма — це внутрішнє напіврідке середовище клітини, що міститься між клітинною мембраною та ядром, у якому розташовані всі органели і відбуваються головні хімічні процеси клітини.\nВона об'єднує всі структури клітини в єдине ціле та забезпечує їхню взаємодію.\n## Склад цитоплазми\n• Гіалоплазма (або цитозоль): Рідка частина цитоплазми (густий розчин, що на 80% складається з води, а також містить білки, амінокислоти, цукри та іони). Вона може змінювати свій стан від рідкого (золь) до желеподібного (гель).\n• Цитоскелет: Внутрішнє «риштовання» клітини, побудоване з білкових ниток (мікротрубочок і мікрофіламентів). Він підтримує форму клітини та забезпечує рух органел.\n• Включення: Тимчасові структури, які не є органелами (наприклад, краплі жиру, зерна крохмалю чи кристали солей), що відкладаються про запас.\n## Основні функції\n• Середовище для метаболізму: Тут проходять найважливіші біохімічні реакції, зокрема гліколіз (початковий етап розщеплення глюкози для отримання енергії).\n• Внутрішньоклітинний транспорт: Завдяки постійному руху цитоплазми (цей процес називається циклоз) поживні речовини, кисень та органели переміщуються туди, де вони найбільше потрібні.\n• Опора та зв'язок: Цитоскелет всередині цитоплазми фіксує органели у певних місцях та зв'язує їх між собою для злагодженої роботи.\n\n","position":[-118.8367,47.8203,2.9758],"normal":[0.0244,0.9997,-0.0002],"cameraPosition":[-236.8272,301.093,257.8531],"cameraTarget":[18.7198,14.2381,75.3393],"descriptionEn":""},{"id":"spot-1789575793814","number":7,"title":"Хлоропласти","description":"Хлоропласти — це великі двомембранні органели рослинних клітин (а також деяких водоростей), у яких відбувається процес фотосинтезу — перетворення енергії сонячного світла на хімічну енергію органічних речовин.\nСаме хлоропласти містять зелений пігмент хлорофіл, який надає рослинам їхнього кольору.\n## Будова хлоропласта\nХлоропласти мають складну внутрішню структуру, що оптимізована для вловлювання світла:\n• Зовнішня мембрана: Гладенька, має високу проникність для багатьох молекул.\n• Внутрішня мембрана: Менш проникна, утворює складки та внутрішні мембранні структури.\n• Строма: Напіврідка внутрішня речовина (аналог цитоплазми), де містяться ферменти, ДНК, РНК і рибосоми. Тут фіксується вуглекислий газ під час темнової фази фотосинтезу.\n• Тилакоїди: Сплющені мембранні мішечки, у мембрани яких вбудований хлорофіл. Саме тут відбувається світлова фаза фотосинтезу.\n• Грани: Стопки тилакоїдів, що нагадують стовпчики монет. Вони з'єднані між собою видовженими мембранними канальцями — ламелами.\n## Основні функції\n• Фотосинтез: Головна функція. Хлоропласти поглинають воду (H₂O) та вуглекислий газ (CO₂), і за допомогою енергії сонця синтезують глюкозу (C₆H₁₂O₆), виділяючи кисень (O₂) як побічний продукт.\n• Синтез власних білків та ліпідів: Завдяки власній ДНК і рибосомам вони забезпечують себе багатьма необхідними компонентами.\n• Запасна функція: У стромі хлоропластів тимчасово відкладаються первинні зерна крохмалю, що утворилися під час фотосинтезу.\n\n\n","position":[-86.3329,37.2091,88.2255],"normal":[-0.5421,0.6786,0.4956],"cameraPosition":[-173.9789736512827,111.57861148242306,159.70281930371968],"cameraTarget":[-1.0516369853197933,-2.275499888414419,59.93020748510373],"descriptionEn":""},{"id":"spot-1789575798615","number":8,"title":"Апарат Гольджі","description":"Апарат Гольджі (комплекс Гольджі) — це одномембранна органела еукаріотичної клітини, яка виконує роль «сортувального та пакувального центру».Сюди надходять речовини, синтезовані в ендоплазматичній сітці (ЕПС), де вони доопрацьовуються, сортуються і пакуються для подальшого транспорту.\n## Будова апарату Гольджі\nОрганела має специфічну форму і складається з таких елементів:\n• Диктіосома: Основна структурна одиниця, яка складається зі стопки сплюснутих мембранних мішечків — цистерн (зазвичай від 3 до 8 у стопці).\n• Мембранні канальці: Розгалужена система, що відходить від цистерн.\n• Транспортні міхурці (везикули): Маленькі мембранні пухирці, які відбруньковуються від канальців та цистерн, щоб переносити речовини далі.\n## Основні функції\n• Модифікація речовин: «Доведення до готовності» білків та ліпідів, що надійшли з ЕПС (наприклад, приєднання до них залишків цукрів з утворенням глікопротеїнів).\n• Сортування та пакування: Розподіл молекул за призначенням і пакування їх у транспортні везикули.\n• Секреція (виведення): Направлення речовин до клітинної мембрани для виведення назовні (екзоцитоз). Це особливо важливо для клітин, що виділяють ферменти чи гормони.\n• Утворення інших структур: В апараті Гольджі формуються лізосоми (у тварин) та пероксисоми.\n• Участь у побудові клітинної стінки (у рослин): Саме тут синтезуються складні вуглеводи (пектини, геміцелюлоза), які везикулами транспортуються до місця поділу клітини для побудови нової клітинної стінки.\n\n\n","position":[90.4255,82.4192,34.4874],"normal":[-0.988,-0.0436,0.1481],"cameraPosition":[68.1562983170466,170.857218626129,129.5884901797324],"cameraTarget":[104.00632212912018,94.55818333070094,59.22886538394499],"descriptionEn":""},{"id":"spot-1789575806510","number":9,"title":"Мітохондрії ","description":"Мітохондрії — це двомембранні органели еукаріотичних клітин, які виконують роль «енергетичних станцій». Вони забезпечують клітину енергією у вигляді молекул АТФ (аденозинтрифосфату) шляхом кисневого дихання.Як і хлоропласти, мітохондрії є напівавтономними органелами. Вони мають власну ДНК і рибосоми, тому здатні самостійно ділитися.\n## Будова мітохондрії\n• Зовнішня мембрана: Гладенька, захисна, має високу проникність для дрібних молекул та іонів.\n• Внутрішня мембрана: Менш проникна, утворює численні складки — кристи. Вони значно збільшують площу поверхні, на якій розташовані ферменти для синтезу АТФ (АТФ-синтази).\n• Міжмембранний простір: Вузька щілина між зовнішньою та внутрішньою мембранами, яка відіграє ключову роль у створенні протонного градієнта.\n• Матрикс: Напіврідкий внутрішній вміст мітохондрії (аналог цитоплазми). Тут містяться кільцева ДНК, РНК, рибосоми (70S типу, як у бактерій) та ферменти для циклу Кребса.\n## Основні функції\n• Клітинне дихання (окиснення речовин): Органічні сполуки (переважно глюкоза) розщеплюються за участю кисню, виділяючи енергію, воду (H₂O) та вуглекислий газ (CO₂).\n• Синтез АТФ: Перетворення енергії, вивільненої під час дихання, на універсальну хімічну енергію АТФ, яку клітина використовує для росту, руху та транспорту.\n• Участь у регуляції метаболізму: Накопичують іони Кальцію (Ca²⁺) та беруть участь у запуску програми самознищення клітини (апоптозу), якщо вона пошкоджена.\n\n","position":[105.1779,56.7643,90.0192],"normal":[-0.6039,0.7894,-0.1104],"cameraPosition":[215.21869319090948,175.25329494926797,126.7219857353139],"cameraTarget":[56.71683057091436,15.552288374707086,79.88247971588332],"descriptionEn":""},{"id":"spot-1789575809732","number":10,"title":"Центріолі","description":"Центріолі — це циліндричні клітинні структури, побудовані переважно з білка тубуліну. Вони відіграють ключову роль в організації веретена поділу та завершенні цитокінезу (процесу поділу цитоплазми материнської клітини між двома дочірніми).Проте, оскільки ми детально розглядаємо саме рослинну клітину, тут є дуже важливий нюанс:\n> Важлива особливість для рослин: Центріолі (які разом утворюють клітинний центр — центросому) відсутні у клітинах вищих рослин (квіткових, хвойних, папоротей). Веретено поділу під час мітозу в них формується без участі центріолей, за допомогою інших структур організації мікротрубочок. Центріолі є лише у тваринних клітинах, клітинах грибів, а серед рослин — тільки у нижчих (наприклад, у деяких зелених водоростей) та в чоловічих статевих клітинах (сперматозоїдах) мохів і папоротей.\n## Будова центріолі\n• Основа структури: Складається з 9 триплетів мікротрубочок (усього 27 мікротрубочок), розташованих по колу, утворюючи порожнистий циліндр.\n• Організація: Зазвичай у клітині вони розташовані парами (диплосома) під прямим кутом (90°) одна до одної.\n## Основні функції (у клітинах, де вони є)\n• Організація веретена поділу: Під час поділу клітини (мітозу чи мейозу) центріолі розходяться до полюсів і забезпечують точне прикріплення та розходження хромосом.\n• Формування війок і джгутиків: Вони слугують основою (базальними тільцями) для виростів клітини, які забезпечують рух.\n\n\n\n","position":[6.8193,68.7155,-97.1408],"normal":[0.3641,0,0.9314],"cameraPosition":[-72.53511991907268,182.7632979413149,-275.6871702568017],"cameraTarget":[18.7198,14.2381,75.3393],"descriptionEn":""},{"id":"spot-1789575824839","number":11,"title":"Ядерце","description":"Ядерце (нуклеола) — це щільне, округле, немембранне тільце, розташоване всередині ядра еукаріотичної клітини.\nЯдерце не є постійною органелою; воно формується навколо спеціальних ділянок хромосом і зникає під час поділу клітини (у профазі мітозу), а після поділу (в телофазі) утворюється знову.\n## Будова ядерця\nОскільки ядерце не має власної мембрани, воно знаходиться у безпосередньому контакті з каріоплазмою (ядерним соком). Його структура включає:\n• Ядерцеві організатори: Ділянки хромосом, які містять гени, що кодують рибосомальну РНК (рРНК).\n• Фібрилярний центр: Внутрішня частина, де відбувається активне зчитування (транскрипція) генової інструкції та синтез молекул рРНК.\n• Гранулярний компонент: Зовнішня частина, що складається з дозріваючих субодиниць рибосом (суміші рРНК та білків, що надійшли з цитоплазми).\n## Головна функція\n• Утворення рибосом: Це єдина, але життєво важлива функція ядерця. Воно працює як «фабрика з виробництва фабрик білка». Тут синтезується рРНК, об'єднується з білками і збирається у велику та малу субодиниці рибосом. Сформовані субодиниці потім виходять через ядерні пори в цитоплазму, де розпочинають біосинтез білків.\n\n\n\n","position":[20.0693,50.0982,96.7009],"normal":[-0.0319,0.9901,0.1364],"cameraPosition":[17.7898,93.1905,141.8699],"cameraTarget":[18.7198,14.2381,75.3393],"descriptionEn":""},{"id":"spot-1789575831579","number":12,"title":"Хроматин","description":"Хроматин — це нуклеопротеїдний комплекс, що складається з ДНК, РНК та специфічних білків (переважно гістонів), який міститься всередині ядра клітини.\nПростіше кажучи, хроматин — це деконденсована (розкручена) форма хромосом. У такому стані ДНК перебуває протягом більшої частини життя клітини (в інтерфазі), коли клітина не ділиться, а активно працює.\n## Особливості хроматину в рослинній клітині\nЗа хімічним складом та функціями хроматин рослин подібний до хроматину тварин чи грибів, але має свої особливості регуляції:\n• Епігенетичний контроль: Рослини не можуть втекти від несприятливих умов (холоду, посухи, шкідників). Тому їхній хроматин має дуже гнучку систему хімічних модифікацій (метилювання ДНК, модифікація гістонів). Це дозволяє рослині швидко «вмикати» або «вимикати» потрібні гени для адаптації до стресу, не змінюючи саму послідовність ДНК.\n• Рівень плоїдності (ендоредуплікація): У багатьох рослинних клітинах (наприклад, у клітинах дозріваючих плодів, пелюсток або трихом) хроматин може багаторазово подвоюватися без поділу самої клітини. Це призводить к збільшенню кількості ДНК (поліплоїдії), що допомагає клітині рости до гігантських розмірів і активно синтезувати речовини.\n\n","position":[31.495,58.2448,111.5997],"normal":[-0.2638,0.3322,0.9056],"cameraPosition":[18.709,93.3122,141.73179999999996],"cameraTarget":[18.7198,14.2381,75.3393],"descriptionEn":""}],
+      settings: {"renderMode":"pbr","environmentPreset":"studio","exposure":0.6,"ambientIntensity":1,"directLightIntensity":1,"toneMapping":"aces","showGrid":true,"gridSize":20,"showAxes":false,"showBoundingBox":false,"castShadows":true,"autoRotate":false,"autoRotateSpeed":1.5,"backgroundColor":"#09090b","transparentBackground":false,"fov":45,"initialCameraPosition":[-245.67912133119333,394.6664455596447,212.85371720320606],"initialCameraTarget":[-6.114177740909224,17.812742026611556,33.989073792849375]},
+      defaultLang: "ua",
+      defaultTheme: "dark",
+      author: "CVallance",
+      license: "CC BY 4.0",
+      sourceUrl: "https://sketchfab.com/3d-models/plant-cell-organelles-e61e7bdf8c8449a583b364f05e70289b",
+      defaultShowHotspots: true,
+      defaultShowLabels: false,
+      enableAnimations: false,
+      defaultAnimationIndex: 0,
+      autoPlayAnimation: true,
+      initialCameraPosition: [-245.67912133119333,394.6664455596447,212.85371720320606],
+      initialCameraTarget: [-6.114177740909224,17.812742026611556,33.989073792849375]
+    };
+
+    // Bilingual Dictionary
+    const I18N = {
+      ua: {
+        themeTextLight: 'Світла',
+        themeTextDark: 'Темна',
+        resetCam: 'Скинути',
+        autoRotate: 'Обертання',
+        grid: 'Сітка',
+        gridToggleTitle: 'Увімкнути/вимкнути допоміжну сітку простору',
+        hotspots: 'Мітки',
+        hotspotsToggleTitle: 'Увімкнути/вимкнути цифрові мітки на моделі',
+        labels: 'Підписи',
+        labelsToggleTitle: 'Увімкнути/вимкнути текстові підписи деталей біля міток',
+        nodesList: 'Вузли',
+        nodesListTitle: 'Список вузлів та керування їх видимістю на моделі',
+        nodesPanelTitle: 'Вузли моделі',
+        showAll: 'Усі',
+        hideAll: 'Приховати всі',
+        expandNode: 'Розгорнути',
+        expandedView: 'Розширений перегляд вузла',
+        nodeVisible: 'Видимий на сцені',
+        nodeHidden: 'Прихований',
+        focusNode: 'Фокус',
+        animToggleTitle: 'Увімкнути/вимкнути панель анімацій моделі',
+        animLabel: 'Анімації',
+        animBadge: 'Анімація',
+        animPlay: 'Відтворити',
+        animPause: 'Пауза',
+        animNoClips: 'Немає анімацій',
+        part: 'Вузол',
+        prev: '← Попередній',
+        next: 'Наступний →',
+        stepOf: 'з',
+        hintRotKey: 'ЛКМ:',
+        hintRotVal: 'обертання',
+        hintPanKey: 'Скрол-клік / ПКМ:',
+        hintPanVal: 'переміщення (вгору/вниз, вліво/вправо)',
+        hintZoomKey: 'Скрол:',
+        hintZoomVal: 'зум',
+        loading: 'Завантаження 3D моделі',
+        loadingProgress: 'Завантаження',
+        fbTitle: 'Виберіть файл моделі',
+        fbDesc: 'Файл <strong>' + CONFIG.modelFileName + '</strong> повинен знаходитись поруч із цією HTML-сторінкою на сервері.<br>Якщо ви відкрили файл локально через <code>file://</code>, вкажіть його вручну:',
+        fbBtn: 'Обрати ' + CONFIG.modelFileName,
+        attrModalTitle: 'Атрибути моделі та довідка',
+        attrSecModelTitle: 'Інформація про 3D модель',
+        attrLblAuthor: 'Автор / Правовласник:',
+        attrLblLicense: 'Ліцензія:',
+        attrLblSource: 'Джерело / Посилання:',
+        attrUnspecified: 'Не вказано (Авторська робота або навчальна модель)',
+        attrSecNavTitle: 'Керування та навігація',
+        guideRot: 'Обертання моделі в 3D просторі',
+        guidePan: 'Панорамування (переміщення вгору, вниз, вліво, вправо)',
+        guideZoom: 'Плавне наближення та віддалення (зум)',
+        guideHotspot: 'Плавний переліт камери до обраного вузла',
+        guidePins: 'Увімкнення та вимкнення цифрових міток над моделлю',
+        guideLabels: 'Увімкнення та вимкнення текстових підписів деталей біля міток',
+        guideNodesList: 'Список вузлів та перемикання їх видимості на моделі',
+        guideExpand: 'Розширений перегляд із повним форматованим описом',
+        guideGrid: 'Увімкнення та вимкнення координатної сітки',
+        attrBtnClose: 'Зрозуміло'
+      },
+      en: {
+        themeTextLight: 'Light',
+        themeTextDark: 'Dark',
+        resetCam: 'Reset',
+        autoRotate: 'Auto-Rotate',
+        grid: 'Grid',
+        gridToggleTitle: 'Toggle 3D coordinate ground grid',
+        hotspots: 'Pins',
+        hotspotsToggleTitle: 'Toggle 3D annotation pins on model',
+        labels: 'Labels',
+        labelsToggleTitle: 'Toggle part labels beside pins',
+        nodesList: 'Nodes',
+        nodesListTitle: 'Model nodes list and individual visibility toggle',
+        nodesPanelTitle: 'Model Nodes',
+        showAll: 'Show All',
+        hideAll: 'Hide All',
+        expandNode: 'Expand',
+        expandedView: 'Expanded Node View',
+        nodeVisible: 'Visible on scene',
+        nodeHidden: 'Hidden',
+        focusNode: 'Focus',
+        animToggleTitle: 'Toggle model animations control bar',
+        animLabel: 'Animations',
+        animBadge: 'Animation',
+        animPlay: 'Play',
+        animPause: 'Pause',
+        animNoClips: 'No animations',
+        part: 'Part',
+        prev: '← Previous',
+        next: 'Next →',
+        stepOf: 'of',
+        hintRotKey: 'LMB:',
+        hintRotVal: 'Rotate',
+        hintPanKey: 'Scroll click / RMB:',
+        hintPanVal: 'Pan (Up/Down, Left/Right)',
+        hintZoomKey: 'Scroll:',
+        hintZoomVal: 'Zoom',
+        loading: 'Loading 3D Model',
+        loadingProgress: 'Loading',
+        fbTitle: 'Select Model File',
+        fbDesc: 'The file <strong>' + CONFIG.modelFileName + '</strong> must be located in the same directory on the server.<br>If opened locally via <code>file://</code>, please select it manually:',
+        fbBtn: 'Select ' + CONFIG.modelFileName,
+        attrModalTitle: 'Model Attribution & Help',
+        attrSecModelTitle: '3D Model Information',
+        attrLblAuthor: 'Author / Creator:',
+        attrLblLicense: 'License:',
+        attrLblSource: 'Source / Link:',
+        attrUnspecified: 'Unspecified (Original or educational model)',
+        attrSecNavTitle: 'Controls & Navigation',
+        guideRot: 'Rotate 3D model in scene',
+        guidePan: 'Pan camera (Up/Down, Left/Right)',
+        guideZoom: 'Smooth zoom in / zoom out',
+        guideHotspot: 'Smooth camera flight to selected node',
+        guidePins: 'Toggle 3D numbered annotation pins above model',
+        guideLabels: 'Toggle node name labels beside pins',
+        guideNodesList: 'Model nodes list and individual visibility toggle on model',
+        guideExpand: 'Expanded node view with full formatted description',
+        guideGrid: 'Toggle ground coordinate grid',
+        attrBtnClose: 'Got it'
+      }
+    };
+
+    let currentLang = CONFIG.defaultLang || 'ua';
+    let currentTheme = CONFIG.defaultTheme || 'dark';
+
+    let scene, camera, renderer, controls;
+    let modelRoot = null;
+    let activeHotspotIndex = -1;
+    let isAutoRotating = false;
+    let gridHelper = null;
+    let shadowPlane = null;
+    let isGridVisible = CONFIG.settings.showGrid !== false;
+    let isHotspotsVisible = CONFIG.defaultShowHotspots !== false;
+    let isLabelsVisible = CONFIG.defaultShowLabels !== false;
+
+    // Lighting variables
+    let keyLight = null;
+    let fillLight = null;
+    let backLight = null;
+    let ambientLight = null;
+    let hemiLight = null;
+
+    // Initial camera tracking
+    let initialCamPos = new THREE.Vector3(3, 3, 3);
+    let initialCamTarget = new THREE.Vector3(0, 0, 0);
+
+    // Node visibility management
+    const hiddenNodeIndices = new Set();
+    let isNodesPanelVisible = false;
+
+    // Animation variables
+    let mixer = null;
+    let animationClips = [];
+    let currentAction = null;
+    let currentClipIndex = CONFIG.defaultAnimationIndex || 0;
+    let isAnimPlaying = CONFIG.autoPlayAnimation !== false;
+    let animSpeed = 1.0;
+    let clock = new THREE.Clock();
+    let isAnimBarVisible = false;
+
+    // Smooth camera fly
+    let isFlying = false;
+    let flyStartPos = new THREE.Vector3();
+    let flyEndPos = new THREE.Vector3();
+    let flyStartTarget = new THREE.Vector3();
+    let flyEndTarget = new THREE.Vector3();
+    let flyStartTime = 0;
+    const flyDuration = 900;
+
+    const container = document.getElementById('viewport-container');
+    const canvas = document.getElementById('webgl-canvas');
+    const hotspotsLayer = document.getElementById('hotspots-layer');
+    const infoPanel = document.getElementById('info-panel');
+    const panelTitle = document.getElementById('panel-title');
+    const panelBadge = document.getElementById('panel-badge');
+    const panelBody = document.getElementById('panel-body');
+    const stepCounter = document.getElementById('tour-step-counter');
+    const tourBar = document.getElementById('tour-bar');
+    const nodesListPanel = document.getElementById('nodes-list-panel');
+    const nodeExpandedModal = document.getElementById('node-expanded-modal');
+    const loaderOverlay = document.getElementById('loader');
+    const loaderProgressBar = document.getElementById('loader-progress-bar');
+    const fallbackModal = document.getElementById('fallback-file-modal');
+
+    // 1. Init Three.js Environment
+    function init() {
+      scene = new THREE.Scene();
+      const w = container.clientWidth || window.innerWidth;
+      const h = container.clientHeight || window.innerHeight;
+
+      camera = new THREE.PerspectiveCamera(CONFIG.settings.fov || 45, w / h, 0.05, 500000);
+      camera.position.set(3, 3, 3);
+
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: true,
+        logarithmicDepthBuffer: true,
+        powerPreference: 'high-performance'
+      });
+      renderer.setSize(w, h);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputEncoding = THREE.sRGBEncoding;
+
+      // Tone Mapping
+      const tmType = CONFIG.settings.toneMapping || 'aces';
+      if (tmType === 'aces') renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      else if (tmType === 'neutral') renderer.toneMapping = THREE.LinearToneMapping;
+      else if (tmType === 'reinhard') renderer.toneMapping = THREE.ReinhardToneMapping;
+      else if (tmType === 'linear') renderer.toneMapping = THREE.NoToneMapping;
+      else renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+      renderer.toneMappingExposure = CONFIG.settings.exposure !== undefined ? CONFIG.settings.exposure : 1.0;
+
+      // Studio Room Environment for realistic PBR reflections & materials
+      if (THREE.RoomEnvironment) {
+        try {
+          const pmremGenerator = new THREE.PMREMGenerator(renderer);
+          pmremGenerator.compileEquirectangularShader();
+          scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment()).texture;
+        } catch (e) {
+          console.warn('Could not initialize RoomEnvironment:', e);
+        }
+      }
+
+      // OrbitControls with free zoom and SCROLL CLICK PANNING
+      controls = new THREE.OrbitControls(camera, canvas);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.screenSpacePanning = true;
+      controls.minDistance = 0.001;
+      controls.maxDistance = Infinity;
+      
+      // Middle click (scroll click) pans the model up/down/left/right!
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.ROTATE,
+        MIDDLE: THREE.MOUSE.PAN,
+        RIGHT: THREE.MOUSE.PAN
+      };
+      controls.touches = {
+        ONE: THREE.TOUCH.ROTATE,
+        TWO: THREE.TOUCH.DOLLY_PAN
+      };
+
+      // Lighting Setup (Exact match with 3D Editor)
+      keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+      keyLight.name = 'sceneKeyLight';
+      keyLight.position.set(10, 15, 10);
+
+      fillLight = new THREE.DirectionalLight(0xdbeafe, 1.0);
+      fillLight.name = 'sceneFillLight';
+      fillLight.position.set(-10, 8, -8);
+
+      backLight = new THREE.DirectionalLight(0xffedd5, 0.8);
+      backLight.name = 'sceneBackLight';
+      backLight.position.set(0, -10, -10);
+
+      ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+      ambientLight.name = 'sceneAmbient';
+
+      hemiLight = new THREE.HemisphereLight(0xffffff, 0x27272a, 0.65);
+      hemiLight.name = 'sceneHemi';
+      hemiLight.position.set(0, 60, 0);
+
+      scene.add(ambientLight);
+      scene.add(hemiLight);
+      scene.add(keyLight);
+      scene.add(fillLight);
+      scene.add(backLight);
+
+      if (CONFIG.settings.castShadows) {
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.width = 2048;
+        keyLight.shadow.mapSize.height = 2048;
+        keyLight.shadow.bias = -0.0001;
+        keyLight.shadow.normalBias = 0.02;
+      }
+
+      applyLightingPreset();
+
+      // Floor Shadow Catcher & Grid
+      if (CONFIG.settings.castShadows) {
+        const planeGeo = new THREE.PlaneGeometry(200, 200);
+        const shadowMat = new THREE.ShadowMaterial({ opacity: 0.35 });
+        shadowPlane = new THREE.Mesh(planeGeo, shadowMat);
+        shadowPlane.rotation.x = -Math.PI / 2;
+        shadowPlane.position.y = 0;
+        shadowPlane.receiveShadow = true;
+        scene.add(shadowPlane);
+      }
+
+      // 3D Coordinate Grid
+      gridHelper = new THREE.GridHelper(30, 60, 0x10b981, 0x3f3f46);
+      gridHelper.position.y = 0;
+      gridHelper.visible = isGridVisible;
+      scene.add(gridHelper);
+
+      applyThemeColors(currentTheme);
+
+      // Listeners
+      window.addEventListener('resize', onWindowResize);
+
+      document.getElementById('btn-reset-cam').addEventListener('click', resetCamera);
+      document.getElementById('btn-autorotate').addEventListener('click', toggleAutoRotate);
+
+      const btnHotspots = document.getElementById('btn-hotspots-toggle');
+      if (btnHotspots) {
+        btnHotspots.addEventListener('click', toggleHotspots);
+        btnHotspots.classList.toggle('btn-emerald', isHotspotsVisible);
+      }
+      if (hotspotsLayer) {
+        hotspotsLayer.style.display = isHotspotsVisible ? 'block' : 'none';
+      }
+
+      const btnLabels = document.getElementById('btn-labels-toggle');
+      if (btnLabels) {
+        btnLabels.addEventListener('click', toggleLabels);
+        btnLabels.classList.toggle('btn-emerald', isLabelsVisible);
+      }
+      document.body.classList.toggle('show-labels', isLabelsVisible);
+
+      document.getElementById('btn-grid-toggle').addEventListener('click', toggleGrid);
+      document.getElementById('btn-grid-toggle').classList.toggle('btn-emerald', isGridVisible);
+      document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
+      document.getElementById('btn-anim-toggle').addEventListener('click', toggleAnimBar);
+      document.getElementById('anim-btn-play').addEventListener('click', toggleAnimPlay);
+      document.getElementById('anim-clip-select').addEventListener('change', (e) => {
+        switchAnimation(parseInt(e.target.value, 10));
+      });
+      document.getElementById('anim-speed-btn').addEventListener('click', cycleAnimSpeed);
+      document.getElementById('btn-theme-toggle').addEventListener('click', toggleTheme);
+      document.getElementById('btn-lang-toggle').addEventListener('click', toggleLanguage);
+      document.getElementById('panel-close-btn').addEventListener('click', () => infoPanel.classList.remove('visible'));
+      document.getElementById('btn-prev-spot').addEventListener('click', prevHotspot);
+      document.getElementById('btn-next-spot').addEventListener('click', nextHotspot);
+
+      // Nodes List Panel Listeners
+      const btnNodesList = document.getElementById('btn-nodes-list');
+      if (btnNodesList) {
+        btnNodesList.addEventListener('click', toggleNodesPanel);
+      }
+      const btnCloseNodesPanel = document.getElementById('btn-close-nodes-panel');
+      if (btnCloseNodesPanel) {
+        btnCloseNodesPanel.addEventListener('click', toggleNodesPanel);
+      }
+      const btnShowAllNodes = document.getElementById('btn-show-all-nodes');
+      if (btnShowAllNodes) {
+        btnShowAllNodes.addEventListener('click', showAllNodes);
+      }
+      const btnHideAllNodes = document.getElementById('btn-hide-all-nodes');
+      if (btnHideAllNodes) {
+        btnHideAllNodes.addEventListener('click', hideAllNodes);
+      }
+
+      // Info Panel extra buttons (visibility & expand)
+      const btnPanelToggleVis = document.getElementById('btn-panel-toggle-vis');
+      if (btnPanelToggleVis) {
+        btnPanelToggleVis.addEventListener('click', () => {
+          if (activeHotspotIndex >= 0) toggleNodeVisibility(activeHotspotIndex);
+        });
+      }
+      const btnExpandNode = document.getElementById('btn-expand-node');
+      if (btnExpandNode) {
+        btnExpandNode.addEventListener('click', () => openExpandedModal(activeHotspotIndex));
+      }
+      const btnOpenExpModal = document.getElementById('btn-open-expanded-modal');
+      if (btnOpenExpModal) {
+        btnOpenExpModal.addEventListener('click', () => openExpandedModal(activeHotspotIndex));
+      }
+
+      // Expanded Node View Modal Listeners
+      const expModalCloseBtn = document.getElementById('exp-modal-close-btn');
+      if (expModalCloseBtn) {
+        expModalCloseBtn.addEventListener('click', closeExpandedModal);
+      }
+      const expModalVisBtn = document.getElementById('exp-modal-vis-btn');
+      if (expModalVisBtn) {
+        expModalVisBtn.addEventListener('click', () => {
+          if (activeHotspotIndex >= 0) {
+            toggleNodeVisibility(activeHotspotIndex);
+            updateExpModalVisButton(activeHotspotIndex);
+          }
+        });
+      }
+      const expModalFlyBtn = document.getElementById('exp-modal-fly-btn');
+      if (expModalFlyBtn) {
+        expModalFlyBtn.addEventListener('click', () => {
+          if (activeHotspotIndex >= 0 && CONFIG.hotspots && CONFIG.hotspots[activeHotspotIndex]) {
+            const spot = CONFIG.hotspots[activeHotspotIndex];
+            if (spot.cameraPosition && spot.cameraTarget) {
+              flyTo(spot.cameraPosition, spot.cameraTarget);
+            }
+          }
+        });
+      }
+      const expBtnPrev = document.getElementById('exp-btn-prev');
+      if (expBtnPrev) {
+        expBtnPrev.addEventListener('click', () => {
+          prevHotspot();
+          openExpandedModal(activeHotspotIndex);
+        });
+      }
+      const expBtnNext = document.getElementById('exp-btn-next');
+      if (expBtnNext) {
+        expBtnNext.addEventListener('click', () => {
+          nextHotspot();
+          openExpandedModal(activeHotspotIndex);
+        });
+      }
+      if (nodeExpandedModal) {
+        nodeExpandedModal.addEventListener('click', (e) => {
+          if (e.target === nodeExpandedModal) closeExpandedModal();
+        });
+      }
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (nodeExpandedModal && nodeExpandedModal.classList.contains('visible')) {
+            closeExpandedModal();
+          } else if (isNodesPanelVisible) {
+            toggleNodesPanel();
+          }
+        } else if (nodeExpandedModal && nodeExpandedModal.classList.contains('visible')) {
+          if (e.key === 'ArrowLeft') {
+            prevHotspot();
+            openExpandedModal(activeHotspotIndex);
+          } else if (e.key === 'ArrowRight') {
+            nextHotspot();
+            openExpandedModal(activeHotspotIndex);
+          }
+        }
+      });
+
+      // Setup Model Attribution Modal
+      setupAttributionModal();
+
+      // Drag and drop local file
+      window.addEventListener('dragover', (e) => e.preventDefault());
+      window.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const f = e.dataTransfer.files[0];
+        if (f) loadLocalModelFile(f);
+      });
+
+      document.getElementById('local-file-picker').addEventListener('change', (e) => {
+        const f = e.target.files[0];
+        if (f) loadLocalModelFile(f);
+      });
+
+      // Build bottom tour chips
+      buildTourBar();
+
+      // Build 3D hotspot DOM elements
+      buildHotspotDOMElements();
+
+      // Sync language labels
+      updateLanguageUI();
+
+      // Load 3D Model
+      loadDefaultModel();
+
+      // Run render loop
+      animate(performance.now());
+    }
+
+    // 2. Load Model Logic (From Server ./model.glb or Embedded DataURI)
+    function loadDefaultModel() {
+      const gltfLoader = new THREE.GLTFLoader();
+      const draco = new THREE.DRACOLoader();
+      draco.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+      gltfLoader.setDRACOLoader(draco);
+
+      // A. If 3D model is embedded as Base64 Data URI
+      if (CONFIG.modelDataUri) {
+        gltfLoader.load(
+          CONFIG.modelDataUri,
+          (gltf) => {
+            onModelLoadedSuccess(gltf.scene || gltf.scenes[0], gltf.animations);
+          },
+          undefined,
+          (err) => {
+            console.warn('Could not parse embedded model data URI, displaying selector modal.', err);
+            loaderOverlay.style.display = 'none';
+            fallbackModal.classList.add('visible');
+          }
+        );
+        return;
+      }
+
+      // B. Load separate GLB file from server with streaming progress bar
+      const path = './' + encodeURIComponent(CONFIG.modelFileName);
+      gltfLoader.load(
+        path,
+        (gltf) => {
+          onModelLoadedSuccess(gltf.scene || gltf.scenes[0], gltf.animations);
+        },
+        (xhr) => {
+          if (xhr.lengthComputable && xhr.total > 0) {
+            const pct = Math.round((xhr.loaded / xhr.total) * 100);
+            const loadedMb = (xhr.loaded / (1024 * 1024)).toFixed(1);
+            const totalMb = (xhr.total / (1024 * 1024)).toFixed(1);
+            document.getElementById('loader-text').innerText = 
+              I18N[currentLang].loadingProgress + ' (' + pct + '% - ' + loadedMb + ' MB / ' + totalMb + ' MB)...';
+            if (loaderProgressBar) {
+              loaderProgressBar.style.width = pct + '%';
+            }
+          } else if (xhr.loaded > 0) {
+            const loadedMb = (xhr.loaded / (1024 * 1024)).toFixed(1);
+            document.getElementById('loader-text').innerText = 
+              I18N[currentLang].loadingProgress + ' (' + loadedMb + ' MB)...';
+          }
+        },
+        (err) => {
+          console.warn('Could not auto-fetch ./' + CONFIG.modelFileName + ' (likely file:// protocol CORS). Showing selector modal.', err);
+          loaderOverlay.style.display = 'none';
+          fallbackModal.classList.add('visible');
+        }
+      );
+    }
+
+    function loadLocalModelFile(file) {
+      fallbackModal.classList.remove('visible');
+      loaderOverlay.style.display = 'flex';
+      document.getElementById('loader-text').innerText = I18N[currentLang].loadingProgress + ' ' + file.name + '...';
+      if (loaderProgressBar) loaderProgressBar.style.width = '100%';
+
+      const url = URL.createObjectURL(file);
+      const gltfLoader = new THREE.GLTFLoader();
+      const draco = new THREE.DRACOLoader();
+      draco.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+      gltfLoader.setDRACOLoader(draco);
+
+      gltfLoader.load(
+        url,
+        (gltf) => {
+          URL.revokeObjectURL(url);
+          onModelLoadedSuccess(gltf.scene || gltf.scenes[0], gltf.animations);
+        },
+        undefined,
+        (err) => {
+          URL.revokeObjectURL(url);
+          loaderOverlay.style.display = 'none';
+          fallbackModal.classList.add('visible');
+          alert('Не вдалося завантажити файл: ' + (err && err.message ? err.message : 'Перевірте валідність .glb або .gltf'));
+        }
+      );
+    }
+
+    function applyLightingPreset() {
+      if (!keyLight || !fillLight || !backLight || !ambientLight || !hemiLight) return;
+      const dirInt = CONFIG.settings.directLightIntensity !== undefined ? CONFIG.settings.directLightIntensity : 1.2;
+      const ambInt = CONFIG.settings.ambientIntensity !== undefined ? CONFIG.settings.ambientIntensity : 1.0;
+      const preset = CONFIG.settings.environmentPreset || 'studio';
+
+      switch (preset) {
+        case 'sunset':
+          keyLight.color.setHex(0xffaa5e);
+          keyLight.intensity = 2.2 * dirInt;
+          fillLight.color.setHex(0x9d4edd);
+          fillLight.intensity = 1.0 * dirInt;
+          backLight.color.setHex(0xf72585);
+          backLight.intensity = 1.2 * dirInt;
+          ambientLight.color.setHex(0x5a189a);
+          ambientLight.intensity = 0.5 * ambInt;
+          hemiLight.color.setHex(0xffb703);
+          hemiLight.groundColor.setHex(0x240046);
+          break;
+
+        case 'cyberpunk':
+          keyLight.color.setHex(0x00f5d4);
+          keyLight.intensity = 2.0 * dirInt;
+          fillLight.color.setHex(0xf72585);
+          fillLight.intensity = 1.8 * dirInt;
+          backLight.color.setHex(0x7209b7);
+          backLight.intensity = 1.5 * dirInt;
+          ambientLight.color.setHex(0x3a0ca3);
+          ambientLight.intensity = 0.4 * ambInt;
+          hemiLight.color.setHex(0x4cc9f0);
+          hemiLight.groundColor.setHex(0x03045e);
+          break;
+
+        case 'minimal_white':
+          keyLight.color.setHex(0xffffff);
+          keyLight.intensity = 1.6 * dirInt;
+          fillLight.color.setHex(0xf4f4f5);
+          fillLight.intensity = 1.2 * dirInt;
+          backLight.color.setHex(0xe4e4e7);
+          backLight.intensity = 0.8 * dirInt;
+          ambientLight.color.setHex(0xffffff);
+          ambientLight.intensity = 0.9 * ambInt;
+          hemiLight.color.setHex(0xffffff);
+          hemiLight.groundColor.setHex(0xa1a1aa);
+          break;
+
+        case 'dark_stage':
+          keyLight.color.setHex(0xffffff);
+          keyLight.intensity = 2.8 * dirInt;
+          fillLight.color.setHex(0x52525b);
+          fillLight.intensity = 0.4 * dirInt;
+          backLight.color.setHex(0x3f3f46);
+          backLight.intensity = 0.6 * dirInt;
+          ambientLight.color.setHex(0x18181b);
+          ambientLight.intensity = 0.2 * ambInt;
+          hemiLight.color.setHex(0x3f3f46);
+          hemiLight.groundColor.setHex(0x09090b);
+          break;
+
+        case 'warm_indoor':
+          keyLight.color.setHex(0xffedd5);
+          keyLight.intensity = 1.9 * dirInt;
+          fillLight.color.setHex(0xfed7aa);
+          fillLight.intensity = 1.1 * dirInt;
+          backLight.color.setHex(0xfde047);
+          backLight.intensity = 0.7 * dirInt;
+          ambientLight.color.setHex(0xffedd5);
+          ambientLight.intensity = 0.7 * ambInt;
+          hemiLight.color.setHex(0xfef08a);
+          hemiLight.groundColor.setHex(0x78350f);
+          break;
+
+        case 'studio':
+        default:
+          keyLight.color.setHex(0xffffff);
+          keyLight.intensity = 1.8 * dirInt;
+          fillLight.color.setHex(0xdbeafe);
+          fillLight.intensity = 1.0 * dirInt;
+          backLight.color.setHex(0xffedd5);
+          backLight.intensity = 0.8 * dirInt;
+          ambientLight.color.setHex(0xffffff);
+          ambientLight.intensity = 0.8 * ambInt;
+          hemiLight.color.setHex(0xffffff);
+          hemiLight.groundColor.setHex(0x27272a);
+          break;
+      }
+    }
+
+    function onModelLoadedSuccess(model, animations) {
+      loaderOverlay.style.display = 'none';
+      fallbackModal.classList.remove('visible');
+      if (modelRoot) scene.remove(modelRoot);
+
+      // 1. Traverse and prepare meshes (normals, double-sided, shadows, depth write)
+      model.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+
+          if (child.geometry && !child.geometry.attributes.normal) {
+            child.geometry.computeVertexNormals();
+          }
+
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach((mat) => {
+            if (mat) {
+              mat.side = THREE.DoubleSide;
+              if (mat.transparent && mat.opacity >= 0.99) {
+                mat.transparent = false;
+                mat.depthWrite = true;
+              } else if (!mat.transparent) {
+                mat.depthWrite = true;
+              }
+            }
+          });
+        }
+      });
+
+      // 2. Compute Bounding Box BEFORE translation
+      const box = new THREE.Box3().setFromObject(model);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+
+      // 3. GROUND MODEL: bottom strictly at y = 0, centered at origin X and Z
+      // Exactly matches the 3D editor (ViewerCanvas.tsx)
+      model.position.x = -center.x;
+      model.position.z = -center.z;
+      model.position.y = -box.min.y; // grounds bottom at 0 on the grid surface
+
+      modelRoot = model;
+      scene.add(model);
+
+      const maxDim = Math.max(size.x, size.y, size.z, 2);
+
+      // Scale shadow plane & grid helper to fit model dimensions
+      if (shadowPlane) {
+        shadowPlane.position.y = 0;
+        const shadowScale = Math.max(maxDim * 3, 40);
+        shadowPlane.scale.set(shadowScale / 80, shadowScale / 80, 1);
+      }
+
+      if (gridHelper) {
+        gridHelper.position.y = 0;
+        const gridScale = Math.max(maxDim * 2.5, 20);
+        gridHelper.scale.set(gridScale / 20, 1, gridScale / 20);
+      }
+
+      if (keyLight && keyLight.shadow) {
+        const d = maxDim * 1.5;
+        keyLight.shadow.camera.left = -d;
+        keyLight.shadow.camera.right = d;
+        keyLight.shadow.camera.top = d;
+        keyLight.shadow.camera.bottom = -d;
+        keyLight.shadow.camera.near = 0.1;
+        keyLight.shadow.camera.far = maxDim * 20;
+        keyLight.shadow.camera.updateProjectionMatrix();
+      }
+
+      // 4. Initial Camera Positioning (Overview of grounded model)
+      const groundedCenter = new THREE.Vector3(0, size.y / 2, 0);
+      const fovRad = (camera.fov * Math.PI) / 180;
+      let dist = (maxDim / 2) / Math.tan(fovRad / 2);
+      dist *= 1.45;
+
+      if (CONFIG.initialCameraPosition && CONFIG.initialCameraTarget) {
+        initialCamPos.set(CONFIG.initialCameraPosition[0], CONFIG.initialCameraPosition[1], CONFIG.initialCameraPosition[2]);
+        initialCamTarget.set(CONFIG.initialCameraTarget[0], CONFIG.initialCameraTarget[1], CONFIG.initialCameraTarget[2]);
+      } else {
+        initialCamPos.set(dist * 0.85, (size.y / 2) + dist * 0.45, dist * 0.85);
+        initialCamTarget.copy(groundedCenter);
+      }
+
+      camera.position.copy(initialCamPos);
+      controls.target.copy(initialCamTarget);
+      camera.near = Math.max(0.01, dist / 200);
+      camera.far = Math.max(1000, dist * 100);
+      camera.updateProjectionMatrix();
+      controls.update();
+
+      // 5. Initialize Animations if model contains clips and animations enabled
+      initModelAnimations(animations);
+
+      // 6. Reset step counter to show total hotspots count in initial overview
+      if (stepCounter) {
+        stepCounter.innerText = CONFIG.hotspots && CONFIG.hotspots.length 
+          ? (CONFIG.hotspots.length + ' ' + (currentLang === 'en' ? 'hotspots' : 'вузлів'))
+          : '';
+      }
+    }
+
+    function initModelAnimations(clips) {
+      if (mixer) {
+        mixer.stopAllAction();
+        mixer = null;
+      }
+      animationClips = clips && clips.length ? clips : [];
+      const animToggleBtn = document.getElementById('btn-anim-toggle');
+      const animBar = document.getElementById('anim-controls-bar');
+      const clipSelect = document.getElementById('anim-clip-select');
+
+      if (!animationClips.length || CONFIG.enableAnimations === false) {
+        if (animToggleBtn) animToggleBtn.style.display = 'none';
+        if (animBar) animBar.classList.remove('visible');
+        return;
+      }
+
+      mixer = new THREE.AnimationMixer(modelRoot);
+      clipSelect.innerHTML = '';
+      animationClips.forEach((clip, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.innerText = clip.name || ('Clip #' + (idx + 1));
+        clipSelect.appendChild(opt);
+      });
+
+      if (animToggleBtn) {
+        animToggleBtn.style.display = 'inline-flex';
+        animToggleBtn.classList.add('btn-emerald');
+      }
+
+      currentClipIndex = Math.min(Math.max(0, CONFIG.defaultAnimationIndex || 0), animationClips.length - 1);
+      clipSelect.value = currentClipIndex;
+
+      isAnimBarVisible = true;
+      if (animBar) animBar.classList.add('visible');
+
+      isAnimPlaying = CONFIG.autoPlayAnimation !== false;
+      playClip(currentClipIndex);
+      updateAnimPlayUI();
+    }
+
+    function playClip(index) {
+      if (!mixer || !animationClips[index]) return;
+      const clip = animationClips[index];
+
+      if (currentAction) {
+        currentAction.fadeOut(0.25);
+      }
+
+      const nextAction = mixer.clipAction(clip);
+      nextAction.reset().setEffectiveTimeScale(animSpeed).setEffectiveWeight(1).fadeIn(0.25);
+      if (isAnimPlaying) {
+        nextAction.play();
+      } else {
+        nextAction.play();
+        nextAction.paused = true;
+      }
+      currentAction = nextAction;
+      currentClipIndex = index;
+    }
+
+    function switchAnimation(index) {
+      playClip(index);
+    }
+
+    function toggleAnimBar() {
+      isAnimBarVisible = !isAnimBarVisible;
+      const bar = document.getElementById('anim-controls-bar');
+      const btn = document.getElementById('btn-anim-toggle');
+      if (bar) bar.classList.toggle('visible', isAnimBarVisible);
+      if (btn) btn.classList.toggle('btn-emerald', isAnimBarVisible);
+    }
+
+    function toggleAnimPlay() {
+      if (!currentAction) return;
+      isAnimPlaying = !isAnimPlaying;
+      if (isAnimPlaying) {
+        currentAction.paused = false;
+      } else {
+        currentAction.paused = true;
+      }
+      updateAnimPlayUI();
+    }
+
+    function updateAnimPlayUI() {
+      const playIcon = document.getElementById('anim-play-icon');
+      const playBtn = document.getElementById('anim-btn-play');
+      const dict = I18N[currentLang];
+      if (playIcon) playIcon.innerText = isAnimPlaying ? '⏸' : '▶';
+      if (playBtn) {
+        playBtn.title = isAnimPlaying ? dict.animPause : dict.animPlay;
+        playBtn.classList.toggle('active', isAnimPlaying);
+      }
+    }
+
+    function cycleAnimSpeed() {
+      const speeds = [0.5, 1.0, 1.5, 2.0];
+      const curIdx = speeds.indexOf(animSpeed);
+      const nextIdx = (curIdx + 1) % speeds.length;
+      animSpeed = speeds[nextIdx];
+      if (currentAction) {
+        currentAction.setEffectiveTimeScale(animSpeed);
+      }
+      const label = document.getElementById('anim-speed-label');
+      if (label) label.innerText = animSpeed + 'x';
+    }
+
+    // 3. Hotspot Interaction & 3D Projections
+    const pinElements = [];
+
+    // Simple markdown parser for node descriptions in standalone HTML
+    function parseMarkdown(text) {
+      if (!text) return '';
+      var escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      var lines = escaped.split(/\r?\n/);
+      var html = '';
+      var inUl = false;
+      var inOl = false;
+
+      function closeLists() {
+        if (inUl) { html += '</ul>'; inUl = false; }
+        if (inOl) { html += '</ol>'; inOl = false; }
+      }
+
+      function formatInline(str) {
+        var tick = String.fromCharCode(96);
+        return str
+          .replace(/\*\*(.*?)\*\*/g, '<strong class="node-strong">$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em class="node-em">$1</em>')
+          .replace(new RegExp(tick + '([^' + tick + ']+)' + tick, 'g'), '<code class="node-code">$1</code>');
+      }
+
+      lines.forEach(function(line) {
+        var trimmed = line.trim();
+        if (trimmed === '---' || trimmed === '***') {
+          closeLists();
+          html += '<hr class="node-divider" />';
+          return;
+        }
+        if (trimmed.indexOf('## ') === 0) {
+          closeLists();
+          html += '<h3 class="node-heading-2">' + formatInline(trimmed.slice(3)) + '</h3>';
+          return;
+        }
+        if (trimmed.indexOf('### ') === 0) {
+          closeLists();
+          html += '<h4 class="node-heading-3">' + formatInline(trimmed.slice(4)) + '</h4>';
+          return;
+        }
+        if (trimmed.indexOf('&gt; ') === 0 || trimmed.indexOf('> ') === 0) {
+          closeLists();
+          var content = trimmed.indexOf('&gt; ') === 0 ? trimmed.slice(5) : trimmed.slice(2);
+          html += '<blockquote class="node-quote">' + formatInline(content) + '</blockquote>';
+          return;
+        }
+        if (trimmed.indexOf('• ') === 0 || trimmed.indexOf('- ') === 0 || trimmed.indexOf('* ') === 0) {
+          if (inOl) { html += '</ol>'; inOl = false; }
+          if (!inUl) { html += '<ul class="node-list-ul">'; inUl = true; }
+          var item = trimmed.replace(/^[•\-\*]\s+/, '');
+          html += '<li class="node-list-item">' + formatInline(item) + '</li>';
+          return;
+        }
+        var numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+        if (numMatch) {
+          if (inUl) { html += '</ul>'; inUl = false; }
+          if (!inOl) { html += '<ol class="node-list-ol">'; inOl = true; }
+          html += '<li class="node-list-item">' + formatInline(numMatch[2]) + '</li>';
+          return;
+        }
+        closeLists();
+        if (trimmed === '') {
+          html += '<div style="height: 6px;"></div>';
+        } else {
+          html += '<p style="margin: 3px 0; line-height: 1.6;">' + formatInline(line) + '</p>';
+        }
+      });
+      closeLists();
+      return html;
+    }
+
+    function buildHotspotDOMElements() {
+      hotspotsLayer.innerHTML = '';
+      pinElements.length = 0;
+
+      if (!CONFIG.hotspots) return;
+
+      CONFIG.hotspots.forEach((spot, idx) => {
+        const pin = document.createElement('div');
+        pin.className = 'hotspot-pin';
+        pin.id = 'pin-' + spot.id;
+
+        const circle = document.createElement('div');
+        circle.className = 'pin-circle';
+        circle.innerText = spot.number || (idx + 1);
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'pin-tooltip';
+        tooltip.innerText = getHotspotTitle(spot);
+
+        pin.appendChild(circle);
+        pin.appendChild(tooltip);
+
+        pin.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectHotspot(idx);
+        });
+
+        if (hiddenNodeIndices.has(idx)) {
+          pin.style.display = 'none';
+        }
+
+        hotspotsLayer.appendChild(pin);
+        pinElements.push({ el: pin, tooltipEl: tooltip, pos: new THREE.Vector3(...spot.position) });
+      });
+    }
+
+    function buildTourBar() {
+      tourBar.innerHTML = '';
+      if (!CONFIG.hotspots || CONFIG.hotspots.length === 0) {
+        tourBar.style.display = 'none';
+        return;
+      }
+      tourBar.style.display = 'flex';
+
+      CONFIG.hotspots.forEach((spot, idx) => {
+        const chip = document.createElement('button');
+        const isHidden = hiddenNodeIndices.has(idx);
+        chip.className = 'tour-chip' + (idx === activeHotspotIndex ? ' active' : '') + (isHidden ? ' hidden-chip' : '');
+        chip.innerText = '#' + (spot.number || (idx + 1)) + ' ' + getHotspotTitle(spot);
+        chip.addEventListener('click', () => selectHotspot(idx));
+        tourBar.appendChild(chip);
+      });
+    }
+
+    function getHotspotTitle(spot) {
+      if (currentLang === 'en' && spot.titleEn) return spot.titleEn;
+      return spot.title || (I18N[currentLang].part + ' #' + spot.number);
+    }
+
+    function getHotspotDesc(spot) {
+      if (currentLang === 'en' && spot.descriptionEn) return spot.descriptionEn;
+      return spot.description || '';
+    }
+
+    function selectHotspot(index) {
+      if (!CONFIG.hotspots || index < 0 || index >= CONFIG.hotspots.length) return;
+      activeHotspotIndex = index;
+      const spot = CONFIG.hotspots[index];
+
+      // Update Panel
+      panelBadge.innerText = (I18N[currentLang].part + ' #' + (spot.number || (index + 1)));
+      panelTitle.innerText = getHotspotTitle(spot);
+      panelBody.innerHTML = parseMarkdown(getHotspotDesc(spot));
+      stepCounter.innerText = (index + 1) + ' ' + I18N[currentLang].stepOf + ' ' + CONFIG.hotspots.length;
+      infoPanel.classList.add('visible');
+
+      updateCurrentSpotVisButton();
+
+      // Update Pin Active States
+      pinElements.forEach((p, i) => {
+        if (i === index) p.el.classList.add('active');
+        else p.el.classList.remove('active');
+      });
+
+      // Update Bottom Tour Chips
+      const chips = tourBar.querySelectorAll('.tour-chip');
+      chips.forEach((c, i) => {
+        if (i === index) {
+          c.classList.add('active');
+          c.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        } else {
+          c.classList.remove('active');
+        }
+      });
+
+      // Refresh rows in nodes panel if open
+      if (isNodesPanelVisible) {
+        renderNodesListPanel();
+      }
+
+      // Fly Camera to saved viewpoint
+      if (spot.cameraPosition && spot.cameraTarget) {
+        flyTo(spot.cameraPosition, spot.cameraTarget);
+      }
+    }
+
+    // Node Visibility Functions (Vmknennia ta vymknennia vydymosti vuzliv)
+    function toggleNodeVisibility(index, e) {
+      if (e) e.stopPropagation();
+      if (hiddenNodeIndices.has(index)) {
+        hiddenNodeIndices.delete(index);
+      } else {
+        hiddenNodeIndices.add(index);
+      }
+      updateNodeVisibilityUI();
+    }
+
+    function showAllNodes() {
+      hiddenNodeIndices.clear();
+      updateNodeVisibilityUI();
+    }
+
+    function hideAllNodes() {
+      if (!CONFIG.hotspots) return;
+      CONFIG.hotspots.forEach((_, idx) => hiddenNodeIndices.add(idx));
+      updateNodeVisibilityUI();
+    }
+
+    function updateNodeVisibilityUI() {
+      // 1. Update 3D pin elements visibility
+      pinElements.forEach((p, idx) => {
+        const isHidden = hiddenNodeIndices.has(idx);
+        p.el.style.display = (isHotspotsVisible && !isHidden) ? 'flex' : 'none';
+      });
+
+      // 2. Re-render rows in nodes-list-panel
+      renderNodesListPanel();
+
+      // 3. Update tour chips appearance
+      const chips = tourBar.querySelectorAll('.tour-chip');
+      chips.forEach((c, idx) => {
+        const isHidden = hiddenNodeIndices.has(idx);
+        c.classList.toggle('hidden-chip', isHidden);
+      });
+
+      // 4. Update current spot panel visibility icon/button
+      updateCurrentSpotVisButton();
+
+      // 5. Update expanded modal visibility icon/button if open
+      if (nodeExpandedModal && nodeExpandedModal.classList.contains('visible')) {
+        updateExpModalVisButton(activeHotspotIndex);
+      }
+    }
+
+    function toggleNodesPanel() {
+      isNodesPanelVisible = !isNodesPanelVisible;
+      if (nodesListPanel) {
+        nodesListPanel.classList.toggle('visible', isNodesPanelVisible);
+        if (isNodesPanelVisible) {
+          renderNodesListPanel();
+        }
+      }
+      const btn = document.getElementById('btn-nodes-list');
+      if (btn) btn.classList.toggle('btn-emerald', isNodesPanelVisible);
+    }
+
+    function renderNodesListPanel() {
+      const container = document.getElementById('nodes-panel-items');
+      const badge = document.getElementById('nodes-count-badge');
+      if (!container || !CONFIG.hotspots) return;
+
+      const total = CONFIG.hotspots.length;
+      const visibleCount = total - hiddenNodeIndices.size;
+      if (badge) badge.innerText = visibleCount + '/' + total;
+
+      container.innerHTML = '';
+      CONFIG.hotspots.forEach((spot, idx) => {
+        const isHidden = hiddenNodeIndices.has(idx);
+        const isActive = idx === activeHotspotIndex;
+
+        const row = document.createElement('div');
+        row.className = 'node-row-item' + (isActive ? ' active' : '') + (isHidden ? ' hidden-node' : '');
+
+        const titleArea = document.createElement('div');
+        titleArea.className = 'node-row-title-area';
+        titleArea.addEventListener('click', () => {
+          selectHotspot(idx);
+        });
+
+        const numSpan = document.createElement('span');
+        numSpan.className = 'node-row-num';
+        numSpan.innerText = '#' + (spot.number || (idx + 1));
+
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'node-row-title';
+        titleSpan.innerText = getHotspotTitle(spot);
+
+        titleArea.appendChild(numSpan);
+        titleArea.appendChild(titleSpan);
+
+        const btnsArea = document.createElement('div');
+        btnsArea.className = 'node-row-btns';
+
+        // Expand view button
+        const expBtn = document.createElement('button');
+        expBtn.className = 'node-action-btn';
+        expBtn.title = I18N[currentLang].expandedView;
+        expBtn.innerHTML = '🔍';
+        expBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openExpandedModal(idx);
+        });
+
+        // Visibility toggle button
+        const eyeBtn = document.createElement('button');
+        eyeBtn.className = 'node-action-btn';
+        eyeBtn.title = isHidden ? I18N[currentLang].nodeHidden : I18N[currentLang].nodeVisible;
+        eyeBtn.innerHTML = isHidden ? '🚫' : '👁️';
+        eyeBtn.addEventListener('click', (e) => {
+          toggleNodeVisibility(idx, e);
+        });
+
+        btnsArea.appendChild(expBtn);
+        btnsArea.appendChild(eyeBtn);
+
+        row.appendChild(titleArea);
+        row.appendChild(btnsArea);
+        container.appendChild(row);
+      });
+    }
+
+    function updateCurrentSpotVisButton() {
+      const btn = document.getElementById('btn-panel-toggle-vis');
+      if (!btn) return;
+      if (activeHotspotIndex < 0) {
+        btn.style.display = 'none';
+        return;
+      }
+      btn.style.display = 'inline-flex';
+      const isHidden = hiddenNodeIndices.has(activeHotspotIndex);
+      btn.innerHTML = isHidden ? '🚫' : '👁️';
+      btn.title = isHidden ? I18N[currentLang].nodeHidden : I18N[currentLang].nodeVisible;
+      btn.classList.toggle('active', !isHidden);
+    }
+
+    // Extended Node View Modal (Rozshyrenyj perehliad elementu)
+    function openExpandedModal(index) {
+      if (index === undefined || index === null || index < 0) index = activeHotspotIndex;
+      if (!CONFIG.hotspots || index < 0 || index >= CONFIG.hotspots.length) {
+        if (CONFIG.hotspots && CONFIG.hotspots.length > 0) index = 0;
+        else return;
+      }
+
+      selectHotspot(index);
+      const spot = CONFIG.hotspots[index];
+      const dict = I18N[currentLang];
+
+      const badge = document.getElementById('exp-modal-badge');
+      const titleEl = document.getElementById('exp-modal-title');
+      const bodyEl = document.getElementById('exp-modal-body');
+      const stepEl = document.getElementById('exp-step-counter');
+
+      if (badge) badge.innerText = dict.part + ' #' + (spot.number || (index + 1));
+      if (titleEl) titleEl.innerText = getHotspotTitle(spot);
+      if (bodyEl) {
+        const desc = getHotspotDesc(spot);
+        bodyEl.innerHTML = desc ? parseMarkdown(desc) : '<span style="color: var(--text-muted); font-style: italic;">' + (currentLang === 'en' ? 'No detailed description available for this node.' : 'Для цього вузла детальний опис відсутній.') + '</span>';
+      }
+      if (stepEl) stepEl.innerText = (index + 1) + ' ' + dict.stepOf + ' ' + CONFIG.hotspots.length;
+
+      updateExpModalVisButton(index);
+
+      if (nodeExpandedModal) {
+        nodeExpandedModal.classList.add('visible');
+      }
+    }
+
+    function closeExpandedModal() {
+      if (nodeExpandedModal) {
+        nodeExpandedModal.classList.remove('visible');
+      }
+    }
+
+    function updateExpModalVisButton(index) {
+      const visBtn = document.getElementById('exp-modal-vis-btn');
+      const visIcon = document.getElementById('exp-vis-icon');
+      const visLabel = document.getElementById('exp-vis-label');
+      if (!visBtn || index < 0) return;
+
+      const isHidden = hiddenNodeIndices.has(index);
+      if (visIcon) visIcon.innerText = isHidden ? '🚫' : '👁️';
+      if (visLabel) visLabel.innerText = isHidden ? I18N[currentLang].nodeHidden : I18N[currentLang].nodeVisible;
+      visBtn.classList.toggle('btn-emerald', !isHidden);
+    }
+
+    function prevHotspot() {
+      if (!CONFIG.hotspots || CONFIG.hotspots.length === 0) return;
+      let nextIdx = activeHotspotIndex - 1;
+      if (nextIdx < 0) nextIdx = CONFIG.hotspots.length - 1;
+      selectHotspot(nextIdx);
+    }
+
+    function nextHotspot() {
+      if (!CONFIG.hotspots || CONFIG.hotspots.length === 0) return;
+      let nextIdx = activeHotspotIndex + 1;
+      if (nextIdx >= CONFIG.hotspots.length) nextIdx = 0;
+      selectHotspot(nextIdx);
+    }
+
+    function flyTo(camPos, targetPos) {
+      flyStartPos.copy(camera.position);
+      flyEndPos.set(camPos[0], camPos[1], camPos[2]);
+
+      flyStartTarget.copy(controls.target);
+      flyEndTarget.set(targetPos[0], targetPos[1], targetPos[2]);
+
+      flyStartTime = performance.now();
+      isFlying = true;
+    }
+
+    // 4. Render & Animation Loop
+    const tempVec = new THREE.Vector3();
+    const camDir = new THREE.Vector3();
+    const vecToPin = new THREE.Vector3();
+
+    function animate(time) {
+      requestAnimationFrame(animate);
+
+      // Camera flight interpolation (easeInOutCubic)
+      if (isFlying) {
+        const elapsed = time - flyStartTime;
+        const progress = Math.min(elapsed / flyDuration, 1.0);
+        const t = progress < 0.5 
+          ? 4 * progress * progress * progress 
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+        camera.position.lerpVectors(flyStartPos, flyEndPos, t);
+        controls.target.lerpVectors(flyStartTarget, flyEndTarget, t);
+
+        if (progress >= 1.0) isFlying = false;
+      }
+
+      if (isAutoRotating && !isFlying) {
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.2;
+      } else {
+        controls.autoRotate = false;
+      }
+
+      // Update 3D Model Skeletal & Object Animations
+      const delta = clock.getDelta();
+      if (mixer) {
+        mixer.update(delta);
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+
+      // Update 2D Hotspot Positions on Screen
+      if (pinElements.length > 0) {
+        const cw = container.clientWidth;
+        const ch = container.clientHeight;
+        camera.getWorldDirection(camDir);
+
+        for (let i = 0; i < pinElements.length; i++) {
+          const item = pinElements[i];
+          if (!isHotspotsVisible || hiddenNodeIndices.has(i)) {
+            item.el.style.display = 'none';
+            continue;
+          }
+
+          tempVec.copy(item.pos);
+          vecToPin.subVectors(tempVec, camera.position);
+          const isBehind = vecToPin.dot(camDir) <= 0;
+
+          if (isBehind) {
+            item.el.style.display = 'none';
+            continue;
+          }
+
+          tempVec.project(camera);
+          const isFar = tempVec.z > 1;
+          const x = (tempVec.x * 0.5 + 0.5) * cw;
+          const y = (-tempVec.y * 0.5 + 0.5) * ch;
+
+          if (!isFar && x >= -20 && x <= cw + 20 && y >= -20 && y <= ch + 20) {
+            item.el.style.display = 'flex';
+            item.el.style.left = x + 'px';
+            item.el.style.top = y + 'px';
+          } else {
+            item.el.style.display = 'none';
+          }
+        }
+      }
+    }
+
+    // 5. Theme & Language Toggles
+    function toggleTheme() {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.body.className = 'theme-' + currentTheme;
+      applyThemeColors(currentTheme);
+      updateLanguageUI();
+    }
+
+    function applyThemeColors(theme) {
+      const isDark = theme === 'dark';
+      const bgColor = isDark ? '#09090b' : '#f8fafc';
+
+      if (!CONFIG.settings.transparentBackground && scene) {
+        scene.background = new THREE.Color(bgColor);
+        renderer.setClearColor(new THREE.Color(bgColor), 1);
+      }
+
+      const hemi = scene ? scene.getObjectByName('sceneHemi') : null;
+      if (hemi) {
+        hemi.groundColor = new THREE.Color(isDark ? 0x27272a : 0xe2e8f0);
+      }
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'ua' ? 'en' : 'ua';
+      document.documentElement.lang = currentLang;
+      updateLanguageUI();
+      buildTourBar();
+      buildHotspotDOMElements();
+
+      if (activeHotspotIndex >= 0) {
+        selectHotspot(activeHotspotIndex);
+      }
+    }
+
+    function updateLanguageUI() {
+      const dict = I18N[currentLang];
+
+      // Titles
+      document.getElementById('header-title-text').innerText = 
+        currentLang === 'en' ? CONFIG.titleEn : CONFIG.titleUa;
+      document.getElementById('header-subtitle-text').innerText = 
+        currentLang === 'en' ? CONFIG.subtitleEn : CONFIG.subtitleUa;
+
+      // Theme button
+      const isDark = currentTheme === 'dark';
+      document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
+      document.getElementById('theme-text').innerText = isDark ? dict.themeTextLight : dict.themeTextDark;
+
+      // Lang label
+      document.getElementById('lang-label').innerText = currentLang.toUpperCase();
+
+      // Hotspots toggle button
+      const btnHotspots = document.getElementById('btn-hotspots-toggle');
+      const lblHotspots = document.getElementById('lbl-hotspots');
+      if (btnHotspots) btnHotspots.title = dict.hotspotsToggleTitle;
+      if (lblHotspots) lblHotspots.innerText = dict.hotspots;
+
+      // Labels toggle button
+      const btnLabels = document.getElementById('btn-labels-toggle');
+      const lblLabels = document.getElementById('lbl-labels');
+      if (btnLabels) btnLabels.title = dict.labelsToggleTitle;
+      if (lblLabels) lblLabels.innerText = dict.labels;
+
+      // Nodes list toggle button
+      const btnNodesList = document.getElementById('btn-nodes-list');
+      const lblNodesList = document.getElementById('lbl-nodes-list');
+      if (btnNodesList) btnNodesList.title = dict.nodesListTitle;
+      if (lblNodesList) lblNodesList.innerText = dict.nodesList;
+
+      // Nodes panel UI labels
+      const lblNodesPanelTitle = document.getElementById('lbl-nodes-panel-title');
+      if (lblNodesPanelTitle) lblNodesPanelTitle.innerText = dict.nodesPanelTitle;
+      const lblShowAll = document.getElementById('lbl-show-all');
+      if (lblShowAll) lblShowAll.innerText = dict.showAll;
+      const lblHideAll = document.getElementById('lbl-hide-all');
+      if (lblHideAll) lblHideAll.innerText = dict.hideAll;
+
+      // Info panel expand button
+      const btnOpenExpModal = document.getElementById('btn-open-expanded-modal');
+      const lblExpand = document.getElementById('lbl-expand');
+      if (btnOpenExpModal) btnOpenExpModal.title = dict.expandedView;
+      if (lblExpand) lblExpand.innerText = dict.expandNode;
+      const btnExpandNode = document.getElementById('btn-expand-node');
+      if (btnExpandNode) btnExpandNode.title = dict.expandedView;
+
+      // Expanded modal labels
+      const expFlyLabel = document.getElementById('exp-fly-label');
+      if (expFlyLabel) expFlyLabel.innerText = dict.focusNode;
+      const expLblPrev = document.getElementById('exp-lbl-prev');
+      if (expLblPrev) expLblPrev.innerText = dict.prev;
+      const expLblNext = document.getElementById('exp-lbl-next');
+      if (expLblNext) expLblNext.innerText = dict.next;
+
+      // Grid button
+      document.getElementById('lbl-grid').innerText = dict.grid;
+      document.getElementById('btn-grid-toggle').title = dict.gridToggleTitle;
+
+      // Animation controls labels
+      const animToggleBtn = document.getElementById('btn-anim-toggle');
+      const animLabel = document.getElementById('lbl-anim-toggle');
+      const animBadge = document.getElementById('anim-badge-label');
+      if (animToggleBtn) animToggleBtn.title = dict.animToggleTitle;
+      if (animLabel) animLabel.innerText = dict.animLabel;
+      if (animBadge) animBadge.innerText = dict.animBadge;
+      updateAnimPlayUI();
+
+      // Action labels
+      document.getElementById('lbl-reset-cam').innerText = dict.resetCam;
+      document.getElementById('lbl-autorotate').innerText = dict.autoRotate;
+      document.getElementById('lbl-prev').innerText = dict.prev;
+      document.getElementById('lbl-next').innerText = dict.next;
+
+      // Controls hints
+      document.getElementById('hint-rot-key').innerText = dict.hintRotKey;
+      document.getElementById('hint-rot-val').innerText = dict.hintRotVal;
+      document.getElementById('hint-pan-key').innerText = dict.hintPanKey;
+      document.getElementById('hint-pan-val').innerText = dict.hintPanVal;
+      document.getElementById('hint-zoom-key').innerText = dict.hintZoomKey;
+      document.getElementById('hint-zoom-val').innerText = dict.hintZoomVal;
+
+      // Fallback modal
+      document.getElementById('fb-modal-title').innerText = dict.fbTitle;
+      document.getElementById('fb-modal-desc').innerHTML = dict.fbDesc;
+      document.getElementById('fb-modal-btn').innerText = dict.fbBtn;
+
+      // Attribution modal labels
+      document.getElementById('attr-modal-title').innerText = dict.attrModalTitle;
+      document.getElementById('attr-sec-model-title').innerText = dict.attrSecModelTitle;
+      document.getElementById('attr-lbl-author').innerText = dict.attrLblAuthor;
+      document.getElementById('attr-lbl-license').innerText = dict.attrLblLicense;
+      document.getElementById('attr-lbl-source').innerText = dict.attrLblSource;
+      document.getElementById('attr-sec-nav-title').innerText = dict.attrSecNavTitle;
+      document.getElementById('guide-rot').innerText = dict.guideRot;
+      document.getElementById('guide-pan').innerText = dict.guidePan;
+      document.getElementById('guide-zoom').innerText = dict.guideZoom;
+      document.getElementById('guide-hotspot').innerText = dict.guideHotspot;
+      if (document.getElementById('guide-pins')) document.getElementById('guide-pins').innerText = dict.guidePins;
+      if (document.getElementById('guide-labels')) document.getElementById('guide-labels').innerText = dict.guideLabels;
+      if (document.getElementById('guide-nodes-list')) document.getElementById('guide-nodes-list').innerText = dict.guideNodesList;
+      if (document.getElementById('guide-expand')) document.getElementById('guide-expand').innerText = dict.guideExpand;
+      document.getElementById('guide-grid').innerText = dict.guideGrid;
+      document.getElementById('attr-btn-close-lbl').innerText = dict.attrBtnClose;
+
+      updateAttributionContent();
+    }
+
+    // Hotspots Marker Pins Toggle (Show / Hide 3D Markers Overlay)
+    function toggleHotspots() {
+      isHotspotsVisible = !isHotspotsVisible;
+      if (hotspotsLayer) {
+        hotspotsLayer.style.display = isHotspotsVisible ? 'block' : 'none';
+      }
+      const btn = document.getElementById('btn-hotspots-toggle');
+      if (btn) {
+        btn.classList.toggle('btn-emerald', isHotspotsVisible);
+      }
+    }
+
+    // Hotspots Node Labels Toggle (Show / Hide Node Label Badges beside pins)
+    function toggleLabels() {
+      isLabelsVisible = !isLabelsVisible;
+      document.body.classList.toggle('show-labels', isLabelsVisible);
+      const btn = document.getElementById('btn-labels-toggle');
+      if (btn) {
+        btn.classList.toggle('btn-emerald', isLabelsVisible);
+      }
+    }
+
+    // Grid Toggle (Show / Hide Ground Grid)
+    function toggleGrid() {
+      isGridVisible = !isGridVisible;
+      if (gridHelper) {
+        gridHelper.visible = isGridVisible;
+      }
+      const btn = document.getElementById('btn-grid-toggle');
+      if (btn) {
+        btn.classList.toggle('btn-emerald', isGridVisible);
+      }
+    }
+
+    // Model Attribution & Help Modal Setup
+    function setupAttributionModal() {
+      const modal = document.getElementById('attribution-modal');
+      const openBtn = document.getElementById('btn-attribution-modal');
+      const closeBtn = document.getElementById('attr-modal-close');
+      const okBtn = document.getElementById('attr-modal-ok-btn');
+
+      if (!modal || !openBtn) return;
+
+      openBtn.addEventListener('click', () => {
+        updateAttributionContent();
+        modal.classList.add('visible');
+      });
+
+      const closeModal = () => modal.classList.remove('visible');
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      if (okBtn) okBtn.addEventListener('click', closeModal);
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('visible')) {
+          closeModal();
+        }
+      });
+    }
+
+    function updateAttributionContent() {
+      const dict = I18N[currentLang];
+      const authorVal = CONFIG.author && CONFIG.author.trim() ? CONFIG.author.trim() : dict.attrUnspecified;
+      const licenseVal = CONFIG.license && CONFIG.license.trim() ? CONFIG.license.trim() : 'CC BY 4.0';
+
+      const authorEl = document.getElementById('attr-val-author');
+      const licenseEl = document.getElementById('attr-val-license');
+      if (authorEl) authorEl.innerText = authorVal;
+      if (licenseEl) licenseEl.innerText = licenseVal;
+
+      const sourceRow = document.getElementById('attr-row-source');
+      const sourceValEl = document.getElementById('attr-val-source');
+      if (sourceRow && sourceValEl) {
+        if (CONFIG.sourceUrl && CONFIG.sourceUrl.trim()) {
+          const url = CONFIG.sourceUrl.trim();
+          sourceRow.style.display = 'flex';
+          sourceValEl.innerHTML = '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(url) + ' ↗</a>';
+        } else {
+          sourceRow.style.display = 'none';
+        }
+      }
+    }
+
+    // 6. Camera Actions
+    function resetCamera() {
+      if (!modelRoot) return;
+      activeHotspotIndex = -1;
+      infoPanel.classList.remove('visible');
+      pinElements.forEach(p => p.el.classList.remove('active'));
+      document.querySelectorAll('.tour-chip').forEach(c => c.classList.remove('active'));
+      if (stepCounter) {
+        stepCounter.innerText = CONFIG.hotspots && CONFIG.hotspots.length 
+          ? (CONFIG.hotspots.length + ' ' + (currentLang === 'en' ? 'hotspots' : 'вузлів'))
+          : '';
+      }
+      flyTo(
+        [initialCamPos.x, initialCamPos.y, initialCamPos.z],
+        [initialCamTarget.x, initialCamTarget.y, initialCamTarget.z]
+      );
+    }
+
+    function toggleAutoRotate() {
+      isAutoRotating = !isAutoRotating;
+      document.getElementById('btn-autorotate').classList.toggle('btn-emerald', isAutoRotating);
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    function onWindowResize() {
+      const w = container.clientWidth || window.innerWidth;
+      const h = container.clientHeight || window.innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+
+    // Launch Application
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

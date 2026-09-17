@@ -1,0 +1,1135 @@
+<svg
+   viewBox="0 0 80 100"
+   class="hero-svg"
+   version="1.1"
+   id="svg262"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  
+  <defs
+     id="defs72">
+    <!-- Градієнти для Вікінга -->
+    <radialGradient
+       id="vik_skin"
+       cx="45%"
+       cy="40%"
+       r="55%">
+      <stop
+         offset="0%"
+         stop-color="#fff2e6"
+         id="stop2" />
+      <stop
+         offset="75%"
+         stop-color="#fdd7bf"
+         id="stop4" />
+      <stop
+         offset="100%"
+         stop-color="#f5bea0"
+         id="stop6" />
+    </radialGradient>
+    <linearGradient
+       id="vik_hair"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#ff793f"
+         id="stop9" />
+      <stop
+         offset="50%"
+         stop-color="#cd6133"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#842e12"
+         id="stop13" />
+    </linearGradient>
+    <linearGradient
+       id="vik_iron"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#cfd8dc"
+         id="stop16" />
+      <stop
+         offset="50%"
+         stop-color="#78909c"
+         id="stop18" />
+      <stop
+         offset="100%"
+         stop-color="#37474f"
+         id="stop20" />
+    </linearGradient>
+    <linearGradient
+       id="vik_bronze"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#ffeaa7"
+         id="stop23" />
+      <stop
+         offset="50%"
+         stop-color="#d35400"
+         id="stop25" />
+      <stop
+         offset="100%"
+         stop-color="#7e2a06"
+         id="stop27" />
+    </linearGradient>
+    <linearGradient
+       id="vik_horn"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#ffffff"
+         id="stop30" />
+      <stop
+         offset="50%"
+         stop-color="#fff8e1"
+         id="stop32" />
+      <stop
+         offset="85%"
+         stop-color="#ffe082"
+         id="stop34" />
+      <stop
+         offset="100%"
+         stop-color="#8d6e63"
+         id="stop36" />
+    </linearGradient>
+    <linearGradient
+       id="vik_tunic"
+       x1="0%"
+       y1="0%"
+       x2="0%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#2980b9"
+         id="stop39" />
+      <stop
+         offset="60%"
+         stop-color="#1f618d"
+         id="stop41" />
+      <stop
+         offset="100%"
+         stop-color="#154360"
+         id="stop43" />
+    </linearGradient>
+    <radialGradient
+       id="vik_fur"
+       cx="50%"
+       cy="40%"
+       r="60%">
+      <stop
+         offset="0%"
+         stop-color="#b0bec5"
+         id="stop46" />
+      <stop
+         offset="60%"
+         stop-color="#78909c"
+         id="stop48" />
+      <stop
+         offset="100%"
+         stop-color="#455a64"
+         id="stop50" />
+    </radialGradient>
+    <linearGradient
+       id="vik_leather"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#a0522d"
+         id="stop53" />
+      <stop
+         offset="60%"
+         stop-color="#6e2c00"
+         id="stop55" />
+      <stop
+         offset="100%"
+         stop-color="#3e1a00"
+         id="stop57" />
+    </linearGradient>
+    <linearGradient
+       id="vik_axe_head"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#eceff1"
+         id="stop60" />
+      <stop
+         offset="50%"
+         stop-color="#90a4ae"
+         id="stop62" />
+      <stop
+         offset="100%"
+         stop-color="#455a64"
+         id="stop64" />
+    </linearGradient>
+    <radialGradient
+       id="vik_cheek"
+       cx="50%"
+       cy="50%"
+       r="50%">
+      <stop
+         offset="0%"
+         stop-color="#ff7675"
+         stop-opacity="0.5"
+         id="stop67" />
+      <stop
+         offset="100%"
+         stop-color="#ff7675"
+         stop-opacity="0"
+         id="stop69" />
+    </radialGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_hair" xlink:href="#vik_hair"
+       id="linearGradient1081"
+       x1="22.305782"
+       y1="35.702117"
+       x2="44.917123"
+       y2="58.313458"
+       gradientTransform="matrix(1.1900706,0,0,0.84028631,0,-2)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ff793f"
+         id="stop9" />
+      <stop
+         offset="50%"
+         stop-color="#cd6133"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#842e12"
+         id="stop13" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_hair" xlink:href="#vik_hair"
+       id="linearGradient1083"
+       x1="49.5"
+       y1="29.333333"
+       x2="55.5"
+       y2="35.333333"
+       gradientTransform="scale(0.66666667,1.5)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ff793f"
+         id="stop9" />
+      <stop
+         offset="50%"
+         stop-color="#cd6133"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#842e12"
+         id="stop13" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_bronze" xlink:href="#vik_bronze"
+       id="linearGradient1085"
+       x1="22.627417"
+       y1="66.468037"
+       x2="26.870058"
+       y2="70.710678"
+       gradientTransform="scale(1.4142136,0.70710678)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ffeaa7"
+         id="stop23" />
+      <stop
+         offset="50%"
+         stop-color="#d35400"
+         id="stop25" />
+      <stop
+         offset="100%"
+         stop-color="#7e2a06"
+         id="stop27" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_hair" xlink:href="#vik_hair"
+       id="linearGradient1087"
+       x1="64.5"
+       y1="29.333333"
+       x2="70.5"
+       y2="35.333333"
+       gradientTransform="scale(0.66666667,1.5)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ff793f"
+         id="stop9" />
+      <stop
+         offset="50%"
+         stop-color="#cd6133"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#842e12"
+         id="stop13" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_bronze" xlink:href="#vik_bronze"
+       id="linearGradient1089"
+       x1="29.698485"
+       y1="66.468037"
+       x2="33.941125"
+       y2="70.710678"
+       gradientTransform="scale(1.4142136,0.70710678)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ffeaa7"
+         id="stop23" />
+      <stop
+         offset="50%"
+         stop-color="#d35400"
+         id="stop25" />
+      <stop
+         offset="100%"
+         stop-color="#7e2a06"
+         id="stop27" />
+    
+  </linearGradient>
+    <radialGradient
+       inkscape:collect="always"
+       href="#vik_fur" xlink:href="#vik_fur"
+       id="radialGradient1091"
+       cx="16.137431"
+       cy="126.25926"
+       r="4.6475802"
+       gradientTransform="scale(1.5491933,0.64549722)"
+       fx="16.137431"
+       fy="126.25926"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#b0bec5"
+         id="stop46" />
+      <stop
+         offset="60%"
+         stop-color="#78909c"
+         id="stop48" />
+      <stop
+         offset="100%"
+         stop-color="#455a64"
+         id="stop50" />
+    
+  </radialGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_leather" xlink:href="#vik_leather"
+       id="linearGradient1093"
+       x1="13.168143"
+       y1="108.44353"
+       x2="24.787093"
+       y2="120.06248"
+       gradientTransform="scale(1.2909944,0.77459667)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#a0522d"
+         id="stop53" />
+      <stop
+         offset="60%"
+         stop-color="#6e2c00"
+         id="stop55" />
+      <stop
+         offset="100%"
+         stop-color="#3e1a00"
+         id="stop57" />
+    
+  </linearGradient>
+    <radialGradient
+       inkscape:collect="always"
+       href="#vik_fur" xlink:href="#vik_fur"
+       id="radialGradient1095"
+       cx="35.502347"
+       cy="126.25926"
+       r="4.6475802"
+       gradientTransform="scale(1.5491933,0.64549722)"
+       fx="35.502347"
+       fy="126.25926"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#b0bec5"
+         id="stop46" />
+      <stop
+         offset="60%"
+         stop-color="#78909c"
+         id="stop48" />
+      <stop
+         offset="100%"
+         stop-color="#455a64"
+         id="stop50" />
+    
+  </radialGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_leather" xlink:href="#vik_leather"
+       id="linearGradient1097"
+       x1="36.406043"
+       y1="108.44353"
+       x2="48.024993"
+       y2="120.06248"
+       gradientTransform="scale(1.2909944,0.77459667)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#a0522d"
+         id="stop53" />
+      <stop
+         offset="60%"
+         stop-color="#6e2c00"
+         id="stop55" />
+      <stop
+         offset="100%"
+         stop-color="#3e1a00"
+         id="stop57" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_iron" xlink:href="#vik_iron"
+       id="linearGradient1099"
+       x1="9.7848567"
+       y1="20.925191"
+       x2="27.490788"
+       y2="38.631123"
+       gradientTransform="scale(2.1461735,0.46594556)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#cfd8dc"
+         id="stop16" />
+      <stop
+         offset="50%"
+         stop-color="#78909c"
+         id="stop18" />
+      <stop
+         offset="100%"
+         stop-color="#37474f"
+         id="stop20" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_iron" xlink:href="#vik_iron"
+       id="linearGradient1101"
+       x1="48.946399"
+       y1="5.6694671"
+       x2="56.883653"
+       y2="13.606721"
+       gradientTransform="scale(0.75592895,1.3228757)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#cfd8dc"
+         id="stop16" />
+      <stop
+         offset="50%"
+         stop-color="#78909c"
+         id="stop18" />
+      <stop
+         offset="100%"
+         stop-color="#37474f"
+         id="stop20" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_bronze" xlink:href="#vik_bronze"
+       id="linearGradient1103"
+       x1="7.2265956"
+       y1="42.136023"
+       x2="20.303292"
+       y2="55.21272"
+       gradientTransform="scale(2.9059326,0.3441236)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ffeaa7"
+         id="stop23" />
+      <stop
+         offset="50%"
+         stop-color="#d35400"
+         id="stop25" />
+      <stop
+         offset="100%"
+         stop-color="#7e2a06"
+         id="stop27" />
+    
+  </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       href="#vik_bronze" xlink:href="#vik_bronze"
+       id="linearGradient1105"
+       x1="50.269275"
+       y1="12.094863"
+       x2="55.560778"
+       y2="17.386366"
+       gradientTransform="scale(0.75592895,1.3228757)"
+       gradientUnits="userSpaceOnUse" >
+
+      <stop
+         offset="0%"
+         stop-color="#ffeaa7"
+         id="stop23" />
+      <stop
+         offset="50%"
+         stop-color="#d35400"
+         id="stop25" />
+      <stop
+         offset="100%"
+         stop-color="#7e2a06"
+         id="stop27" />
+    
+  </linearGradient>
+  </defs>
+  <!-- Теплий хутряний комір / накидка з вовчого хутра (задня частина) -->
+  <path
+     d="M 22 40 Q 40 34 58 40 Q 64 54 58 60 Q 40 54 22 60 Q 16 54 22 40 Z"
+     fill="url(#vik_fur)"
+     id="path74" />
+  <!-- Ліва нога у хутряному зимовому чобітку (шарнір 25, 88) -->
+  <g
+     class="ll"
+     id="g86"
+     transform="translate(0,-2)">
+    <!-- Штанина -->
+    <rect
+       x="21"
+       y="78"
+       width="8"
+       height="8"
+       rx="2"
+       fill="#1f618d"
+       id="rect76" />
+    <!-- Хутряна опушка чобітка -->
+    <ellipse
+       cx="25"
+       cy="82"
+       rx="6"
+       ry="2.5"
+       fill="url(#vik_fur)"
+       id="ellipse78"
+       style="fill:url(#radialGradient1091)" />
+    <!-- Шкіряний чобіт з перехресними ремінцями -->
+    <path
+       d="m 18,84 h 14 v 8 q -7,2 -15,0 z"
+       fill="url(#vik_leather)"
+       id="path80"
+       style="fill:url(#linearGradient1093)" />
+    <!-- Ремінці шнурівки -->
+    <line
+       x1="20"
+       y1="85"
+       x2="30"
+       y2="89"
+       stroke="#d35400"
+       stroke-width="1"
+       id="line82" />
+    <line
+       x1="30"
+       y1="85"
+       x2="20"
+       y2="89"
+       stroke="#d35400"
+       stroke-width="1"
+       id="line84" />
+  </g>
+  <!-- Права нога (шарнір 55, 88) -->
+  <g
+     class="lr"
+     id="g98"
+     transform="translate(0,-2)">
+    <!-- Штанина -->
+    <rect
+       x="51"
+       y="78"
+       width="8"
+       height="8"
+       rx="2"
+       fill="#1f618d"
+       id="rect88" />
+    <!-- Хутряна опушка -->
+    <ellipse
+       cx="55"
+       cy="82"
+       rx="6"
+       ry="2.5"
+       fill="url(#vik_fur)"
+       id="ellipse90"
+       style="fill:url(#radialGradient1095)" />
+    <!-- Шкіряний чобіт -->
+    <path
+       d="m 48,84 h 14 v 8 q -7,2 -15,0 z"
+       fill="url(#vik_leather)"
+       id="path92"
+       style="fill:url(#linearGradient1097)" />
+    <!-- Ремінці шнурівки -->
+    <line
+       x1="50"
+       y1="85"
+       x2="60"
+       y2="89"
+       stroke="#d35400"
+       stroke-width="1"
+       id="line94" />
+    <line
+       x1="60"
+       y1="85"
+       x2="50"
+       y2="89"
+       stroke="#d35400"
+       stroke-width="1"
+       id="line96" />
+  </g>
+  <!-- Тулуб / Вікінгська туніка з хутряною мантією -->
+  <g
+     id="g116">
+    <!-- Синя нордична туніка -->
+    <path
+       d="M 26 42 L 21 72 Q 40 76 59 72 L 54 42 Z"
+       fill="url(#vik_tunic)"
+       id="path100" />
+    <!-- Орнаментальна облямівка подолу -->
+    <path
+       d="M 22 69 Q 40 74 58 69 L 58 72 Q 40 76 22 72 Z"
+       fill="url(#vik_bronze)"
+       id="path102" />
+    <!-- Важкий шкіряний ремінь з круглою рунічною пряжкою -->
+    <rect
+       x="23"
+       y="61"
+       width="34"
+       height="6.5"
+       rx="1.5"
+       fill="url(#vik_leather)"
+       id="rect104" />
+    <circle
+       cx="40"
+       cy="64"
+       r="5"
+       fill="url(#vik_bronze)"
+       id="circle106" />
+    <circle
+       cx="40"
+       cy="64"
+       r="3"
+       fill="#2d1600"
+       id="circle108" />
+    <circle
+       cx="40"
+       cy="64"
+       r="1.5"
+       fill="url(#vik_bronze)"
+       id="circle110" />
+    <!-- Передні краї хутряної накидки на грудях -->
+    <path
+       d="M 22 42 Q 28 56 34 50 Q 30 42 26 42 Z"
+       fill="url(#vik_fur)"
+       id="path112" />
+    <path
+       d="M 58 42 Q 52 56 46 50 Q 50 42 54 42 Z"
+       fill="url(#vik_fur)"
+       id="path114" />
+  </g>
+  <!-- Ліва рука з круглим вікінгським щитом (шарнір 12, 48) -->
+  <!-- Права рука з бойовою вікінгською сокирою (шарнір 68, 48) -->
+  <g
+     class="ar"
+     id="g170">
+    <!-- Рука з наручем -->
+    <path
+       d="M 62 46 L 66 58 L 60 62 L 58 48 Z"
+       fill="url(#vik_skin)"
+       id="path150" />
+    <rect
+       x="59"
+       y="52"
+       width="7"
+       height="8"
+       rx="1.5"
+       transform="rotate(15 62 56)"
+       fill="url(#vik_leather)"
+       id="rect152" />
+    <!-- Бойова сокира з широким бородатим лезом -->
+    <g
+       transform="rotate(15 66 54)"
+       id="g168">
+      <!-- Дерев'яне топорище -->
+      <rect
+         x="65"
+         y="24"
+         width="3.5"
+         height="42"
+         rx="1"
+         fill="#795548"
+         id="rect154" />
+      <!-- Шкіряна обмотка рукояті -->
+      <rect
+         x="64.5"
+         y="44"
+         width="4.5"
+         height="12"
+         rx="1"
+         fill="url(#vik_leather)"
+         id="rect156" />
+      <line
+         x1="65"
+         y1="47"
+         x2="69"
+         y2="49"
+         stroke="#d35400"
+         stroke-width="0.8"
+         id="line158" />
+      <line
+         x1="65"
+         y1="52"
+         x2="69"
+         y2="54"
+         stroke="#d35400"
+         stroke-width="0.8"
+         id="line160" />
+      <!-- Сталеве коване лезо сокири (bearded axe) -->
+      <path
+         d="M 67 25 L 77 18 Q 80 27 76 38 L 68 33 Z"
+         fill="url(#vik_axe_head)"
+         id="path162" />
+      <!-- Вістря/заточка леза -->
+      <path
+         d="M 77 18 Q 80 27 76 38"
+         stroke="#ffffff"
+         stroke-width="1.2"
+         stroke-linecap="round"
+         fill="none"
+         id="path164" />
+      <!-- Обух сокири -->
+      <rect
+         x="64"
+         y="26"
+         width="5"
+         height="6"
+         rx="1"
+         fill="url(#vik_iron)"
+         id="rect166" />
+    </g>
+  </g>
+  <!-- Голова у шоломі з рогами, бородою та косами (анімується .phead, точка 40, 24) -->
+  <g
+     class="phead"
+     id="g260">
+    <path
+       d="M 35 28.5 Q 40 33 45 28.5"
+       stroke="#873600"
+       stroke-width="1.8"
+       stroke-linecap="round"
+       fill="none"
+       id="path224" />
+    <!-- Вогняне мідне волосся (задній шар) -->
+    <path
+       d="M 22 24 Q 16 38 20 50 Q 26 44 26 34 Z"
+       fill="url(#vik_hair)"
+       id="path172" />
+    <path
+       d="M 58 24 Q 64 38 60 50 Q 54 44 54 34 Z"
+       fill="url(#vik_hair)"
+       id="path174" />
+    <!-- Роги вікінгського шолома! -->
+    <!-- Лівий ріг -->
+    <g
+       id="g182">
+      <path
+         d="M 24 16 Q 10 12 6 2 Q 14 6 23 11 Z"
+         fill="url(#vik_horn)"
+         id="path176" />
+      <path
+         d="M 6 2 Q 8 6 11 9"
+         stroke="#4e342e"
+         stroke-width="1"
+         fill="none"
+         id="path178" />
+      <!-- Бронзове кріплення рога -->
+      <path
+         d="M 21 13 L 24 18"
+         stroke="url(#vik_bronze)"
+         stroke-width="2.5"
+         id="path180" />
+    </g>
+    <!-- Правий ріг -->
+    <g
+       id="g190">
+      <path
+         d="M 56 16 Q 70 12 74 2 Q 66 6 57 11 Z"
+         fill="url(#vik_horn)"
+         id="path184" />
+      <path
+         d="M 74 2 Q 72 6 69 9"
+         stroke="#4e342e"
+         stroke-width="1"
+         fill="none"
+         id="path186" />
+      <!-- Бронзове кріплення рога -->
+      <path
+         d="M 59 13 L 56 18"
+         stroke="url(#vik_bronze)"
+         stroke-width="2.5"
+         id="path188" />
+    </g>
+    <!-- Обличчя вікінга -->
+    <circle
+       cx="40"
+       cy="25"
+       r="17"
+       fill="url(#vik_skin)"
+       id="circle192" />
+    <!-- Рум'яні щічки від північного вітру -->
+    <circle
+       cx="28"
+       cy="27"
+       r="4.5"
+       fill="url(#vik_cheek)"
+       id="circle194" />
+    <circle
+       cx="52"
+       cy="27"
+       r="4.5"
+       fill="url(#vik_cheek)"
+       id="circle196" />
+    <!-- Очі вікінга (веселі, зухвалі та сміливі) -->
+    <!-- Ліве око -->
+    <g
+       id="g208">
+      <ellipse
+         cx="31.5"
+         cy="23"
+         rx="3.8"
+         ry="4.5"
+         fill="#ffffff"
+         id="ellipse198" />
+      <circle
+         cx="32"
+         cy="23.5"
+         r="2.8"
+         fill="#2e7d32"
+         id="circle200" />
+      <circle
+         cx="32.5"
+         cy="23.8"
+         r="1.7"
+         fill="#143618"
+         id="circle202" />
+      <circle
+         cx="33.2"
+         cy="22.2"
+         r="1.1"
+         fill="#ffffff"
+         id="circle204" />
+      <!-- Густа руда брова -->
+      <path
+         d="M 27 18 Q 32 15 37 18"
+         stroke="#ba4a00"
+         stroke-width="2"
+         stroke-linecap="round"
+         fill="none"
+         id="path206" />
+    </g>
+    <!-- Праве око -->
+    <g
+       id="g220">
+      <ellipse
+         cx="48.5"
+         cy="23"
+         rx="3.8"
+         ry="4.5"
+         fill="#ffffff"
+         id="ellipse210" />
+      <circle
+         cx="48"
+         cy="23.5"
+         r="2.8"
+         fill="#2e7d32"
+         id="circle212" />
+      <circle
+         cx="47.5"
+         cy="23.8"
+         r="1.7"
+         fill="#143618"
+         id="circle214" />
+      <circle
+         cx="48.2"
+         cy="22.2"
+         r="1.1"
+         fill="#ffffff"
+         id="circle216" />
+      <!-- Густа руда брова -->
+      <path
+         d="M 43 18 Q 48 15 53 18"
+         stroke="#ba4a00"
+         stroke-width="2"
+         stroke-linecap="round"
+         fill="none"
+         id="path218" />
+    </g>
+    <!-- Кирпатий скандинавський ніс -->
+    <path
+       d="M 38 25 Q 40 27 42 25"
+       stroke="#cb7a58"
+       stroke-width="1.6"
+       stroke-linecap="round"
+       fill="none"
+       id="path222" />
+    <!-- Широка задерикувата усмішка -->
+    <!-- Руда вікінгська борода з кісками та кільцями! -->
+    <g
+       id="g238">
+      <!-- Основна маса бороди -->
+      <path
+         d="m 28,28 q -4,8 3,16 9,6 18,0 7,-8 3,-16 -12,3 -24,0 z"
+         fill="url(#vik_hair)"
+         id="path226"
+         style="fill:url(#linearGradient1081)" />
+      <!-- Вуса -->
+      <!-- Дві косички бороди з бронзовими кільцями -->
+      <!-- Ліва кіска -->
+      <path
+         d="m 34,44 -1,9 h 4 v -9 z"
+         fill="url(#vik_hair)"
+         id="path230"
+         style="fill:url(#linearGradient1083)" />
+      <rect
+         x="32"
+         y="47"
+         width="6"
+         height="3"
+         rx="1"
+         fill="url(#vik_bronze)"
+         id="rect232"
+         style="fill:url(#linearGradient1085)" />
+      <!-- Права кіска -->
+      <path
+         d="m 43,44 v 9 h 4 l -1,-9 z"
+         fill="url(#vik_hair)"
+         id="path234"
+         style="fill:url(#linearGradient1087)" />
+      <rect
+         x="42"
+         y="47"
+         width="6"
+         height="3"
+         rx="1"
+         fill="url(#vik_bronze)"
+         id="rect236"
+         style="fill:url(#linearGradient1089)" />
+      <path
+         d="m 31.593756,30.858587 q 9,-3 18,0 -9,-6 -18,0 z"
+         fill="#ba4a00"
+         id="path228" />
+    </g>
+    <!-- Нордичний залізний шолом -->
+    <g
+       id="g258"
+       transform="matrix(1,0,0,1.4285713,0,-5.8571413)">
+      <!-- Купол шолома -->
+      <path
+         d="M 21,18 C 21,7 59,7 59,18 Z"
+         fill="url(#vik_iron)"
+         id="path240"
+         style="fill:url(#linearGradient1099)" />
+      <!-- Центральна кована смуга (гребінь шолома) -->
+      <path
+         d="m 37,8 q 3,-1 6,0 l -1,10 h -4 z"
+         fill="url(#vik_iron)"
+         id="path242"
+         style="fill:url(#linearGradient1101)" />
+      <line
+         x1="40"
+         y1="8"
+         x2="40"
+         y2="18"
+         stroke="#eceff1"
+         stroke-width="1"
+         id="line244" />
+      <!-- Бронзовий обідок шолома з заклепками -->
+      <path
+         d="m 21,16 q 19,-3 38,0 v 3 Q 40,16 21,19 Z"
+         fill="url(#vik_bronze)"
+         id="path246"
+         style="fill:url(#linearGradient1103)" />
+      <!-- Т-подібний наносник (spectacle/nasal guard) -->
+      <path
+         d="m 38,16 h 4 l -1,7 h -2 z"
+         fill="url(#vik_bronze)"
+         id="path248"
+         style="fill:url(#linearGradient1105)" />
+      <!-- Заклепки на обідку шолома -->
+      <circle
+         cx="26"
+         cy="17"
+         r="1"
+         fill="#fff9c4"
+         id="circle250" />
+      <circle
+         cx="33"
+         cy="16"
+         r="1"
+         fill="#fff9c4"
+         id="circle252" />
+      <circle
+         cx="47"
+         cy="16"
+         r="1"
+         fill="#fff9c4"
+         id="circle254" />
+      <circle
+         cx="54"
+         cy="17"
+         r="1"
+         fill="#fff9c4"
+         id="circle256" />
+    </g>
+  </g>
+  <g
+     class="al"
+     id="g148">
+    <!-- Рука з наручем -->
+    <path
+       d="M 18 46 L 13 58 L 19 62 L 22 48 Z"
+       fill="url(#vik_skin)"
+       id="path118" />
+    <rect
+       x="14"
+       y="52"
+       width="7"
+       height="8"
+       rx="1.5"
+       transform="rotate(-15 17 56)"
+       fill="url(#vik_leather)"
+       id="rect120" />
+    <!-- Круглий вікінгський щит (drakkar shield) -->
+    <g
+       transform="rotate(5 16 60)"
+       id="g146">
+      <!-- Тінь щита -->
+      <circle
+         cx="16"
+         cy="60"
+         r="15"
+         fill="#1c2833"
+         opacity="0.3"
+         transform="translate(1, 1)"
+         id="circle122" />
+      <!-- Основа щита -->
+      <circle
+         cx="16"
+         cy="60"
+         r="14.5"
+         fill="#78281f"
+         id="circle124" />
+      <!-- Сектори щита (розфарбований по чвертях: червоний і морський зелений) -->
+      <path
+         d="M 16 60 L 16 45.5 A 14.5 14.5 0 0 1 30.5 60 Z"
+         fill="#117864"
+         id="path126" />
+      <path
+         d="M 16 60 L 1.5 60 A 14.5 14.5 0 0 1 16 74.5 Z"
+         fill="#117864"
+         id="path128" />
+      <!-- Кований залізний обід щита з заклепками -->
+      <circle
+         cx="16"
+         cy="60"
+         r="14.5"
+         stroke="url(#vik_iron)"
+         stroke-width="2"
+         fill="none"
+         id="circle130" />
+      <!-- Центральний залізний умбон (boss) -->
+      <circle
+         cx="16"
+         cy="60"
+         r="5"
+         fill="url(#vik_iron)"
+         id="circle132" />
+      <circle
+         cx="16"
+         cy="60"
+         r="2.5"
+         fill="#cfd8dc"
+         id="circle134" />
+      <circle
+         cx="16"
+         cy="60"
+         r="1"
+         fill="#263238"
+         id="circle136" />
+      <!-- Заклепки на обідку -->
+      <circle
+         cx="16"
+         cy="47"
+         r="0.8"
+         fill="#eceff1"
+         id="circle138" />
+      <circle
+         cx="29"
+         cy="60"
+         r="0.8"
+         fill="#eceff1"
+         id="circle140" />
+      <circle
+         cx="16"
+         cy="73"
+         r="0.8"
+         fill="#eceff1"
+         id="circle142" />
+      <circle
+         cx="3"
+         cy="60"
+         r="0.8"
+         fill="#eceff1"
+         id="circle144" />
+    </g>
+  </g>
+</svg>

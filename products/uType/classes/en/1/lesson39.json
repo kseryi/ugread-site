@@ -1,0 +1,11 @@
+{
+  "title": "Lesson 39: Complete Keyboard Pangram & Numbers",
+  "text": "The quick brown fox jumps over 12 lazy dogs near 5 quiet rivers! \"Keep typing!\" he shouted.",
+  "words": [
+    "quick",
+    "jumps",
+    "rivers",
+    "typing",
+    "shouted"
+  ]
+}

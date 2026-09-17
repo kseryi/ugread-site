@@ -1,0 +1,950 @@
+{
+  "ua": {
+    "1": [
+      {
+        "id": "lesson1",
+        "title": "Урок 01: Опорні клавіші — А та О",
+        "file": "classes/ua/1/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Урок 02: Вказівні пальці — В та Л",
+        "file": "classes/ua/1/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Урок 03: Середні пальці — І та Д",
+        "file": "classes/ua/1/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Урок 04: Безіменні пальці — Ф та Ж",
+        "file": "classes/ua/1/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Урок 05: Мізинці — П та Р (розширення базового ряду)",
+        "file": "classes/ua/1/lesson5.json"
+      },
+      {
+        "id": "lesson6",
+        "title": "Урок 06: Правий край базового ряду — Є",
+        "file": "classes/ua/1/lesson6.json"
+      },
+      {
+        "id": "lesson7",
+        "title": "Урок 07: Закріплення повного базового (домашнього) ряду",
+        "file": "classes/ua/1/lesson7.json"
+      },
+      {
+        "id": "lesson8",
+        "title": "Урок 08: Верхній ряд — Е та Н (вказівні пальці)",
+        "file": "classes/ua/1/lesson8.json"
+      },
+      {
+        "id": "lesson9",
+        "title": "Урок 09: Верхній ряд — К та Г (вказівні зміщення)",
+        "file": "classes/ua/1/lesson9.json"
+      },
+      {
+        "id": "lesson10",
+        "title": "Урок 10: Верхній ряд — У та Ш (середній та безіменний)",
+        "file": "classes/ua/1/lesson10.json"
+      },
+      {
+        "id": "lesson11",
+        "title": "Урок 11: Верхній ряд — Ц та Щ (лівий та правий безіменний)",
+        "file": "classes/ua/1/lesson11.json"
+      },
+      {
+        "id": "lesson12",
+        "title": "Урок 12: Верхній ряд — Й, З, Х (периферія верхнього ряду)",
+        "file": "classes/ua/1/lesson12.json"
+      },
+      {
+        "id": "lesson13",
+        "title": "Урок 13: Верхній ряд — Ї (правий мізинець вгору)",
+        "file": "classes/ua/1/lesson13.json"
+      },
+      {
+        "id": "lesson14",
+        "title": "Урок 14: Комбінований тренажер базового та верхнього рядів",
+        "file": "classes/ua/1/lesson14.json"
+      },
+      {
+        "id": "lesson15",
+        "title": "Урок 15: Нижній ряд — М та И (вказівні пальці)",
+        "file": "classes/ua/1/lesson15.json"
+      },
+      {
+        "id": "lesson16",
+        "title": "Урок 16: Нижній ряд — Т та Б (зміщення пальців униз)",
+        "file": "classes/ua/1/lesson16.json"
+      },
+      {
+        "id": "lesson17",
+        "title": "Урок 17: Нижній ряд — С та Ч (середній та вказівний зліва)",
+        "file": "classes/ua/1/lesson17.json"
+      },
+      {
+        "id": "lesson18",
+        "title": "Урок 18: Нижній ряд — Я та Ю (лівий та правий мізинці)",
+        "file": "classes/ua/1/lesson18.json"
+      },
+      {
+        "id": "lesson19",
+        "title": "Урок 19: Нижній ряд — Ь (знак м'якшення)",
+        "file": "classes/ua/1/lesson19.json"
+      },
+      {
+        "id": "lesson20",
+        "title": "Урок 20: Повний алфавітний набір літер",
+        "file": "classes/ua/1/lesson20.json"
+      },
+      {
+        "id": "lesson21",
+        "title": "Урок 21: Розділові знаки — Крапка (.)",
+        "file": "classes/ua/1/lesson21.json"
+      },
+      {
+        "id": "lesson22",
+        "title": "Урок 22: Розділові знаки — Кома (,)",
+        "file": "classes/ua/1/lesson22.json"
+      },
+      {
+        "id": "lesson23",
+        "title": "Урок 23: Апостроф (') в українських словах",
+        "file": "classes/ua/1/lesson23.json"
+      },
+      {
+        "id": "lesson24",
+        "title": "Урок 24: Знак оклику (!) та Знак питання (?)",
+        "file": "classes/ua/1/lesson24.json"
+      },
+      {
+        "id": "lesson25",
+        "title": "Урок 25: Тире (—), Двокрапка (:) та Лапки («»)",
+        "file": "classes/ua/1/lesson25.json"
+      },
+      {
+        "id": "lesson26",
+        "title": "Урок 26: Великі літери — Правий та лівий Shift",
+        "file": "classes/ua/1/lesson26.json"
+      },
+      {
+        "id": "lesson27",
+        "title": "Урок 27: Імена та прізвища (велика літера)",
+        "file": "classes/ua/1/lesson27.json"
+      },
+      {
+        "id": "lesson28",
+        "title": "Урок 28: Цифровий ряд — 1, 2, 3, 4, 5",
+        "file": "classes/ua/1/lesson28.json"
+      },
+      {
+        "id": "lesson29",
+        "title": "Урок 29: Цифровий ряд — 6, 7, 8, 9, 0",
+        "file": "classes/ua/1/lesson29.json"
+      },
+      {
+        "id": "lesson30",
+        "title": "Урок 30: Повний цифровий набір — 0..9",
+        "file": "classes/ua/1/lesson30.json"
+      },
+      {
+        "id": "lesson31",
+        "title": "Урок 31: Ритмічні двобуквені зв'язки",
+        "file": "classes/ua/1/lesson31.json"
+      },
+      {
+        "id": "lesson32",
+        "title": "Урок 32: Зв'язки літер з високою частотою (СТ, ПР, КР, ТР)",
+        "file": "classes/ua/1/lesson32.json"
+      },
+      {
+        "id": "lesson33",
+        "title": "Урок 33: Довгі слова та складна моторика",
+        "file": "classes/ua/1/lesson33.json"
+      },
+      {
+        "id": "lesson34",
+        "title": "Урок 34: Рідний край — Зв'язний текст 1",
+        "file": "classes/ua/1/lesson34.json"
+      },
+      {
+        "id": "lesson35",
+        "title": "Урок 35: Мова і слово — Зв'язний текст 2",
+        "file": "classes/ua/1/lesson35.json"
+      },
+      {
+        "id": "lesson36",
+        "title": "Урок 36: Комп'ютер та майбутнє — Зв'язний текст 3",
+        "file": "classes/ua/1/lesson36.json"
+      },
+      {
+        "id": "lesson37",
+        "title": "Урок 37: Прислів'я та народна мудрість",
+        "file": "classes/ua/1/lesson37.json"
+      },
+      {
+        "id": "lesson38",
+        "title": "Урок 38: Діалог та пряма мова (пунктуація)",
+        "file": "classes/ua/1/lesson38.json"
+      },
+      {
+        "id": "lesson39",
+        "title": "Урок 39: Всі символи клавіатури в одному реченні",
+        "file": "classes/ua/1/lesson39.json"
+      },
+      {
+        "id": "lesson40",
+        "title": "Урок 40: Майстер сліпого набору (Підсумковий екзамен)",
+        "file": "classes/ua/1/lesson40.json"
+      }
+    ],
+    "2": [
+      {
+        "id": "lesson1",
+        "title": "Осінь у лісі",
+        "file": "classes/ua/2/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Моя родина",
+        "file": "classes/ua/2/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Шкільні друзі",
+        "file": "classes/ua/2/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Веселий зоопарк",
+        "file": "classes/ua/2/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Смачне літо",
+        "file": "classes/ua/2/lesson5.json"
+      }
+    ],
+    "3": [
+      {
+        "id": "lesson1",
+        "title": "Рідний край",
+        "file": "classes/ua/3/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Пташиний світ",
+        "file": "classes/ua/3/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Чорне море",
+        "file": "classes/ua/3/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Корисні книги",
+        "file": "classes/ua/3/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Зимова казка",
+        "file": "classes/ua/3/lesson5.json"
+      }
+    ],
+    "4": [
+      {
+        "id": "lesson1",
+        "title": "Пори року",
+        "file": "classes/ua/4/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Тварини лісу",
+        "file": "classes/ua/4/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Таємниці космосу",
+        "file": "classes/ua/4/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Український рушник",
+        "file": "classes/ua/4/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Карпатські полонини",
+        "file": "classes/ua/4/lesson5.json"
+      }
+    ],
+    "5": [
+      {
+        "id": "lesson1",
+        "title": "Природа України",
+        "file": "classes/ua/5/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Водойми України",
+        "file": "classes/ua/5/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Тваринний світ степів",
+        "file": "classes/ua/5/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Прогноз погоди",
+        "file": "classes/ua/5/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Вивчення рідної мови",
+        "file": "classes/ua/5/lesson5.json"
+      }
+    ],
+    "6": [
+      {
+        "id": "lesson1",
+        "title": "Україна — моя Батьківщина",
+        "file": "classes/ua/6/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Символи України",
+        "file": "classes/ua/6/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Великі мандрівники",
+        "file": "classes/ua/6/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Збереження довкілля",
+        "file": "classes/ua/6/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Комп’ютери та програмування",
+        "file": "classes/ua/6/lesson5.json"
+      }
+    ],
+    "7": [
+      {
+        "id": "lesson1",
+        "title": "Козацька слава",
+        "file": "classes/ua/7/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Середньовічні замки",
+        "file": "classes/ua/7/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Закони фізики",
+        "file": "classes/ua/7/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Музичне диво",
+        "file": "classes/ua/7/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Здоровий спосіб життя",
+        "file": "classes/ua/7/lesson5.json"
+      }
+    ],
+    "8": [
+      {
+        "id": "lesson1",
+        "title": "Видатні українці",
+        "file": "classes/ua/8/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Таємниці хімії",
+        "file": "classes/ua/8/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Сучасна архітектура",
+        "file": "classes/ua/8/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Цифрове спілкування",
+        "file": "classes/ua/8/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Освоєння космосу",
+        "file": "classes/ua/8/lesson5.json"
+      }
+    ],
+    "9": [
+      {
+        "id": "lesson1",
+        "title": "Культура і мистецтво",
+        "file": "classes/ua/9/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Права людини та закон",
+        "file": "classes/ua/9/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Генетика і спадковість",
+        "file": "classes/ua/9/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Відновлювана енергія",
+        "file": "classes/ua/9/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Мистецтво оратора",
+        "file": "classes/ua/9/lesson5.json"
+      }
+    ],
+    "10": [
+      {
+        "id": "lesson1",
+        "title": "Наука і технології",
+        "file": "classes/ua/10/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Філософські роздуми",
+        "file": "classes/ua/10/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Світова класична література",
+        "file": "classes/ua/10/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Економічні принципи",
+        "file": "classes/ua/10/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Дослідження Всесвіту",
+        "file": "classes/ua/10/lesson5.json"
+      }
+    ],
+    "11": [
+      {
+        "id": "lesson1",
+        "title": "Майбутнє України",
+        "file": "classes/ua/11/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Міжнародна дипломатія",
+        "file": "classes/ua/11/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Концепція сталого розвитку",
+        "file": "classes/ua/11/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Лідерство та інноваційність",
+        "file": "classes/ua/11/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Кібербезпека та приватність",
+        "file": "classes/ua/11/lesson5.json"
+      }
+    ]
+  },
+  "en": {
+    "1": [
+      {
+        "id": "lesson1",
+        "title": "Lesson 01: Base Anchor Keys — F and J",
+        "file": "classes/en/1/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Lesson 02: Home Row — D and K (Middle fingers)",
+        "file": "classes/en/1/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Lesson 03: Home Row — S and L (Ring fingers)",
+        "file": "classes/en/1/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Lesson 04: Home Row — A and ; (Pinky fingers)",
+        "file": "classes/en/1/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Lesson 05: Home Row Center — G and H (Index reach)",
+        "file": "classes/en/1/lesson5.json"
+      },
+      {
+        "id": "lesson6",
+        "title": "Lesson 06: Full Home Row Master Drill",
+        "file": "classes/en/1/lesson6.json"
+      },
+      {
+        "id": "lesson7",
+        "title": "Lesson 07: Top Row — R and U (Index fingers)",
+        "file": "classes/en/1/lesson7.json"
+      },
+      {
+        "id": "lesson8",
+        "title": "Lesson 08: Top Row — E and I (Middle fingers)",
+        "file": "classes/en/1/lesson8.json"
+      },
+      {
+        "id": "lesson9",
+        "title": "Lesson 09: Top Row — W and O (Ring fingers)",
+        "file": "classes/en/1/lesson9.json"
+      },
+      {
+        "id": "lesson10",
+        "title": "Lesson 10: Top Row — Q and P (Pinky fingers)",
+        "file": "classes/en/1/lesson10.json"
+      },
+      {
+        "id": "lesson11",
+        "title": "Lesson 11: Top Row Center — T and Y (Index reach)",
+        "file": "classes/en/1/lesson11.json"
+      },
+      {
+        "id": "lesson12",
+        "title": "Lesson 12: Combined Home and Top Rows Drill",
+        "file": "classes/en/1/lesson12.json"
+      },
+      {
+        "id": "lesson13",
+        "title": "Lesson 13: Bottom Row — V and M (Index fingers)",
+        "file": "classes/en/1/lesson13.json"
+      },
+      {
+        "id": "lesson14",
+        "title": "Lesson 14: Bottom Row — C and , (Middle fingers)",
+        "file": "classes/en/1/lesson14.json"
+      },
+      {
+        "id": "lesson15",
+        "title": "Lesson 15: Bottom Row — X and . (Ring fingers)",
+        "file": "classes/en/1/lesson15.json"
+      },
+      {
+        "id": "lesson16",
+        "title": "Lesson 16: Bottom Row — Z and / (Pinky fingers)",
+        "file": "classes/en/1/lesson16.json"
+      },
+      {
+        "id": "lesson17",
+        "title": "Lesson 17: Bottom Row Center — B and N (Index reach)",
+        "file": "classes/en/1/lesson17.json"
+      },
+      {
+        "id": "lesson18",
+        "title": "Lesson 18: Full Alphabet Across All Three Rows",
+        "file": "classes/en/1/lesson18.json"
+      },
+      {
+        "id": "lesson19",
+        "title": "Lesson 19: Punctuation — Period (.) and Comma (,)",
+        "file": "classes/en/1/lesson19.json"
+      },
+      {
+        "id": "lesson20",
+        "title": "Lesson 20: Punctuation — Apostrophe (') and Quotes (\")",
+        "file": "classes/en/1/lesson20.json"
+      },
+      {
+        "id": "lesson21",
+        "title": "Lesson 21: Question Mark (?) and Exclamation (!)",
+        "file": "classes/en/1/lesson21.json"
+      },
+      {
+        "id": "lesson22",
+        "title": "Lesson 22: Colon (:), Semicolon (;), and Hyphen (-)",
+        "file": "classes/en/1/lesson22.json"
+      },
+      {
+        "id": "lesson23",
+        "title": "Lesson 23: Shift Keys — Left & Right Hand Capitals",
+        "file": "classes/en/1/lesson23.json"
+      },
+      {
+        "id": "lesson24",
+        "title": "Lesson 24: Proper Nouns and Cities (Capitalization)",
+        "file": "classes/en/1/lesson24.json"
+      },
+      {
+        "id": "lesson25",
+        "title": "Lesson 25: Names and Titles (Shift practice)",
+        "file": "classes/en/1/lesson25.json"
+      },
+      {
+        "id": "lesson26",
+        "title": "Lesson 26: Number Row Left Hand — 1, 2, 3, 4, 5",
+        "file": "classes/en/1/lesson26.json"
+      },
+      {
+        "id": "lesson27",
+        "title": "Lesson 27: Number Row Right Hand — 6, 7, 8, 9, 0",
+        "file": "classes/en/1/lesson27.json"
+      },
+      {
+        "id": "lesson28",
+        "title": "Lesson 28: Complete Number Row 0..9",
+        "file": "classes/en/1/lesson28.json"
+      },
+      {
+        "id": "lesson29",
+        "title": "Lesson 29: Common Bigrams — TH, ER, ON, AN",
+        "file": "classes/en/1/lesson29.json"
+      },
+      {
+        "id": "lesson30",
+        "title": "Lesson 30: Common Bigrams — IN, ED, TE, ES",
+        "file": "classes/en/1/lesson30.json"
+      },
+      {
+        "id": "lesson31",
+        "title": "Lesson 31: Common Trigrams — ION, ENT, FOR, TIO",
+        "file": "classes/en/1/lesson31.json"
+      },
+      {
+        "id": "lesson32",
+        "title": "Lesson 32: Double Letter Words Drill",
+        "file": "classes/en/1/lesson32.json"
+      },
+      {
+        "id": "lesson33",
+        "title": "Lesson 33: Short High-Frequency Words",
+        "file": "classes/en/1/lesson33.json"
+      },
+      {
+        "id": "lesson34",
+        "title": "Lesson 34: Rhythm and Flow — Sentences 1",
+        "file": "classes/en/1/lesson34.json"
+      },
+      {
+        "id": "lesson35",
+        "title": "Lesson 35: Nature and Life — Sentences 2",
+        "file": "classes/en/1/lesson35.json"
+      },
+      {
+        "id": "lesson36",
+        "title": "Lesson 36: Technology and Coding — Sentences 3",
+        "file": "classes/en/1/lesson36.json"
+      },
+      {
+        "id": "lesson37",
+        "title": "Lesson 37: Wisdom and Proverbs",
+        "file": "classes/en/1/lesson37.json"
+      },
+      {
+        "id": "lesson38",
+        "title": "Lesson 38: Dialogue and Direct Quotes",
+        "file": "classes/en/1/lesson38.json"
+      },
+      {
+        "id": "lesson39",
+        "title": "Lesson 39: Complete Keyboard Pangram & Numbers",
+        "file": "classes/en/1/lesson39.json"
+      },
+      {
+        "id": "lesson40",
+        "title": "Lesson 40: Touch Typing Master Graduation",
+        "file": "classes/en/1/lesson40.json"
+      }
+    ],
+    "2": [
+      {
+        "id": "lesson1",
+        "title": "My Family",
+        "file": "classes/en/2/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Animals Around Us",
+        "file": "classes/en/2/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "My School Day",
+        "file": "classes/en/2/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "In the Garden",
+        "file": "classes/en/2/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Happy Colors",
+        "file": "classes/en/2/lesson5.json"
+      }
+    ],
+    "3": [
+      {
+        "id": "lesson1",
+        "title": "My School",
+        "file": "classes/en/3/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Seasons",
+        "file": "classes/en/3/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Friendly Pets",
+        "file": "classes/en/3/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "My Birthday Party",
+        "file": "classes/en/3/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Trip to the Forest",
+        "file": "classes/en/3/lesson5.json"
+      }
+    ],
+    "4": [
+      {
+        "id": "lesson1",
+        "title": "Nature Around Us",
+        "file": "classes/en/4/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Food and Health",
+        "file": "classes/en/4/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Wonders of the Sea",
+        "file": "classes/en/4/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Solar System",
+        "file": "classes/en/4/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Favorite Hobbies",
+        "file": "classes/en/4/lesson5.json"
+      }
+    ],
+    "5": [
+      {
+        "id": "lesson1",
+        "title": "Ukraine and Its Nature",
+        "file": "classes/en/5/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Cities and Countries",
+        "file": "classes/en/5/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Animal Kingdom",
+        "file": "classes/en/5/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Weather Forecast",
+        "file": "classes/en/5/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Learning Languages",
+        "file": "classes/en/5/lesson5.json"
+      }
+    ],
+    "6": [
+      {
+        "id": "lesson1",
+        "title": "History of Ukraine",
+        "file": "classes/en/6/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Science and Discovery",
+        "file": "classes/en/6/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Great Explorers",
+        "file": "classes/en/6/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Protecting Environment",
+        "file": "classes/en/6/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Computers and Coding",
+        "file": "classes/en/6/lesson5.json"
+      }
+    ],
+    "7": [
+      {
+        "id": "lesson1",
+        "title": "World Geography",
+        "file": "classes/en/7/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Medieval Kingdoms",
+        "file": "classes/en/7/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Laws of Physics",
+        "file": "classes/en/7/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Wonders of Music",
+        "file": "classes/en/7/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Healthy Lifestyle",
+        "file": "classes/en/7/lesson5.json"
+      }
+    ],
+    "8": [
+      {
+        "id": "lesson1",
+        "title": "Literature and Arts",
+        "file": "classes/en/8/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Chemistry of Matter",
+        "file": "classes/en/8/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Modern Architecture",
+        "file": "classes/en/8/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Digital Communication",
+        "file": "classes/en/8/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Space Exploration",
+        "file": "classes/en/8/lesson5.json"
+      }
+    ],
+    "9": [
+      {
+        "id": "lesson1",
+        "title": "Technology Today",
+        "file": "classes/en/9/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Human Rights and Law",
+        "file": "classes/en/9/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Genetic Wonders",
+        "file": "classes/en/9/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Renewable Resources",
+        "file": "classes/en/9/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Public Speaking",
+        "file": "classes/en/9/lesson5.json"
+      }
+    ],
+    "10": [
+      {
+        "id": "lesson1",
+        "title": "Economics and Society",
+        "file": "classes/en/10/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Great Philosophers",
+        "file": "classes/en/10/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "World Literature",
+        "file": "classes/en/10/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Quantum Physics",
+        "file": "classes/en/10/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Global Ecology",
+        "file": "classes/en/10/lesson5.json"
+      }
+    ],
+    "11": [
+      {
+        "id": "lesson1",
+        "title": "Future and Progress",
+        "file": "classes/en/11/lesson1.json"
+      },
+      {
+        "id": "lesson2",
+        "title": "Global Diplomacy",
+        "file": "classes/en/11/lesson2.json"
+      },
+      {
+        "id": "lesson3",
+        "title": "Artificial Intelligence Ethics",
+        "file": "classes/en/11/lesson3.json"
+      },
+      {
+        "id": "lesson4",
+        "title": "Environmental Innovation",
+        "file": "classes/en/11/lesson4.json"
+      },
+      {
+        "id": "lesson5",
+        "title": "Cybersecurity and Privacy",
+        "file": "classes/en/11/lesson5.json"
+      }
+    ]
+  }
+}

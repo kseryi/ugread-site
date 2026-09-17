@@ -1,0 +1,6 @@
+{
+  "name": "🐛 Клавіатурний тренажер — Хробачки",
+  "description": "Клавіатурний тренажер-гра «Хробачки» (uType) з рівнями, босами, вибором героїв, темами та статистикою",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

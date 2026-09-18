@@ -18,7 +18,7 @@ const CATEGORIES_DATA = {
       { name: 'Дроби для початківців', link: './products/fractions/fractions.html' },
       { name: 'Синусоїда', link: './products/uSinX/sinx.htm' },
       { name: 'Теорема Піфагора', link: './products/pythagoras/pythagoras_areas.html' },
-      { name: 'Додатки в розробці', link: '' },
+     
      
     ]
   },
@@ -85,7 +85,7 @@ const CATEGORIES_DATA = {
       { name: 'Веб-технології: HTML, CSS та JS', link: './products/uweb/index.html' },
       { name: 'Блочне програмування', link: 'https://kseryi.github.io/uPyth/' },
        { name: 'Стікербос', link: './products/stikerbox/stikerbox.html' },
-       { name: 'Додатки в розробці', link: '' },
+      { name: 'uType - клавіатурний тренажер', link: './products/uType/index.html' },
     ]
   },
   geography: {

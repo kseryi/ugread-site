@@ -44,7 +44,8 @@ let G = {
     hero: 'panda',
     studentId: 'default',
     questEnabled: false,   // чи увімкнув учитель міні-квест для цього посилання
-    questCoins: 0          // "банк" монет міні-квесту (обмінюється на життя поточного рівня)
+    questCoins: 0,         // "банк" монет міні-квесту (обмінюється на життя поточного рівня)
+    questSpeed: 5          // швидкість падіння монет у квесті, 1 (повільно) — 10 (швидко)
 };
 let eng = null, inp = null, rnd = null, bossTmrs = [];
 let soundCtx = null;
@@ -909,11 +910,22 @@ function updateQuestBankUI() {
     el.textContent = `🪙 ${G.questCoins}`;
 }
 
-/** Швидкість падіння монет (px за тік), невелика, трохи росте зі складністю уроку. */
-function questFallSpeed(difficulty) {
-    const map = { 0: 0.6, 1: 0.8, 2: 1.0, 3: 1.3, 4: 1.7, 5: 2.1 };
-    const d = (difficulty !== undefined && difficulty !== null) ? Number(difficulty) : 3;
-    return map[d] !== undefined ? map[d] : 1.3;
+/** Швидкість падіння монет (px за тік). Керується повзунком учителя (1-10), передається через ?qspeed=. */
+function questFallSpeed(speedLevel) {
+    const lvl = (speedLevel !== undefined && speedLevel !== null && speedLevel !== '') ? Number(speedLevel) : 5;
+    const clamped = Math.min(10, Math.max(1, isNaN(lvl) ? 5 : lvl));
+    return 0.4 + (clamped - 1) * (2.6 / 9); // 1 → 0.4 px/тік, 10 → 3.0 px/тік
+}
+
+function questSpeedLabel(v) {
+    if (v <= 3) return 'Повільна 🐢';
+    if (v <= 7) return 'Середня ⚡';
+    return 'Швидка 🔥';
+}
+
+function updateQuestSpeedLabel() {
+    const el = $('questSpeedLabel');
+    if (el) el.textContent = `${G.questSpeed} — ${questSpeedLabel(G.questSpeed)}`;
 }
 
 /** Будує чергу літер для монет виключно зі слів поточного уроку. */
@@ -942,11 +954,10 @@ class QuestGame {
         this.total = this.queue.length;
         this.collected = 0;
         this.onEnd = onEnd;
-        this.active = [];
+        this.cur = null;       // єдина активна (падаюча) монета — сувора послідовність, без накладання
         this.ended = false;
-        this.spawnTimer = null;
         this.loopTimer = null;
-        this.fallSpeed = questFallSpeed(G.difficulty);
+        this.fallSpeed = questFallSpeed(G.questSpeed);
         this._key = this._key.bind(this);
     }
 
@@ -954,23 +965,24 @@ class QuestGame {
         if (!this.total) { this.ended = true; this.onEnd(false, 0, 0); return; }
         updateQuestProgressUI(this);
         this._spawnNext();
-        this.spawnTimer = setInterval(() => this._spawnNext(), CONFIG.QUEST_SPAWN_MS);
         this.loopTimer = setInterval(() => this._tick(), 40);
         document.addEventListener('keydown', this._key);
     }
 
     stop() {
-        clearInterval(this.spawnTimer);
         clearInterval(this.loopTimer);
         document.removeEventListener('keydown', this._key);
-        this.active.forEach(c => c.el.remove());
-        this.active = [];
+        rnd?.kb?.(null, null);
+        rnd?.hands?.(null, null);
+        if (this.cur) this.cur.el.remove();
+        this.cur = null;
     }
 
+    /** Спавнить рівно ОДНУ наступну монету — доки вона не зловлена/не впала, наступна не з'являється.
+        Це гарантує чітку послідовність (верхні літери завжди йдуть раніше нижніх) і виключає накладання монет. */
     _spawnNext() {
-        if (this.ended) return;
-        if (this.active.length >= CONFIG.QUEST_MAX_CONCURRENT) return;
-        if (!this.queue.length) { clearInterval(this.spawnTimer); return; }
+        if (this.ended || this.cur) return;
+        if (!this.queue.length) { this._success(); return; }
         const ch = this.queue.shift();
         const area = $('questArea');
         if (!area) return;
@@ -981,34 +993,31 @@ class QuestGame {
         el.style.left = x + 'px';
         el.style.top = '-46px';
         area.appendChild(el);
-        this.active.push({ char: ch, el, y: -46 });
+        this.cur = { char: ch, el, y: -46 };
+        rnd?.kb?.(null, ch);     // підсвітити потрібну клавішу на клавіатурі внизу
+        rnd?.hands?.(null, ch);  // підсвітити потрібний палець на руках
     }
 
     _tick() {
-        if (this.ended) return;
+        if (this.ended || !this.cur) return;
         const area = $('questArea');
         if (!area) return;
         const floorY = (area.offsetHeight || 360) - 56;
-        for (const c of this.active) {
-            c.y += this.fallSpeed;
-            c.el.style.top = c.y + 'px';
-            if (c.y >= floorY) { this._fail(); return; }
-        }
+        this.cur.y += this.fallSpeed;
+        this.cur.el.style.top = this.cur.y + 'px';
+        if (this.cur.y >= floorY) this._fail();
     }
 
     _key(ev) {
-        if (this.ended) return;
+        if (this.ended || !this.cur) return;
         if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab'].includes(ev.key)) return;
         ev.preventDefault();
         const pressed = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
-        let best = null;
-        for (const c of this.active) {
-            if (c.char.toLowerCase() === pressed && (!best || c.y > best.y)) best = c;
-        }
-        if (!best) return;
-        best.el.classList.add('caught');
-        setTimeout(() => best.el.remove(), 150);
-        this.active = this.active.filter(c => c !== best);
+        if (this.cur.char.toLowerCase() !== pressed) return; // не та літера — ігноруємо, без штрафу
+        const caught = this.cur;
+        caught.el.classList.add('caught');
+        setTimeout(() => caught.el.remove(), 150);
+        this.cur = null;
         this.collected++;
         G.questCoins++;
         updateQuestBankUI();
@@ -1016,13 +1025,12 @@ class QuestGame {
         sounds.coin?.();
         const heroEl = $('questHero');
         if (heroEl) {
-            heroEl.style.left = (parseFloat(best.el.style.left) + 21) + 'px';
+            heroEl.style.left = (parseFloat(caught.el.style.left) + 21) + 'px';
             heroEl.classList.remove('catch');
             void heroEl.offsetWidth; // перезапуск анімації
             heroEl.classList.add('catch');
         }
-        if (!this.active.length && !this.queue.length) this._success();
-        else this._spawnNext();
+        this._spawnNext();
     }
 
     _fail() {
@@ -1097,6 +1105,7 @@ function onQuestEnd(success, collected, total) {
     }
     inp?.on();
     rnd?.running(true);
+    rnd?.prompt(eng?.cur);
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -1758,8 +1767,14 @@ function updateStudentLink() {
     url.searchParams.set('bg', G.bg || 'space');
     const questChecked = !!$('questToggle')?.checked;
     G.questEnabled = questChecked;
-    if (questChecked) url.searchParams.set('quest', '1');
-    else url.searchParams.delete('quest');
+    if (questChecked) {
+        url.searchParams.set('quest', '1');
+        G.questSpeed = Number($('questSpeedSlider')?.value) || G.questSpeed || 5;
+        url.searchParams.set('qspeed', G.questSpeed);
+    } else {
+        url.searchParams.delete('quest');
+        url.searchParams.delete('qspeed');
+    }
     
     const linkEl = $('linkText');
     if (linkEl) linkEl.textContent = url.toString();
@@ -2120,6 +2135,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             G.bg = 'space';
         }
         G.questEnabled = p.get('quest') === '1';
+        G.questSpeed = Number(p.get('qspeed')) || 5;
         const lid = p.get('lid');
         G.lessonId = lid;
         const lesson = G.index?.[G.lang]?.[G.grade]?.find(l => l.id === lid);
@@ -2293,9 +2309,20 @@ $('backToGrade').onclick = () => show('s-grade');
 
 $('copyBtn').onclick = () => navigator.clipboard?.writeText($('linkText').textContent).then(() => toast('Посилання скопійовано!'));
 
-$('questToggle')?.addEventListener('change', e => { G.questEnabled = !!e.target.checked; updateStudentLink(); });
+$('questToggle')?.addEventListener('change', e => {
+    G.questEnabled = !!e.target.checked;
+    const row = $('questSpeedRow');
+    if (row) row.style.display = G.questEnabled ? 'flex' : 'none';
+    updateStudentLink();
+});
+$('questSpeedSlider')?.addEventListener('input', e => {
+    G.questSpeed = Number(e.target.value);
+    updateQuestSpeedLabel();
+    updateStudentLink();
+});
 $('questAcceptBtn')?.addEventListener('click', acceptQuestOffer);
 $('questDeclineBtn')?.addEventListener('click', declineQuestOffer);
+updateQuestSpeedLabel();
 
 $('teacherPlay').onclick = loadAndPlay;
 $('studentPlay').onclick = loadAndPlay;

@@ -1,0 +1,242 @@
+[
+  {
+    "id": "classic_ua_1",
+    "num": 1,
+    "title": "Урок 01: Опорні клавіші — А та О",
+    "file": "lessons-ua/lesson1.json"
+  },
+  {
+    "id": "classic_ua_2",
+    "num": 2,
+    "title": "Урок 02: Вказівні пальці — В та Л",
+    "file": "lessons-ua/lesson2.json"
+  },
+  {
+    "id": "classic_ua_3",
+    "num": 3,
+    "title": "Урок 03: Середні пальці — І та Д",
+    "file": "lessons-ua/lesson3.json"
+  },
+  {
+    "id": "classic_ua_4",
+    "num": 4,
+    "title": "Урок 04: Безіменні пальці — Ф та Ж",
+    "file": "lessons-ua/lesson4.json"
+  },
+  {
+    "id": "classic_ua_5",
+    "num": 5,
+    "title": "Урок 05: Мізинці — П та Р (розширення базового ряду)",
+    "file": "lessons-ua/lesson5.json"
+  },
+  {
+    "id": "classic_ua_6",
+    "num": 6,
+    "title": "Урок 06: Правий край базового ряду — Є",
+    "file": "lessons-ua/lesson6.json"
+  },
+  {
+    "id": "classic_ua_7",
+    "num": 7,
+    "title": "Урок 07: Закріплення повного базового (домашнього) ряду",
+    "file": "lessons-ua/lesson7.json"
+  },
+  {
+    "id": "classic_ua_8",
+    "num": 8,
+    "title": "Урок 08: Верхній ряд — Е та Н (вказівні пальці)",
+    "file": "lessons-ua/lesson8.json"
+  },
+  {
+    "id": "classic_ua_9",
+    "num": 9,
+    "title": "Урок 09: Верхній ряд — К та Г (вказівні зміщення)",
+    "file": "lessons-ua/lesson9.json"
+  },
+  {
+    "id": "classic_ua_10",
+    "num": 10,
+    "title": "Урок 10: Верхній ряд — У та Ш (середній та безіменний)",
+    "file": "lessons-ua/lesson10.json"
+  },
+  {
+    "id": "classic_ua_11",
+    "num": 11,
+    "title": "Урок 11: Верхній ряд — Ц та Щ (лівий та правий безіменний)",
+    "file": "lessons-ua/lesson11.json"
+  },
+  {
+    "id": "classic_ua_12",
+    "num": 12,
+    "title": "Урок 12: Верхній ряд — Й, З, Х (периферія верхнього ряду)",
+    "file": "lessons-ua/lesson12.json"
+  },
+  {
+    "id": "classic_ua_13",
+    "num": 13,
+    "title": "Урок 13: Верхній ряд — Ї (правий мізинець вгору)",
+    "file": "lessons-ua/lesson13.json"
+  },
+  {
+    "id": "classic_ua_14",
+    "num": 14,
+    "title": "Урок 14: Комбінований тренажер базового та верхнього рядів",
+    "file": "lessons-ua/lesson14.json"
+  },
+  {
+    "id": "classic_ua_15",
+    "num": 15,
+    "title": "Урок 15: Нижній ряд — М та И (вказівні пальці)",
+    "file": "lessons-ua/lesson15.json"
+  },
+  {
+    "id": "classic_ua_16",
+    "num": 16,
+    "title": "Урок 16: Нижній ряд — Т та Б (зміщення пальців униз)",
+    "file": "lessons-ua/lesson16.json"
+  },
+  {
+    "id": "classic_ua_17",
+    "num": 17,
+    "title": "Урок 17: Нижній ряд — С та Ч (середній та вказівний зліва)",
+    "file": "lessons-ua/lesson17.json"
+  },
+  {
+    "id": "classic_ua_18",
+    "num": 18,
+    "title": "Урок 18: Нижній ряд — Я та Ю (лівий та правий мізинці)",
+    "file": "lessons-ua/lesson18.json"
+  },
+  {
+    "id": "classic_ua_19",
+    "num": 19,
+    "title": "Урок 19: Нижній ряд — Ь (знак м'якшення)",
+    "file": "lessons-ua/lesson19.json"
+  },
+  {
+    "id": "classic_ua_20",
+    "num": 20,
+    "title": "Урок 20: Повний алфавітний набір літер",
+    "file": "lessons-ua/lesson20.json"
+  },
+  {
+    "id": "classic_ua_21",
+    "num": 21,
+    "title": "Урок 21: Розділові знаки — Крапка (.)",
+    "file": "lessons-ua/lesson21.json"
+  },
+  {
+    "id": "classic_ua_22",
+    "num": 22,
+    "title": "Урок 22: Розділові знаки — Кома (,)",
+    "file": "lessons-ua/lesson22.json"
+  },
+  {
+    "id": "classic_ua_23",
+    "num": 23,
+    "title": "Урок 23: Апостроф (') в українських словах",
+    "file": "lessons-ua/lesson23.json"
+  },
+  {
+    "id": "classic_ua_24",
+    "num": 24,
+    "title": "Урок 24: Знак оклику (!) та Знак питання (?)",
+    "file": "lessons-ua/lesson24.json"
+  },
+  {
+    "id": "classic_ua_25",
+    "num": 25,
+    "title": "Урок 25: Тире (—), Двокрапка (:) та Лапки («»)",
+    "file": "lessons-ua/lesson25.json"
+  },
+  {
+    "id": "classic_ua_26",
+    "num": 26,
+    "title": "Урок 26: Великі літери — Правий та лівий Shift",
+    "file": "lessons-ua/lesson26.json"
+  },
+  {
+    "id": "classic_ua_27",
+    "num": 27,
+    "title": "Урок 27: Імена та прізвища (велика літера)",
+    "file": "lessons-ua/lesson27.json"
+  },
+  {
+    "id": "classic_ua_28",
+    "num": 28,
+    "title": "Урок 28: Цифровий ряд — 1, 2, 3, 4, 5",
+    "file": "lessons-ua/lesson28.json"
+  },
+  {
+    "id": "classic_ua_29",
+    "num": 29,
+    "title": "Урок 29: Цифровий ряд — 6, 7, 8, 9, 0",
+    "file": "lessons-ua/lesson29.json"
+  },
+  {
+    "id": "classic_ua_30",
+    "num": 30,
+    "title": "Урок 30: Повний цифровий набір — 0..9",
+    "file": "lessons-ua/lesson30.json"
+  },
+  {
+    "id": "classic_ua_31",
+    "num": 31,
+    "title": "Урок 31: Ритмічні двобуквені зв'язки",
+    "file": "lessons-ua/lesson31.json"
+  },
+  {
+    "id": "classic_ua_32",
+    "num": 32,
+    "title": "Урок 32: Зв'язки літер з високою частотою (СТ, ПР, КР, ТР)",
+    "file": "lessons-ua/lesson32.json"
+  },
+  {
+    "id": "classic_ua_33",
+    "num": 33,
+    "title": "Урок 33: Довгі слова та складна моторика",
+    "file": "lessons-ua/lesson33.json"
+  },
+  {
+    "id": "classic_ua_34",
+    "num": 34,
+    "title": "Урок 34: Рідний край — Зв'язний текст 1",
+    "file": "lessons-ua/lesson34.json"
+  },
+  {
+    "id": "classic_ua_35",
+    "num": 35,
+    "title": "Урок 35: Мова і слово — Зв'язний текст 2",
+    "file": "lessons-ua/lesson35.json"
+  },
+  {
+    "id": "classic_ua_36",
+    "num": 36,
+    "title": "Урок 36: Комп'ютер та майбутнє — Зв'язний текст 3",
+    "file": "lessons-ua/lesson36.json"
+  },
+  {
+    "id": "classic_ua_37",
+    "num": 37,
+    "title": "Урок 37: Прислів'я та народна мудрість",
+    "file": "lessons-ua/lesson37.json"
+  },
+  {
+    "id": "classic_ua_38",
+    "num": 38,
+    "title": "Урок 38: Діалог та пряма мова (пунктуація)",
+    "file": "lessons-ua/lesson38.json"
+  },
+  {
+    "id": "classic_ua_39",
+    "num": 39,
+    "title": "Урок 39: Всі символи клавіатури в одному реченні",
+    "file": "lessons-ua/lesson39.json"
+  },
+  {
+    "id": "classic_ua_40",
+    "num": 40,
+    "title": "Урок 40: Майстер сліпого набору (Підсумковий екзамен)",
+    "file": "lessons-ua/lesson40.json"
+  }
+]

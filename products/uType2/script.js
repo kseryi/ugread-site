@@ -1014,6 +1014,13 @@ class QuestGame {
         updateQuestBankUI();
         updateQuestProgressUI(this);
         sounds.coin?.();
+        const heroEl = $('questHero');
+        if (heroEl) {
+            heroEl.style.left = (parseFloat(best.el.style.left) + 21) + 'px';
+            heroEl.classList.remove('catch');
+            void heroEl.offsetWidth; // перезапуск анімації
+            heroEl.classList.add('catch');
+        }
         if (!this.active.length && !this.queue.length) this._success();
         else this._spawnNext();
     }
@@ -1064,6 +1071,14 @@ function acceptQuestOffer() {
 function startQuestScene() {
     const words = (questState && questState.words) || [];
     $('questScene')?.classList.add('on');
+    const heroId = G.hero || localStorage.getItem('selected_hero') || 'panda';
+    const hero = (typeof window !== 'undefined' && window.HEROES) ? (window.HEROES[heroId] || window.HEROES.panda) : null;
+    const heroEl = $('questHero');
+    if (heroEl && hero) {
+        heroEl.innerHTML = scopeSvg(hero.svg, 'quest_');
+        const area = $('questArea');
+        heroEl.style.left = ((area?.offsetWidth || 500) / 2) + 'px';
+    }
     quest = new QuestGame(words, onQuestEnd);
     quest.start();
 }

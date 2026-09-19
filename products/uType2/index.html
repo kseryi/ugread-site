@@ -7,7 +7,7 @@
     <meta name="description" content="🐛 Клавіатурний тренажер — Хробачки" />
     <meta property="og:title" content="🐛 Клавіатурний тренажер — Хробачки" />
     <meta property="og:description" content="🐛 Клавіатурний тренажер — Хробачки" />
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
     <!-- ════════════════════════════════════════════════════════════════ -->
@@ -1405,6 +1405,14 @@
                         <span class="slider"></span>
                     </label>
                 </div>
+                <!-- 🪙 ШВИДКІСТЬ ПАДІННЯ МОНЕТ -->
+                <div class="quest-speed-row" id="questSpeedRow" style="display:none;width:100%;box-sizing:border-box;flex-direction:column;gap:6px;margin-top:2px;padding:10px 16px 14px;border-top:1px solid var(--edge);">
+                    <label for="questSpeedSlider" style="font-size:13px;color:var(--text);display:flex;justify-content:space-between;">
+                        <span>🪙 Швидкість падіння монет</span>
+                        <strong id="questSpeedLabel">5 — Середня</strong>
+                    </label>
+                    <input type="range" id="questSpeedSlider" min="1" max="10" step="1" value="5" style="width:100%;">
+                </div>
             </div>
             <div class="link-box"><span id="linkText"></span>
                 <button class="btn sm" id="copyBtn">Копіювати</button>
@@ -1528,39 +1536,39 @@
                     <svg class="psvg" id="playerSvg" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
                 </div>
             </div>
+
+            <!-- 🌀 ПРОПОЗИЦІЯ МІНІ-КВЕСТУ (портал) -->
+            <div class="quest-offer" id="questOffer">
+                <div class="quest-offer-box">
+                    <div class="quest-offer-icon">🌀</div>
+                    <h3>Знайдено портал!</h3>
+                    <p>Хочеш пройти міні-квест: ловити монети з літерами уроку?<br>За кожні 3 зловлені монети — 1 життя.</p>
+                    <div class="quest-offer-btns">
+                        <button class="btn primary" id="questAcceptBtn">✅ Прийняти квест</button>
+                        <button class="btn" id="questDeclineBtn">➡️ Продовжити рівень</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🪙 СЦЕНА МІНІ-КВЕСТУ (падаючі монети) -->
+            <div class="quest-scene" id="questScene">
+                <div class="quest-bg-anim" aria-hidden="true">
+                    <span class="qb qb1"></span><span class="qb qb2"></span><span class="qb qb3"></span>
+                    <span class="qb qb4"></span><span class="qb qb5"></span>
+                </div>
+                <div class="quest-scene-hud">
+                    🪙 Лови монети! <span id="questProgressText">0/0</span>
+                </div>
+                <div class="quest-area" id="questArea">
+                    <div class="quest-platform"></div>
+                    <div class="quest-hero player run" id="questHero"></div>
+                </div>
+            </div>
         </div>
         <div class="kbpanel">
             <div class="hand hand-left" id="hL"></div>
             <div class="kbrows" id="kbrows"></div>
             <div class="hand hand-right" id="hR"></div>
-        </div>
-
-        <!-- ════════════════════════════════════════════════════════════ -->
-        <!-- 🌀 ПРОПОЗИЦІЯ МІНІ-КВЕСТУ (портал) -->
-        <!-- ════════════════════════════════════════════════════════════ -->
-        <div class="quest-offer" id="questOffer">
-            <div class="quest-offer-box">
-                <div class="quest-offer-icon">🌀</div>
-                <h3>Знайдено портал!</h3>
-                <p>Хочеш пройти міні-квест: ловити монети з літерами уроку?<br>За кожні 3 зловлені монети — 1 життя.</p>
-                <div class="quest-offer-btns">
-                    <button class="btn primary" id="questAcceptBtn">✅ Прийняти квест</button>
-                    <button class="btn" id="questDeclineBtn">➡️ Продовжити рівень</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ════════════════════════════════════════════════════════════ -->
-        <!-- 🪙 СЦЕНА МІНІ-КВЕСТУ (падаючі монети) -->
-        <!-- ════════════════════════════════════════════════════════════ -->
-        <div class="quest-scene" id="questScene">
-            <div class="quest-scene-hud">
-                🪙 Лови монети! <span id="questProgressText">0/0</span>
-            </div>
-            <div class="quest-area" id="questArea">
-                <div class="quest-platform"></div>
-                <div class="quest-hero player run" id="questHero"></div>
-            </div>
         </div>
     </section>
 
@@ -1620,8 +1628,8 @@
         <div class="history-container" id="historyList"></div>
     </section>
 
-    <script src="heroes.js"></script>
-    <script src="scenery.js"></script>
-    <script src="script.js"></script>
+    <script src="heroes.js?v=4"></script>
+    <script src="scenery.js?v=4"></script>
+    <script src="script.js?v=4"></script>
 </body>
 </html>

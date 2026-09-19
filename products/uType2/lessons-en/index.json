@@ -1,0 +1,242 @@
+[
+  {
+    "id": "classic_en_1",
+    "num": 1,
+    "title": "Lesson 01: Base Anchor Keys — F and J",
+    "file": "lessons-en/lesson1.json"
+  },
+  {
+    "id": "classic_en_2",
+    "num": 2,
+    "title": "Lesson 02: Home Row — D and K (Middle fingers)",
+    "file": "lessons-en/lesson2.json"
+  },
+  {
+    "id": "classic_en_3",
+    "num": 3,
+    "title": "Lesson 03: Home Row — S and L (Ring fingers)",
+    "file": "lessons-en/lesson3.json"
+  },
+  {
+    "id": "classic_en_4",
+    "num": 4,
+    "title": "Lesson 04: Home Row — A and ; (Pinky fingers)",
+    "file": "lessons-en/lesson4.json"
+  },
+  {
+    "id": "classic_en_5",
+    "num": 5,
+    "title": "Lesson 05: Home Row Center — G and H (Index reach)",
+    "file": "lessons-en/lesson5.json"
+  },
+  {
+    "id": "classic_en_6",
+    "num": 6,
+    "title": "Lesson 06: Full Home Row Master Drill",
+    "file": "lessons-en/lesson6.json"
+  },
+  {
+    "id": "classic_en_7",
+    "num": 7,
+    "title": "Lesson 07: Top Row — R and U (Index fingers)",
+    "file": "lessons-en/lesson7.json"
+  },
+  {
+    "id": "classic_en_8",
+    "num": 8,
+    "title": "Lesson 08: Top Row — E and I (Middle fingers)",
+    "file": "lessons-en/lesson8.json"
+  },
+  {
+    "id": "classic_en_9",
+    "num": 9,
+    "title": "Lesson 09: Top Row — W and O (Ring fingers)",
+    "file": "lessons-en/lesson9.json"
+  },
+  {
+    "id": "classic_en_10",
+    "num": 10,
+    "title": "Lesson 10: Top Row — Q and P (Pinky fingers)",
+    "file": "lessons-en/lesson10.json"
+  },
+  {
+    "id": "classic_en_11",
+    "num": 11,
+    "title": "Lesson 11: Top Row Center — T and Y (Index reach)",
+    "file": "lessons-en/lesson11.json"
+  },
+  {
+    "id": "classic_en_12",
+    "num": 12,
+    "title": "Lesson 12: Combined Home and Top Rows Drill",
+    "file": "lessons-en/lesson12.json"
+  },
+  {
+    "id": "classic_en_13",
+    "num": 13,
+    "title": "Lesson 13: Bottom Row — V and M (Index fingers)",
+    "file": "lessons-en/lesson13.json"
+  },
+  {
+    "id": "classic_en_14",
+    "num": 14,
+    "title": "Lesson 14: Bottom Row — C and , (Middle fingers)",
+    "file": "lessons-en/lesson14.json"
+  },
+  {
+    "id": "classic_en_15",
+    "num": 15,
+    "title": "Lesson 15: Bottom Row — X and . (Ring fingers)",
+    "file": "lessons-en/lesson15.json"
+  },
+  {
+    "id": "classic_en_16",
+    "num": 16,
+    "title": "Lesson 16: Bottom Row — Z and / (Pinky fingers)",
+    "file": "lessons-en/lesson16.json"
+  },
+  {
+    "id": "classic_en_17",
+    "num": 17,
+    "title": "Lesson 17: Bottom Row Center — B and N (Index reach)",
+    "file": "lessons-en/lesson17.json"
+  },
+  {
+    "id": "classic_en_18",
+    "num": 18,
+    "title": "Lesson 18: Full Alphabet Across All Three Rows",
+    "file": "lessons-en/lesson18.json"
+  },
+  {
+    "id": "classic_en_19",
+    "num": 19,
+    "title": "Lesson 19: Punctuation — Period (.) and Comma (,)",
+    "file": "lessons-en/lesson19.json"
+  },
+  {
+    "id": "classic_en_20",
+    "num": 20,
+    "title": "Lesson 20: Punctuation — Apostrophe (') and Quotes (\")",
+    "file": "lessons-en/lesson20.json"
+  },
+  {
+    "id": "classic_en_21",
+    "num": 21,
+    "title": "Lesson 21: Question Mark (?) and Exclamation (!)",
+    "file": "lessons-en/lesson21.json"
+  },
+  {
+    "id": "classic_en_22",
+    "num": 22,
+    "title": "Lesson 22: Colon (:), Semicolon (;), and Hyphen (-)",
+    "file": "lessons-en/lesson22.json"
+  },
+  {
+    "id": "classic_en_23",
+    "num": 23,
+    "title": "Lesson 23: Shift Keys — Left & Right Hand Capitals",
+    "file": "lessons-en/lesson23.json"
+  },
+  {
+    "id": "classic_en_24",
+    "num": 24,
+    "title": "Lesson 24: Proper Nouns and Cities (Capitalization)",
+    "file": "lessons-en/lesson24.json"
+  },
+  {
+    "id": "classic_en_25",
+    "num": 25,
+    "title": "Lesson 25: Names and Titles (Shift practice)",
+    "file": "lessons-en/lesson25.json"
+  },
+  {
+    "id": "classic_en_26",
+    "num": 26,
+    "title": "Lesson 26: Number Row Left Hand — 1, 2, 3, 4, 5",
+    "file": "lessons-en/lesson26.json"
+  },
+  {
+    "id": "classic_en_27",
+    "num": 27,
+    "title": "Lesson 27: Number Row Right Hand — 6, 7, 8, 9, 0",
+    "file": "lessons-en/lesson27.json"
+  },
+  {
+    "id": "classic_en_28",
+    "num": 28,
+    "title": "Lesson 28: Complete Number Row 0..9",
+    "file": "lessons-en/lesson28.json"
+  },
+  {
+    "id": "classic_en_29",
+    "num": 29,
+    "title": "Lesson 29: Common Bigrams — TH, ER, ON, AN",
+    "file": "lessons-en/lesson29.json"
+  },
+  {
+    "id": "classic_en_30",
+    "num": 30,
+    "title": "Lesson 30: Common Bigrams — IN, ED, TE, ES",
+    "file": "lessons-en/lesson30.json"
+  },
+  {
+    "id": "classic_en_31",
+    "num": 31,
+    "title": "Lesson 31: Common Trigrams — ION, ENT, FOR, TIO",
+    "file": "lessons-en/lesson31.json"
+  },
+  {
+    "id": "classic_en_32",
+    "num": 32,
+    "title": "Lesson 32: Double Letter Words Drill",
+    "file": "lessons-en/lesson32.json"
+  },
+  {
+    "id": "classic_en_33",
+    "num": 33,
+    "title": "Lesson 33: Short High-Frequency Words",
+    "file": "lessons-en/lesson33.json"
+  },
+  {
+    "id": "classic_en_34",
+    "num": 34,
+    "title": "Lesson 34: Rhythm and Flow — Sentences 1",
+    "file": "lessons-en/lesson34.json"
+  },
+  {
+    "id": "classic_en_35",
+    "num": 35,
+    "title": "Lesson 35: Nature and Life — Sentences 2",
+    "file": "lessons-en/lesson35.json"
+  },
+  {
+    "id": "classic_en_36",
+    "num": 36,
+    "title": "Lesson 36: Technology and Coding — Sentences 3",
+    "file": "lessons-en/lesson36.json"
+  },
+  {
+    "id": "classic_en_37",
+    "num": 37,
+    "title": "Lesson 37: Wisdom and Proverbs",
+    "file": "lessons-en/lesson37.json"
+  },
+  {
+    "id": "classic_en_38",
+    "num": 38,
+    "title": "Lesson 38: Dialogue and Direct Quotes",
+    "file": "lessons-en/lesson38.json"
+  },
+  {
+    "id": "classic_en_39",
+    "num": 39,
+    "title": "Lesson 39: Complete Keyboard Pangram & Numbers",
+    "file": "lessons-en/lesson39.json"
+  },
+  {
+    "id": "classic_en_40",
+    "num": 40,
+    "title": "Lesson 40: Touch Typing Master Graduation",
+    "file": "lessons-en/lesson40.json"
+  }
+]

@@ -86,6 +86,8 @@ const CATEGORIES_DATA = {
       { name: 'Блочне програмування', link: 'https://kseryi.github.io/uPyth/' },
        { name: 'Стікербос', link: './products/stikerbox/stikerbox.html' },
       { name: 'uType - клавіатурний тренажер', link: './products/uType/index.html' },
+       { name: 'GLB 3D Studio', link: './products/GLB3DSTUDIO/glb3dse.html' },
+       
     ]
   },
   geography: {

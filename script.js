@@ -120,7 +120,7 @@ const CATEGORIES_DATA = {
     desc: 'Історія України та всесвітня історія, хронологічні шкали, історичні карти та події.',
     topics: [
       { name: 'Інтерактивна часова шкала', link: './products/timeless/timeless.html' },
-       { name: 'Світлини Часу', link: '' },
+       { name: 'Світлини Часу', link: './products/PhotoHist/index.html' },
        { name: 'Додатки в розробці', link: '' },
        { name: 'Додатки в розробці', link: '' },
        { name: 'Додатки в розробці', link: '' },

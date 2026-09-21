@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Історія України: Світлини часу</title>
+    <meta name="description" content="Офлайн-ресурс з історії України для підготовки до ЗНО/НМТ. Каталог персоналій для візуального розпізнавання від Русі-України до сьогодення з портретами, біографіями та інтерактивним тренажером." />
+    <meta name="referrer" content="no-referrer" />
+    <meta property="og:title" content="Історія України: ЗНО/НМТ - Історичні постаті" />
+    <meta property="og:description" content="Офлайн-ресурс з історії України для підготовки до ЗНО/НМТ. Каталог персоналій для візуального розпізнавання від Русі-України до сьогодення з портретами, біографіями та інтерактивним тренажером." />
+    <meta property="og:type" content="website" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Верхній банер автономності -->
+    <div class="offline-banner">
+      <div class="container">
+        ⚡ <span>100% Офлайн-режим:</span> цей ресурс працює локально без встановлення серверів та компіляції. Достатньо завантажити архів і відкрити <strong>index.html</strong> у будь-якому браузері!
+      </div>
+    </div>
+
+    <!-- Шапка додатку -->
+    <header class="app-header">
+      <div class="container">
+        <div class="header-inner">
+          <a href="#" class="brand">
+            <div class="brand-icon">UA</div>
+            <div class="brand-text">
+              <h1>сторія України: Світлини часу</h1>
+              <span>Фотодовідник - за матеріалами офіційної програми УЦОЯО </span>
+            </div>
+          </a>
+          <div class="header-actions">
+            <button class="btn-icon" id="themeToggleBtn" title="Змінити тему оформлення (світла/темна)">🌙</button>
+            <button class="btn-icon" onclick="window.print()" title="Роздрукувати сторінку">🖨️</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Навігація по частинах ресурсу -->
+    <nav class="sections-nav">
+      <div class="container">
+        <ul class="sections-list">
+          <li>
+            <button class="section-btn active" data-tab="part1">
+              📚 Частина 1: Історичні постаті <span class="badge-tag">Готово • 68 постатей</span>
+            </button>
+          </li>
+          <li>
+            <button class="section-btn" data-tab="part4_quiz">
+              🎯 Тренажер розпізнавання <span class="badge-tag">Тест ЗНО</span>
+            </button>
+          </li>
+          <li>
+            <button class="section-btn" data-tab="part2">
+              🏛️ Частина 2: Пам'ятки культури <span class="badge-tag tag-dev">В розробці ⏳</span>
+            </button>
+          </li>
+          <li>
+            <button class="section-btn" data-tab="part3">
+              ⏳ Частина 3: Ключові дати <span class="badge-tag tag-dev">В розробці ⏳</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- ОСНОВНИЙ ВМІСТ -->
+    <main class="container">
+      <!-- ВКЛАДКА 1: ІСТОРИЧНІ ПОСТАТІ -->
+      <section id="part1" class="content-tab-pane active">
+        <div class="toolbar-section">
+          <div class="search-box-row">
+            <div class="search-wrapper">
+              <span class="search-icon">🔍</span>
+              <input 
+                type="text" 
+                id="searchInput" 
+                class="search-input" 
+                placeholder="Швидкий пошук постаті за іменем, роками, битвою чи твором..." 
+                autocomplete="off"
+              />
+            </div>
+            <div class="filter-btn-group">
+              <button class="filter-toggle-btn" id="favToggleBtn">
+                ★ Лише обрані (для повторення)
+              </button>
+            </div>
+          </div>
+
+          <!-- Стрічка фільтрів за епохами -->
+          <div class="period-pills-container" id="periodPills"></div>
+
+          <!-- Лічильник знайдених персоналій -->
+          <div class="results-info">
+            <span id="countBadge">Завантаження персоналій...</span>
+            <span style="font-size: 13px;">💡 Натисніть на зірочку ★ щоб зберегти постать для швидкого повторення</span>
+          </div>
+        </div>
+
+        <!-- Сітка карток діячів -->
+        <div class="figures-grid" id="figuresGrid"></div>
+      </section>
+
+      <!-- ВКЛАДКА 4: ТРЕНАЖЕР ВІЗУАЛЬНОГО РОЗПІЗНАВАННЯ -->
+      <section id="part4_quiz" class="content-tab-pane">
+        <div class="toolbar-section" style="text-align: center; margin-bottom: 20px;">
+          <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 6px;">🎯 Тренажер візуального розпізнавання постатей ЗНО</h2>
+          <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">
+            Перевірте себе: подивіться на портрет і оберіть правильне ім'я діяча з чотирьох варіантів, як на реальному тестуванні!
+          </p>
+        </div>
+        <div id="quizContainer"></div>
+      </section>
+
+      <!-- ВКЛАДКА 2: ПАМ'ЯТКИ АРХІТЕКТУРИ ТА ОБРАЗОТВОРЧОГО МИСТЕЦТВА -->
+      <section id="part2" class="content-tab-pane">
+        <div class="dev-banner-box">
+          <div class="dev-banner-title">
+            <span>🚧</span>
+            <span>Частина 2: Пам'ятки культури та архітектури — ЩЕ В РОЗРОБЦІ ⏳</span>
+          </div>
+          <p class="dev-banner-desc">
+            Розділ архітектурних споруд, давніх храмів, ікон та творів образотворчого мистецтва наразі наповнюється офіційними фотоілюстраціями та описами до ЗНО. Зараз повністю готова та активна <strong>Частина 1: Історичні постаті</strong> з портретами та тестом-тренажером!
+          </p>
+          <button class="btn-primary" onclick="window.switchTab('part1')">
+            📚 Перейти до історичних постатей з портретами
+          </button>
+        </div>
+
+        <div class="placeholder-section">
+          <h2>🏛️ Попередній огляд обов'язкових візуальних пам'яток культури</h2>
+          <p>
+            Список об'єктів культурної спадщини програми УЦОЯО, які готуються до публікації з детальними фотографіями:
+          </p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 24px; text-align: left;">
+            <div style="background: var(--bg-card-hover); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+              <h4 style="color: var(--color-blue); margin-bottom: 6px;">Русь-Україна (IX–XII ст.)</h4>
+              <ul style="font-size: 13px; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
+                <li>Десятинна церква в Києві (реконструкція)</li>
+                <li>Софійський собор у Києві (сучасний вигляд та макет)</li>
+                <li>Спасо-Преображенський собор у Чернігові (1036 р.)</li>
+                <li>Золоті ворота в Києві</li>
+                <li>Успенський собор Києво-Печерської лаври</li>
+                <li>Мозаїка Богоматері Оранти та Христа Вседержителя</li>
+              </ul>
+            </div>
+            <div style="background: var(--bg-card-hover); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+              <h4 style="color: var(--color-blue); margin-bottom: 6px;">Галицько-Волинська доба та Литва</h4>
+              <ul style="font-size: 13px; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
+                <li>Церква святого Пантелеймона біля Галича</li>
+                <li>Ікона Богородиці Дороговказниці (Одигітрія)</li>
+                <li>Холмська ікона Божої Матері</li>
+                <li>Замок Любарта в Луцьку (XIV ст.)</li>
+                <li>Кам'янець-Подільська та Хотинська фортеці</li>
+                <li>Генуезька фортеця в Судаку</li>
+              </ul>
+            </div>
+            <div style="background: var(--bg-card-hover); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+              <h4 style="color: var(--color-blue); margin-bottom: 6px;">Козацька доба та бароко</h4>
+              <ul style="font-size: 13px; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
+                <li>Іллінська церква в Суботові (усипальниця Б. Хмельницького)</li>
+                <li>Покровський собор у Харкові (1689 р.)</li>
+                <li>Георгіївська церква Видубицького монастиря в Києві</li>
+                <li>Собор святого Юра у Львові (арх. Б. Меретин)</li>
+                <li>Андріївська церква в Києві (арх. Б. Растреллі)</li>
+                <li>Костел домініканців у Львові</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ВКЛАДКА 3: ХРОНОЛОГІЯ ТА ДАТИ -->
+      <section id="part3" class="content-tab-pane">
+        <div class="dev-banner-box">
+          <div class="dev-banner-title">
+            <span>⏳</span>
+            <span>Частина 3: Ключові дати та хронологія — ЩЕ В РОЗРОБЦІ ⏳</span>
+          </div>
+          <p class="dev-banner-desc">
+            Хронологічний довідник фундаментальних дат програми ЗНО/НМТ перебуває на етапі структурування та підготовки тренувальних тестів на послідовність подій.
+          </p>
+          <button class="btn-primary" onclick="window.switchTab('part1')">
+            📚 Перейти до вивчення історичних постатей
+          </button>
+        </div>
+
+        <div class="placeholder-section">
+          <h2>⏳ Попередній огляд ключових дат програми ЗНО / НМТ</h2>
+          <p>
+            Базовий хронологічний орієнтир найважливіших подій історії України:
+          </p>
+          <div style="max-width: 720px; margin: 20px auto 0; text-align: left;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-blue);">
+                <strong style="color: var(--color-blue);">860 р.</strong>
+                <span>Аскольдів похід на Константинополь, перший договір Русі з Візантією</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-blue);">
+                <strong style="color: var(--color-blue);">882 р.</strong>
+                <span>Об’єднання північних і південних руських земель князем Олегом</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-blue);">
+                <strong style="color: var(--color-blue);">988 р.</strong>
+                <span>Хрещення Русі-України князем Володимиром Великим</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-blue);">
+                <strong style="color: var(--color-blue);">1036 р.</strong>
+                <span>Розгром печенігів князем Ярославом Мудрим під Києвом</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-blue);">
+                <strong style="color: var(--color-blue);">1097 р.</strong>
+                <span>Любецький з’їзд князів («Кожен хай держить отчину свою»)</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-blue);">
+                <strong style="color: var(--color-blue);">1187 р.</strong>
+                <span>Перша літописна згадка назви «Україна» (у Київському літописі)</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-blue);">
+                <strong style="color: var(--color-blue);">1199 р.</strong>
+                <span>Утворення Галицько-Волинської держави князем Романом Мстиславичем</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-blue);">
+                <strong style="color: var(--color-blue);">1253 р.</strong>
+                <span>Коронація Данила Галицького в Дорогочині папською короною</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-gold);">
+                <strong style="color: var(--color-gold);">1556–1561 рр.</strong>
+                <span>Створення рукописного Пересопницького Євангелія</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-gold);">
+                <strong style="color: var(--color-gold);">1569 р.</strong>
+                <span>Люблінська унія: утворення Речі Посполитої</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-gold);">
+                <strong style="color: var(--color-gold);">1596 р.</strong>
+                <span>Берестейська церковна унія: утворення Української греко-католицької церкви</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-gold);">
+                <strong style="color: var(--color-gold);">1648–1657 рр.</strong>
+                <span>Національно-визвольна війна під проводом Богдана Хмельницького</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-gold);">
+                <strong style="color: var(--color-gold);">1710 р.</strong>
+                <span>«Пакти й Конституції» гетьмана Пилипа Орлика</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid var(--color-gold);">
+                <strong style="color: var(--color-gold);">1775 р.</strong>
+                <span>Остаточна ліквідація Запорозької (Нової) Січі російськими військами</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid #16a34a;">
+                <strong style="color: #16a34a;">24 серпня 1991 р.</strong>
+                <span>Ухвалення Акта проголошення незалежності України Верховною Радою</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-card-hover); border-radius: var(--radius-sm); border-left: 4px solid #16a34a;">
+                <strong style="color: #16a34a;">28 червня 1996 р.</strong>
+                <span>Ухвалення чинної Конституції незалежної України</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- МОДАЛЬНЕ ВІКНО ДЕТАЛЬНОЇ ІНФОРМАЦІЇ ДЛЯ ЗНО -->
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal-card" id="modalCard">
+        <button class="modal-close-btn" id="modalCloseBtn" title="Закрити картку (Esc)">✕</button>
+        <div id="modalContent"></div>
+      </div>
+    </div>
+
+    <!-- СПЕЦІАЛЬНИЙ ПОВНОЕКРАННИЙ ЛАЙТБОКС ДЛЯ ПЕРЕГЛЯДУ ТА МАСШТАБУВАННЯ ПОРТРЕТІВ ЗНО -->
+    <div class="photo-lightbox-overlay" id="photoLightboxOverlay" style="display: none;" role="dialog" aria-modal="true" aria-label="Збільшений портрет діяча">
+      <div class="photo-lightbox-backdrop" id="photoLightboxBackdrop"></div>
+
+      <div class="photo-lightbox-container">
+        <!-- Верхня панель з інформацією та інструментами -->
+        <div class="photo-lightbox-header">
+          <div class="photo-lightbox-meta">
+            <span class="photo-lightbox-badge" id="photoLightboxBadge">Основне зображення УЦОЯО</span>
+            <div class="photo-lightbox-title-wrap">
+              <h2 class="photo-lightbox-title" id="photoLightboxTitle">Портрет діяча</h2>
+              <span class="photo-lightbox-counter" id="photoLightboxCounter">1 / 1</span>
+            </div>
+          </div>
+
+          <div class="photo-lightbox-toolbar">
+            <!-- Кнопки масштабування -->
+            <div class="photo-zoom-controls">
+              <button class="photo-tool-btn" id="photoZoomOutBtn" title="Зменшити масштаб (-)">−</button>
+              <span class="photo-zoom-level" id="photoZoomLevel" title="Поточний масштаб">100%</span>
+              <button class="photo-tool-btn" id="photoZoomInBtn" title="Збільшити масштаб (+)">+</button>
+              <button class="photo-tool-btn reset-btn" id="photoZoomResetBtn" title="Скинути масштаб (1:1)">1:1</button>
+            </div>
+
+            <!-- Перехід до біографії -->
+            <button class="photo-tool-btn info-btn" id="photoOpenInfoBtn" title="Відкрити біографію та обов'язкові факти ЗНО">
+              📋 Біографія та факти
+            </button>
+
+            <!-- Кнопка закриття -->
+            <button class="photo-tool-btn close-btn" id="photoCloseBtn" title="Закрити перегляд портрета (Esc)">
+              ✕ Закрити
+            </button>
+          </div>
+        </div>
+
+        <!-- Центральна сцена з великим зображенням -->
+        <div class="photo-lightbox-body" id="photoLightboxBody">
+          <button class="photo-nav-arrow prev" id="photoPrevBtn" title="Попереднє зображення (←)">❮</button>
+
+          <div class="photo-stage" id="photoStage">
+            <img 
+              id="photoLightboxImg" 
+              class="photo-lightbox-img" 
+              src="" 
+              alt="Портрет діяча" 
+              draggable="false"
+              title="Клікніть по зображенню для швидкого масштабування (100% ⇄ 175%)"
+            />
+          </div>
+
+          <button class="photo-nav-arrow next" id="photoNextBtn" title="Наступне зображення (→)">❯</button>
+        </div>
+
+        <!-- Нижня панель: детальний коментар та смуга мініатюр ракурсів -->
+        <div class="photo-lightbox-footer">
+          <div class="photo-lightbox-caption" id="photoLightboxCaption"></div>
+          <div class="photo-thumbs-container" id="photoThumbsContainer">
+            <div class="photo-thumbs-list" id="photoThumbsList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Завантаження даних та скриптів -->
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

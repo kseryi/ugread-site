@@ -106,7 +106,7 @@ const CATEGORIES_DATA = {
     name: 'Біологія',
     desc: 'Цитологія, генетика, анатомія людини, ботаніка, зоологія та екологія.',
     topics: [
-      { name: 'Додатки в розробці', link: '' },
+      { name: 'Рослинна клітина', link: '/products/plant_cell/plant_cell_organelles.compressed.html' },
        { name: 'Додатки в розробці', link: '' },
        { name: 'Додатки в розробці', link: '' },
        { name: 'Додатки в розробці', link: '' },

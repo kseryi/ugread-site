@@ -745,67 +745,6 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
     <!-- ====== [КІНЕЦЬ БЛОКУ 1: Web Browser] ====== -->
 
     <!-- ===================================================================== -->
-    <!-- 📦 [БЛОК 2] Блок-схеми алгоритмів (Flowcharts)                         -->
-    <!-- ===================================================================== -->
-    <div class="module-card">
-      <div class="module-card-title">
-        <span>🔄 Блок-схеми алгоритмів</span>
-      </div>
-      <p style="font-size:12px; color:#64748b;">Вставка стандартних блоків алгоритмів на дошку:</p>
-      <div class="btn-group-grid-3">
-        <button class="module-btn" data-flowchart="start_end">⬭ Початок/Кінець</button>
-        <button class="module-btn" data-flowchart="process">▭ Дія / Процес</button>
-        <button class="module-btn" data-flowchart="decision">◇ Умова (Розгалуження)</button>
-        <button class="module-btn" data-flowchart="input_output">▱ Введення / Виведення</button>
-        <button class="module-btn" data-flowchart="loop">⎔ Цикл</button>
-        <button class="module-btn" data-flowchart="arrow">➔ Стрілка потоку</button>
-      </div>
-    </div>
-    <!-- ====== [КІНЕЦЬ БЛОКУ 2: Блок-схеми] ====== -->
-
-    <!-- ===================================================================== -->
-    <!-- 📦 [БЛОК 3] Двійковий та шістнадцятковий конвертер (Binary & Hex)       -->
-    <!-- ===================================================================== -->
-    <div class="module-card">
-      <div class="module-card-title">
-        <span>🔢 Двійковий & Шістнадцятковий конвертер</span>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:6px;">
-        <input 
-          type="text" 
-          id="infoConvertInput" 
-          placeholder="Введіть текст або число..." 
-          style="padding:6px 8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px;" 
-        />
-        <div style="display:flex; gap:4px;">
-          <button id="btnConvertToBin" class="module-btn" style="flex:1;">0101 Двійковий (Bin)</button>
-          <button id="btnConvertToHex" class="module-btn" style="flex:1;">#HEX Шістнадцятковий</button>
-        </div>
-        <div id="infoConvertResult" style="display:none; padding:8px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:6px; font-family:monospace; font-size:12px; word-break:break-all; color:#0f172a;"></div>
-        <button id="btnInsertCodeToBoard" class="module-btn btn-accent" style="display:none; background:#2563eb; color:white;">➕ Додати код на дошку</button>
-      </div>
-    </div>
-    <!-- ====== [КІНЕЦЬ БЛОКУ 3: Конвертер Bin/Hex] ====== -->
-
-    <!-- ===================================================================== -->
-    <!-- 📦 [БЛОК 4] Складові комп'ютера та мережі (Hardware / Networks)        -->
-    <!-- ===================================================================== -->
-    <div class="module-card">
-      <div class="module-card-title">
-        <span>🖥️ Складові комп'ютера & Мережі</span>
-      </div>
-      <div class="btn-group-grid-3">
-        <button class="module-btn" data-cs-icon="cpu">🔲 Процесор (CPU)</button>
-        <button class="module-btn" data-cs-icon="ram">💾 Пам'ять (RAM/SSD)</button>
-        <button class="module-btn" data-cs-icon="server">🗄️ Сервер</button>
-        <button class="module-btn" data-cs-icon="cloud">☁️ Хмара</button>
-        <button class="module-btn" data-cs-icon="router">📡 Роутер</button>
-        <button class="module-btn" data-cs-icon="user">👤 Користувач (Клієнт)</button>
-      </div>
-    </div>
-    <!-- ====== [КІНЕЦЬ БЛОКУ 4: Складові ПК] ====== -->
-
-    <!-- ===================================================================== -->
     <!-- 📦 [БЛОК 5] Каталог симуляцій та онлайн-ресурсів з інформатики         -->
     <!-- ===================================================================== -->
     <div id="infoSimCatalogContainer"></div>

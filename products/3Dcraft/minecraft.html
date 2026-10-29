@@ -9,8 +9,7 @@
 {
   "imports": {
     "three": "https://unpkg.com/three@0.173.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.173.0/examples/jsm/",
-    "canvas-confetti": "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/+esm"
+    "three/addons/": "https://unpkg.com/three@0.173.0/examples/jsm/"
   }
 }
 </script>
@@ -253,7 +252,6 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { OBJExporter }   from 'three/addons/exporters/OBJExporter.js';
 import { STLExporter }   from 'three/addons/exporters/STLExporter.js';
-import confetti          from 'canvas-confetti';
 
 const BS = 2, PLATFORM = 16;
 const CENTER = new THREE.Vector3((PLATFORM / 2 - 0.5) * BS, 2, (PLATFORM / 2 - 0.5) * BS);
@@ -336,11 +334,7 @@ function showToast(msg) {
     t.style.transform = 'translateX(-50%) translateY(0)';
   }, 2200);
 }
-function triggerConfetti() {
-  try {
-    confetti({ particleCount: 50, spread: 60, origin: { y: 0.65 } });
-  } catch(e) {}
-}
+
 
 /* ── 3D Scene ── */
 const vp = document.getElementById('vp');
@@ -658,8 +652,9 @@ function placeBlock(x, y, z, bKey = activeKey, recordHistory = true) {
   const key = blockKey(x, y, z);
   if (blockMap.has(key)) return;
 
-  const hx = PLATFORM * BS / 2, cx = CENTER.x, cz = CENTER.z;
-  if (x < cx - hx || x > cx + hx - BS || z < cz - hx || z > cz + hx - BS || y < BS / 2) return;
+  const minCoord = 0;
+  const maxCoord = (PLATFORM - 1) * BS;
+  if (x < minCoord || x > maxCoord || z < minCoord || z > maxCoord || y < BS / 2 || y > 30 * BS) return;
 
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(BS, BS, BS), makeMaterial(bKey));
   mesh.position.set(x, y, z);
@@ -685,7 +680,6 @@ function placeBlock(x, y, z, bKey = activeKey, recordHistory = true) {
   playSound('block');
 
   if (count === 15 || count === 35 || count === 70) {
-    triggerConfetti();
     playSound('success');
     showToast(`🎉 Ого! Побудовано вже ${count} блоків!`);
   }
@@ -725,27 +719,47 @@ function setPtr(e) {
 
 function getPlacement() {
   ray.setFromCamera(ptr, cam);
-  const hits = ray.intersectObjects(blocks.children, false);
+  const minCoord = 0;
+  const maxCoord = (PLATFORM - 1) * BS;
 
+  // 1. Raycast against placed blocks
+  const hits = ray.intersectObjects(blocks.children, false);
   if (hits.length) {
     const h = hits[0];
     const norm = h.face.normal.clone().transformDirection(h.object.matrixWorld).round();
     const bPos = h.object.position;
     let x, y, z;
     if (Math.abs(norm.y) > 0.5) {
-      x = bPos.x; z = bPos.z; y = bPos.y + norm.y * BS;
+      x = bPos.x;
+      z = bPos.z;
+      y = bPos.y + norm.y * BS;
     } else {
-      x = bPos.x + norm.x * BS; y = bPos.y; z = bPos.z + norm.z * BS;
+      x = bPos.x + norm.x * BS;
+      y = bPos.y;
+      z = bPos.z + norm.z * BS;
     }
-    return { x, y, z, valid: y >= BS / 2, hitMesh: h.object };
+    const valid = y >= BS / 2 && y <= 30 * BS && x >= minCoord && x <= maxCoord && z >= minCoord && z <= maxCoord;
+    return { x, y, z, valid, hitMesh: h.object };
   }
 
+  // 2. Raycast against platform mesh (direct hit on top surface or edges)
+  const platHits = ray.intersectObject(plat, false);
+  if (platHits.length) {
+    const h = platHits[0];
+    const x = Math.max(minCoord, Math.min(maxCoord, snapXZ(h.point.x)));
+    const z = Math.max(minCoord, Math.min(maxCoord, snapXZ(h.point.z)));
+    return { x, y: BS / 2, z, valid: true, hitMesh: null };
+  }
+
+  // 3. Fallback plane intersection with platform boundary (+ border tolerance)
   const t = ray.ray.intersectPlane(floorPlane, new THREE.Vector3());
   if (t) {
-    const hx = PLATFORM * BS / 2;
-    const x = Math.max(CENTER.x - hx, Math.min(CENTER.x + hx - BS, snapXZ(t.x)));
-    const z = Math.max(CENTER.z - hx, Math.min(CENTER.z + hx - BS, snapXZ(t.z)));
-    return { x, y: BS / 2, z, valid: true, hitMesh: null };
+    const margin = BS * 0.5;
+    if (t.x >= -margin && t.x <= maxCoord + margin && t.z >= -margin && t.z <= maxCoord + margin) {
+      const x = Math.max(minCoord, Math.min(maxCoord, snapXZ(t.x)));
+      const z = Math.max(minCoord, Math.min(maxCoord, snapXZ(t.z)));
+      return { x, y: BS / 2, z, valid: true, hitMesh: null };
+    }
   }
   return null;
 }
@@ -832,7 +846,6 @@ document.getElementById('btnPhoto').addEventListener('click', () => {
   a.download = `minecraft-svit-${Date.now().toString().slice(-4)}.png`;
   a.click();
   playSound('success');
-  triggerConfetti();
   showToast('📸 Фото світу збережено! Шедевр!');
 });
 
@@ -972,7 +985,6 @@ document.querySelectorAll('.preset-card').forEach(card => {
 
     saveHistoryState();
     presetDrawer.classList.remove('open');
-    triggerConfetti();
     playSound('success');
     showToast(`Споруду завантажено ⭐`);
   });

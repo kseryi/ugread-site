@@ -138,9 +138,7 @@ const CATEGORIES_DATA = {
   }
 };
 
-/* ==========================================================================
-   2. ІНІЦІАЛІЗАЦІЯ ПІСЛЯ ЗАВАНТАЖЕННЯ СТОРІНКИ
-   ========================================================================== */
+
 document.addEventListener('DOMContentLoaded', () => {
 
   // --- 2.1 Мобільне меню навігації ---
@@ -235,9 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initHeaderCanvas();
 });
 
-/* ==========================================================================
-   3. АНІМАЦІЯ ХЕДЕРА (CANVAS NETWORK PARTICLES)
-   ========================================================================== */
+
 function initHeaderCanvas() {
   const canvas = document.getElementById('header-bg');
   if (!canvas) return;

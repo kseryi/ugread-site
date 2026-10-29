@@ -9,8 +9,7 @@
 {
   "imports": {
     "three": "https://unpkg.com/three@0.173.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.173.0/examples/jsm/",
-    "canvas-confetti": "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/+esm"
+    "three/addons/": "https://unpkg.com/three@0.173.0/examples/jsm/"
   }
 }
 </script>
@@ -283,7 +282,6 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { OBJExporter }   from 'three/addons/exporters/OBJExporter.js';
 import { STLExporter }   from 'three/addons/exporters/STLExporter.js';
-import confetti          from 'canvas-confetti';
 
 const U = 1.6, BH = 1.92, PH = 0.64, SR = 0.55, SH = 0.44, PLATE_W = 20;
 
@@ -366,15 +364,7 @@ function showToast(msg) {
     t.style.transform = 'translateX(-50%) translateY(0)';
   }, 2200);
 }
-function triggerConfetti() {
-  try {
-    confetti({
-      particleCount: 50,
-      spread: 60,
-      origin: { y: 0.65 }
-    });
-  } catch(e) {}
-}
+
 
 /* ── Brick colors ── */
 const LEGO_COLORS = [
@@ -802,7 +792,6 @@ function placeBrick(gx, gz, baseY, def, color, rot = currentRotation, recordHist
   playSound('pop');
 
   if (brickCount === 10 || brickCount === 25 || brickCount === 50) {
-    triggerConfetti();
     playSound('success');
     showToast(`🎉 Чудово! Вже ${brickCount} деталей!`);
   }
@@ -983,7 +972,6 @@ document.getElementById('btnPhoto').addEventListener('click', () => {
   a.download = `lego-tvorba-${Date.now().toString().slice(-4)}.png`;
   a.click();
   playSound('success');
-  triggerConfetti();
   showToast('📸 Фото збережено! Чудова робота!');
   updateGhost();
 });
@@ -1072,7 +1060,6 @@ document.querySelectorAll('.preset-card').forEach(card => {
 
     saveHistoryState();
     presetDrawer.classList.remove('open');
-    triggerConfetti();
     playSound('success');
     showToast(`Готово! Модель завантажено ⭐`);
     updateGhost();

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mathematical Pendulum Simulator | Симулятор Математичного Маятника</title>
+  <meta name="description" content="Standalone HTML/CSS/JS Mathematical Pendulum Physics Simulator. Works offline in any browser." />
+  
+  <!-- Tailwind CSS CDN for instant modern styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Project Stylesheet -->
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 transition-colors duration-200" id="appBody">
+
+  <!-- ==================== NAVBAR ==================== -->
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-slate-900/90 border-b border-slate-800 transition-colors" id="navHeader">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand -->
+      <div class="flex items-center space-x-3">
+        <div>
+          <h1 class="text-lg font-bold tracking-tight sm:text-xl flex items-center gap-2" id="txtAppTitle">
+            Симулятор Математичного Маятника
+          </h1>
+          <p class="text-xs text-slate-400" id="txtAppSubtitle">
+            Інтерактивне моделювання та фізична аналітика (Autonomous Local App)
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Controls -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <!-- Quick Reset -->
+        <button id="btnNavReset" class="p-2 rounded-lg text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5" title="Reset Simulation">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          <span class="hidden md:inline" id="txtBtnReset">Скинути</span>
+        </button>
+
+        <!-- Physics Guide Modal Button -->
+        <button id="btnOpenGuide" class="px-3 py-2 rounded-lg text-sm font-medium bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-300 border border-indigo-800/60 transition flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+          <span class="hidden sm:inline" id="txtBtnGuide">Довідник Фізики</span>
+        </button>
+
+        <!-- Language Switcher -->
+        <div class="flex items-center rounded-lg p-1 border bg-slate-800 border-slate-700" id="langBox">
+          <button id="btnLangEN" class="px-2 py-1 text-xs font-semibold rounded-md transition text-slate-300 hover:text-white">EN</button>
+          <button id="btnLangUA" class="px-2 py-1 text-xs font-semibold rounded-md transition bg-indigo-600 text-white shadow-sm">UA</button>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="btnThemeToggle" class="p-2 rounded-lg border bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700 transition" title="Toggle Light/Dark Theme">
+          <svg id="iconSun" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          <svg id="iconMoon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- EXPERIMENT PRESETS BAR -->
+    <section class="p-4 rounded-2xl border bg-slate-900/80 border-slate-800 shadow-sm space-y-3" id="panelPresets">
+      <div class="flex items-center gap-2">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-500" id="txtHeaderPresets">
+          Шаблони Експериментів
+        </h3>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2" id="containerPresetButtons">
+        <!-- Generated dynamically via JS -->
+      </div>
+    </section>
+
+    <!-- TOP GRID: CANVAS & CONTROLS -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- PENDULUM CANVAS (7 cols) -->
+      <div class="lg:col-span-7 h-full">
+        <div class="relative w-full h-[380px] sm:h-[450px] lg:h-[500px] rounded-2xl overflow-hidden shadow-inner border bg-slate-900 border-slate-800 transition-colors" id="canvasBox">
+          <canvas id="pendulumCanvas" class="w-full h-full cursor-grab touch-none"></canvas>
+          <div class="absolute bottom-3 left-3 right-3 sm:left-auto sm:right-3 px-3 py-1.5 rounded-lg text-xs font-medium backdrop-blur-md border bg-slate-900/80 text-indigo-300 border-slate-800 shadow-sm" id="txtDragTip">
+            💡 Порада: Перетягуйте тягарець мишею/пальцем на полотні, щоб встановити кут!
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTROLS PANEL (5 cols) -->
+      <div class="lg:col-span-5 h-full">
+        <div class="p-5 rounded-2xl border bg-slate-900/80 border-slate-800 shadow-sm space-y-6" id="panelControls">
+          
+          <!-- Transport controls -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 border-b border-slate-700/30">
+            <div class="flex items-center space-x-2 w-full sm:w-auto">
+              <button id="btnPlayPause" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/20 transition">
+                <svg id="iconPlay" class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <svg id="iconPause" class="w-4 h-4 fill-current hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                <span id="txtBtnPlay">Запустити</span>
+              </button>
+              <button id="btnStep" class="p-2.5 rounded-xl border font-semibold text-sm bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200 transition" title="Step +0.01s">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+              </button>
+              <button id="btnResetPhysics" class="p-2.5 rounded-xl border font-semibold text-sm bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200 transition" title="Reset Physics">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              </button>
+            </div>
+
+            <!-- Speed Multiplier -->
+            <div class="flex items-center space-x-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+              <span class="text-xs font-semibold mr-1 text-slate-400" id="txtLabelSpeed">Швидкість:</span>
+              <button data-speed="0.25" class="btn-speed px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">0.25x</button>
+              <button data-speed="0.5" class="btn-speed px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">0.5x</button>
+              <button data-speed="1.0" class="btn-speed px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm">1x</button>
+              <button data-speed="2.0" class="btn-speed px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">2x</button>
+              <button data-speed="5.0" class="btn-speed px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">5x</button>
+            </div>
+          </div>
+
+          <!-- Parameter Sliders -->
+          <div class="space-y-4">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-500" id="txtHeaderParams">Параметри Фізики</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- String Length -->
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-xs font-semibold">
+                  <label class="text-slate-300" id="lblLength">Довжина нитки (L)</label>
+                  <div class="flex items-center space-x-1">
+                    <input type="number" id="numLength" min="0.1" max="5.0" step="0.05" value="1.0" class="w-16 px-1.5 py-0.5 text-right font-mono text-xs rounded border bg-slate-800 border-slate-700 text-indigo-300" />
+                    <span class="text-slate-400" id="unitMeter">м</span>
+                  </div>
+                </div>
+                <input type="range" id="rangeLength" min="0.1" max="5.0" step="0.05" value="1.0" class="w-full accent-indigo-600 cursor-pointer" />
+              </div>
+
+              <!-- Initial Angle & Linear Amplitude -->
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-xs font-semibold">
+                  <label class="text-slate-300" id="lblAngle">Початковий кут (αₘ / θ₀)</label>
+                  <div class="flex items-center space-x-1">
+                    <input type="number" id="numAngle" min="-179" max="179" step="1" value="30" class="w-16 px-1.5 py-0.5 text-right font-mono text-xs rounded border bg-slate-800 border-slate-700 text-amber-300" />
+                    <span class="text-slate-400" id="unitDeg">°</span>
+                  </div>
+                </div>
+                <input type="range" id="rangeAngle" min="-179" max="179" step="1" value="30" class="w-full accent-amber-500 cursor-pointer" />
+                <div class="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
+                  <span id="lblControlAmpFormula" title="A = l · αₘ (в радіанах)">Амплітуда A = l · αₘ:</span>
+                  <div class="flex items-center space-x-1">
+                    <input type="number" id="numLinearAmp" min="0.01" max="15.0" step="0.01" value="0.524" class="w-16 px-1.5 py-0.5 text-right font-mono text-xs rounded border bg-slate-800 border-slate-700 text-emerald-400 font-bold" title="Амплітуда A в метрах (СІ)" />
+                    <span class="text-emerald-400 font-semibold" id="unitMeterAmp">м</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bob Mass -->
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-xs font-semibold">
+                  <label class="text-slate-300" id="lblMass">Маса тягарця (m)</label>
+                  <div class="flex items-center space-x-1">
+                    <input type="number" id="numMass" min="0.1" max="10.0" step="0.1" value="1.0" class="w-16 px-1.5 py-0.5 text-right font-mono text-xs rounded border bg-slate-800 border-slate-700 text-cyan-300" />
+                    <span class="text-slate-400" id="unitKg">кг</span>
+                  </div>
+                </div>
+                <input type="range" id="rangeMass" min="0.1" max="10.0" step="0.1" value="1.0" class="w-full accent-cyan-500 cursor-pointer" />
+              </div>
+
+              <!-- Air Damping -->
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-xs font-semibold">
+                  <label class="text-slate-300" id="lblDamping">Опір повітря (c)</label>
+                  <span id="txtDampingVal" class="font-mono text-xs font-bold text-rose-400">0.00</span>
+                </div>
+                <input type="range" id="rangeDamping" min="0" max="0.5" step="0.01" value="0.0" class="w-full accent-rose-500 cursor-pointer" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Gravity Presets -->
+          <div class="pt-2 border-t border-slate-700/30">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-500" id="txtHeaderGravity">Гравітація (g)</h3>
+              <div class="flex items-center space-x-1 text-xs">
+                <span class="text-slate-400">Custom:</span>
+                <input type="number" id="numGravity" min="0" max="300" step="0.1" value="9.81" class="w-16 px-1.5 py-0.5 text-right font-mono text-xs rounded border bg-slate-800 border-slate-700 text-emerald-300" />
+                <span class="text-slate-400">м/с²</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2" id="containerGravityButtons">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Visual Overlays Toggles -->
+          <div class="pt-2 border-t border-slate-700/30">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-400 mb-2" id="txtHeaderVisuals">Візуалізація</h3>
+            <div class="flex flex-wrap gap-2">
+              <button id="toggleVectors" class="btn-toggle px-3 py-1.5 rounded-lg text-xs font-semibold border bg-indigo-600 text-white border-indigo-500">✓ Вектори</button>
+              <button id="toggleProtractor" class="btn-toggle px-3 py-1.5 rounded-lg text-xs font-semibold border bg-indigo-600 text-white border-indigo-500">✓ Транспортир</button>
+              <button id="toggleRuler" class="btn-toggle px-3 py-1.5 rounded-lg text-xs font-semibold border bg-indigo-600 text-white border-indigo-500">✓ Лінійка</button>
+              <button id="toggleTrail" class="btn-toggle px-3 py-1.5 rounded-lg text-xs font-semibold border bg-indigo-600 text-white border-indigo-500">✓ Траєкторія</button>
+              <button id="toggleGrid" class="btn-toggle px-3 py-1.5 rounded-lg text-xs font-semibold border bg-indigo-600 text-white border-indigo-500">✓ Сітка</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- LIVE METRICS CARDS -->
+    <section class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3" id="panelMetrics">
+      
+      <!-- Card 1: Length & Amplitude -->
+      <div class="p-4 rounded-xl border bg-slate-800/80 border-slate-700/80 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400" id="cardTitleLengthAmp">Довжина & Амплітуда</span>
+          <span class="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 text-[11px] font-mono font-bold" id="badgeLengthAmp">l, αₘ, A</span>
+        </div>
+        <div class="space-y-1.5">
+          <div class="flex items-baseline justify-between">
+            <span class="text-xs text-slate-400" id="txtLabelL">Довжина (l):</span>
+            <span id="metricLength" class="text-base font-bold text-indigo-400 font-mono">1.00 м</span>
+          </div>
+          <div class="flex items-baseline justify-between border-t pt-1 border-slate-700/30">
+            <span class="text-xs text-slate-400" id="txtLabelAmp">Кут (αₘ):</span>
+            <span id="metricAmplitude" class="text-xs font-bold text-amber-400 font-mono">30.0° (0.524 рад)</span>
+          </div>
+          <div class="flex items-baseline justify-between border-t pt-1 border-slate-700/30">
+            <div class="flex items-center gap-1">
+              <span class="text-xs font-bold text-emerald-400" id="txtLabelLinearAmp">Амплітуда (A):</span>
+              <span class="text-[10px] text-slate-400 font-mono" title="A = l · αₘ">(xₘ)</span>
+            </div>
+            <span id="metricLinearAmp" class="text-base font-extrabold text-emerald-400 font-mono">0.524 м</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Period T -->
+      <div class="p-4 rounded-xl border bg-slate-800/80 border-slate-700/80 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400" id="cardTitlePeriod">Період (T)</span>
+          <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 text-xs font-bold">⏱</span>
+        </div>
+        <div class="space-y-1">
+          <div class="flex items-baseline justify-between">
+            <span class="text-xs text-slate-400" id="txtLabelTExact">Точний:</span>
+            <span id="metricPeriodExact" class="text-xl font-extrabold text-emerald-400">2.038 с</span>
+          </div>
+          <div class="flex items-baseline justify-between border-t pt-1 border-slate-700/30 text-xs">
+            <span class="text-slate-400" id="txtLabelTTheory">Теоретичний:</span>
+            <span id="metricPeriodTheoretical" class="font-semibold text-slate-300">2.006 с</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Frequency f -->
+      <div class="p-4 rounded-xl border bg-slate-800/80 border-slate-700/80 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400" id="cardTitleFrequency">Частота (f)</span>
+          <span class="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-500 text-xs font-bold">Hz</span>
+        </div>
+        <div class="space-y-1">
+          <div class="flex items-baseline justify-between">
+            <span class="text-xs text-slate-400" id="txtLabelFreq">Частота:</span>
+            <span id="metricFrequency" class="text-xl font-extrabold text-cyan-400">0.491 Гц</span>
+          </div>
+          <div class="flex items-baseline justify-between border-t pt-1 border-slate-700/30 text-xs">
+            <span class="text-slate-400" id="txtLabelVel">Швидкість v:</span>
+            <span id="metricVelocity" class="font-semibold text-slate-300">0.00 м/с</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Energy Breakdown -->
+      <div class="p-4 rounded-xl border bg-slate-800/80 border-slate-700/80 shadow-sm">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400" id="cardTitleEnergy">Енергія (Eₜₒₜ)</span>
+          <span class="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 text-xs font-bold">⚡</span>
+        </div>
+        <div class="flex items-baseline justify-between mb-2">
+          <span id="metricTotalEnergy" class="text-lg font-bold text-amber-400">1.314 Дж</span>
+          <span id="metricTension" class="text-xs text-slate-400">Fₜ: 8.50 Н</span>
+        </div>
+        <div class="space-y-1">
+          <div class="w-full bg-slate-700/50 rounded-full h-2.5 overflow-hidden flex">
+            <div id="barEk" style="width: 0%" class="bg-emerald-500 h-full transition-all duration-75"></div>
+            <div id="barEp" style="width: 100%" class="bg-sky-500 h-full transition-all duration-75"></div>
+          </div>
+          <div class="flex justify-between text-[10px] font-medium pt-0.5">
+            <span id="metricEkText" class="text-emerald-400">Eₖ: 0.000 Дж</span>
+            <span id="metricEpText" class="text-sky-400">Eₚ: 1.314 Дж</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- VIRTUAL STOPWATCH LAB -->
+    <section class="p-5 rounded-2xl border bg-slate-900/80 border-slate-800 shadow-sm space-y-4" id="panelStopwatch">
+      <div class="flex items-center justify-between border-b border-slate-700/30 pb-3">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-500 flex items-center gap-2" id="txtHeaderStopwatch">
+          ⏱ Віртуальний Секундомір Лабораторної
+        </h3>
+        <span class="text-xs text-slate-400" id="txtStopwatchDesc">
+          Виміряйте час 10 повних коливань для розрахунку періоду та похибки
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+        <!-- Display & Controls -->
+        <div class="p-4 rounded-xl border bg-slate-800/90 border-slate-700 text-center">
+          <div class="text-3xl font-mono font-extrabold text-indigo-400 tracking-wider">
+            <span id="swTimeDisplay">0.00</span> <span class="text-sm font-normal text-slate-400">с</span>
+          </div>
+          <div class="text-xs font-semibold text-slate-400 mt-1" id="txtSwElapsed">Пройдений час</div>
+          <div class="flex items-center justify-center space-x-2 mt-3">
+            <button id="btnSwStart" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition">Старт</button>
+            <button id="btnSwLap" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition">+1 Коливання</button>
+            <button id="btnSwReset" class="p-1.5 rounded-lg border bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 transition flex items-center justify-center" title="Reset Stopwatch">
+              <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Oscillation Progress -->
+        <div class="p-4 rounded-xl border bg-slate-800/90 border-slate-700 text-center">
+          <div class="text-2xl font-bold text-emerald-400" id="swOscCountDisplay">0 / 10</div>
+          <div class="text-xs font-semibold text-slate-400 mt-1" id="txtSwOscLabel">Відраховано коливань</div>
+          <div class="w-full bg-slate-700/30 rounded-full h-2 mt-3 overflow-hidden">
+            <div id="swProgressBar" style="width: 0%" class="bg-emerald-500 h-full transition-all duration-300"></div>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="p-4 rounded-xl border bg-slate-800/90 border-slate-700">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-400" id="txtSwMeasuredTLabel">Виміряний період:</span>
+            <span id="swMeasuredTVal" class="text-lg font-extrabold text-indigo-400">—</span>
+          </div>
+          <div class="flex items-center justify-between border-t border-slate-700/30 pt-2 mt-2">
+            <span class="text-xs font-semibold text-slate-400" id="txtSwErrorLabel">Похибка до теорії:</span>
+            <span id="swErrorVal" class="text-sm font-bold text-amber-400">—</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REAL-TIME ANALYTICS PLOTS -->
+    <section class="p-5 rounded-2xl border bg-slate-900/80 border-slate-800 shadow-sm space-y-4" id="panelPlots">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 border-b border-slate-700/30">
+        <div class="flex items-center space-x-1 w-full sm:w-auto overflow-x-auto">
+          <button id="btnTabWave" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-sm">Хвильові графіки (θ, ω)</button>
+          <button id="btnTabEnergy" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">Баланс Енергій</button>
+          <button id="btnTabPhase" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">Фазовий портрет</button>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="btnClearPlotData" class="px-2.5 py-1.5 rounded-lg border text-xs font-semibold bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300 transition">Очистити</button>
+          <button id="btnExportCsv" class="px-2.5 py-1.5 rounded-lg border text-xs font-semibold bg-indigo-950/60 hover:bg-indigo-900 border-indigo-800 text-indigo-300 transition">Експорт CSV</button>
+        </div>
+      </div>
+
+      <div class="w-full h-60 rounded-xl overflow-hidden border border-slate-700/20 bg-slate-900" id="plotBox">
+        <canvas id="plotCanvas" class="w-full h-full"></canvas>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== LAB GUIDE MODAL ==================== -->
+  <div id="modalGuide" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+    <div class="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl border bg-slate-900 border-slate-800 text-slate-100 shadow-2xl p-6 sm:p-8">
+      <button id="btnCloseGuide" class="absolute top-4 right-4 p-2 rounded-xl border bg-slate-800 border-slate-700 text-slate-300 hover:text-white transition">✕</button>
+
+      <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-slate-700/30">
+        <div class="p-3 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-500/20">📖</div>
+        <div>
+          <h2 class="text-xl font-bold tracking-tight" id="modalTitle">
+            Теорія Математичного Маятника та Методичні Вказівки
+          </h2>
+          <p class="text-xs text-slate-400">Physics principles, small angle approximation & non-linear mechanics</p>
+        </div>
+      </div>
+
+      <div class="space-y-6 text-sm">
+        <div class="p-4 rounded-xl border bg-slate-800/60 border-slate-700/70">
+          <div class="font-bold text-indigo-400 mb-1">1. Диференціальне рівняння руху</div>
+          <p class="text-slate-300 mb-3">Математичний маятник — це матеріальна точка масою m, підвішена на невагомій і нерозтяжній нитці довжиною l. Згідно з 2-м законом Ньютона:</p>
+          <div class="p-3 rounded-lg font-mono text-center text-base font-bold bg-slate-900 text-indigo-300 border border-slate-800">
+            d²θ/dt² + (c / m) · (dθ/dt) + (g / l) · sin(θ) = 0
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl border bg-slate-800/60 border-slate-700/70">
+          <div class="font-bold text-emerald-400 mb-1">2. Амплітуда коливань (СІ: метри)</div>
+          <p class="text-slate-300 mb-2">Амплітуда позначається символом <b>A</b> (або <b>xₘ</b>), а її основною одиницею вимірювання в системі СІ є <b>метр (м)</b>.</p>
+          <p class="text-slate-300 mb-3">Лінійна амплітуда <b>xₘ</b> пов'язана з довжиною нитки <b>l</b> та максимальним кутом відхилення від вертикалі <b>αₘ</b> (у радіанах) фундаментальною формулою:</p>
+          <div class="p-3 rounded-lg font-mono text-center text-base font-bold bg-slate-900 text-emerald-300 border border-slate-800">
+            A = xₘ = l · αₘ &nbsp;&nbsp;[м]
+          </div>
+          <p class="text-xs text-slate-400 mt-2">де αₘ [рад] = θ₀ [°] · π / 180°. Для горизонтального зміщення також використовують x = l · sin(θ).</p>
+        </div>
+
+        <div class="p-4 rounded-xl border bg-slate-800/60 border-slate-700/70">
+          <div class="font-bold text-sky-400 mb-1">3. Теоретична формула періоду (Формула Гюйгенса)</div>
+          <p class="text-slate-300 mb-3">За малих кутів відхилення (θ₀ &lt; 15°), sin(θ) ≈ θ. Період гармонічних коливань:</p>
+          <div class="p-3 rounded-lg font-mono text-center text-lg font-bold bg-slate-900 text-sky-300 border border-slate-800">
+            T₀ = 2π · √(l / g)
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl border bg-slate-800/60 border-slate-700/70">
+          <div class="font-bold text-amber-400 mb-1">4. Точний нелінійний період (Наближення Борда)</div>
+          <p class="text-slate-300 mb-3">За великих кутів амплітуди θ₀ період зростає згідно з нескінченним рядом:</p>
+          <div class="p-3 rounded-lg font-mono text-center text-sm font-bold bg-slate-900 text-amber-300 border border-slate-800">
+            T = T₀ · [ 1 + (1/16)θ₀² + (11/3072)θ₀⁴ + (173/737280)θ₀⁶ + ... ]
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl border bg-slate-800/60 border-slate-700/70">
+          <div class="font-bold text-cyan-400 mb-1">5. Закон збереження механічної енергії</div>
+          <p class="text-slate-300 mb-3">За відсутності опору повітря (c = 0) повна енергія є константою:</p>
+          <div class="p-3 rounded-lg font-mono text-center text-xs sm:text-sm font-bold bg-slate-900 text-cyan-300 border border-slate-800">
+            Eₜₒₜ = ½ m (l ω)² + m g l (1 - cos θ) = const
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-700/30 flex justify-end">
+        <button id="btnCloseGuideBtn" class="px-5 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition">
+          Закрити
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STANDALONE JS ENGINE ==================== -->
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

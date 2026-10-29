@@ -11,8 +11,7 @@
     "three": "https://unpkg.com/three@0.173.0/build/three.module.js",
     "three/addons/": "https://unpkg.com/three@0.173.0/examples/jsm/",
     "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.9.3/build/index.module.js",
-    "three-bvh-csg": "https://unpkg.com/three-bvh-csg@0.0.17/build/index.module.js",
-    "canvas-confetti": "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/+esm"
+    "three-bvh-csg": "https://unpkg.com/three-bvh-csg@0.0.17/build/index.module.js"
   }
 }
 </script>
@@ -365,7 +364,6 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { OBJExporter }       from 'three/addons/exporters/OBJExporter.js';
 import { STLExporter }       from 'three/addons/exporters/STLExporter.js';
 import { Brush, Evaluator, ADDITION, SUBTRACTION, INTERSECTION } from 'three-bvh-csg';
-import confetti              from 'canvas-confetti';
 
 const CSG = true;
 
@@ -438,11 +436,7 @@ function showToast(msg) {
     t.style.transform = 'translateX(-50%) translateY(0)';
   }, 2200);
 }
-function triggerConfetti() {
-  try {
-    confetti({ particleCount: 50, spread: 60, origin: { y: 0.65 } });
-  } catch(e) {}
-}
+
 
 /* ── Scene Setup ── */
 const vp = document.getElementById('vp');
@@ -715,7 +709,6 @@ function addObj(o, name) {
   playSound('pop');
 
   if (objs.length === 5 || objs.length === 10) {
-    triggerConfetti();
     playSound('success');
   }
 }
@@ -1186,7 +1179,6 @@ function runBool(op) {
     removeObj(a);
     removeObj(b);
     addObj(res, 'Нова фігура ' + ctr);
-    triggerConfetti();
     playSound('success');
     showToast('Логічну операцію успішно виконано! ✂️');
   } catch (e) {
@@ -1217,7 +1209,6 @@ document.getElementById('btnPhoto').addEventListener('click', () => {
   a.click();
   if (sel) tc.attach(sel);
   playSound('success');
-  triggerConfetti();
   showToast('📸 Фото фігур збережено!');
 });
 

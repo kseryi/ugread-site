@@ -25,7 +25,7 @@ const CATEGORIES_DATA = {
       { name: 'Капілярність', link: './products/Capilar/index.html' },
       { name: 'Гідроудар', link: './products/hidrohamm/simulation.html' },
       { name: 'Симулятор ГЕС', link: './products/GES/index.html' },
-      { name: 'Математичний маятник', link: './products/prndulum/index.html' }
+      { name: 'Математичний маятник', link: './products/physics/pendulum/index.html' }
     ]
   },
   astronomy: {

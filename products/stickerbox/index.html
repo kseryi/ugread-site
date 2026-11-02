@@ -1,0 +1,3811 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stickerbox</title>
+  <meta name="description" content="Stickerbox — створення інтерактивних стікерів на дошці та презентацій у форматі 16:9 PDF для учнів.">
+  <meta property="og:title" content="Stickerbox">
+  <meta property="og:description" content="Stickerbox — створення інтерактивних стікерів на дошці та презентацій у форматі 16:9 PDF для учнів.">
+  <link rel="stylesheet" href="style.css">
+  <script src="libs/peerjs.min.js"></script>
+  <script src="libs/qrious.min.js"></script>
+  <script src="libs/html2canvas.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    
+    <header class="toolbar">
+      <div class="brand-section">
+        <button type="button" class="brand-logo" id="brandLogoBtn" title="Меню дій: Додати стікер, Нова дошка, Експорт" aria-label="Меню швидких дій" aria-haspopup="true" aria-expanded="false">
+          <span class="logo-pin">📌</span>
+          <span class="logo-arrow">▾</span>
+        </button>
+
+        <!-- Невелике меню при кліку на логотип (Нова дошка, Додати стікер, Експорт) -->
+        <div class="logo-dropdown-menu" id="logoQuickMenu" role="menu" aria-label="Швидкі дії">
+          <div class="logo-dropdown-header">
+            <span>📌 Stickerbox</span>
+            <button type="button" class="logo-close-btn" id="closeLogoMenuBtn" title="Закрити меню">✕</button>
+          </div>
+          <button type="button" class="logo-menu-btn primary" id="logoAddStickerBtn">
+            <span class="l-icon">➕</span>
+            <span class="l-text">Додати стікер</span>
+          </button>
+          <button type="button" class="logo-menu-btn success" id="logoNewBoardBtn">
+            <span class="l-icon">✨</span>
+            <span class="l-text">Нова дошка</span>
+          </button>
+          <button type="button" class="logo-menu-btn" id="logoExportBtn">
+            <span class="l-icon">📥</span>
+            <span class="l-text">Експорт дошки</span>
+          </button>
+          <div class="logo-menu-divider"></div>
+          <button type="button" class="logo-menu-btn" id="logoPresentationBtn">
+            <span class="l-icon">▶</span>
+            <span class="l-text">Презентація</span>
+          </button>
+          <button type="button" class="logo-menu-btn" id="logoCollabBtn">
+            <span class="l-icon">👥</span>
+            <span class="l-text">Спільна робота</span>
+          </button>
+        </div>
+
+        <div class="brand-name-tag">Stickerbox</div>
+        <div class="brand-divider"></div>
+        <div class="title-area">
+          <div class="project-title" id="projTitleDisplay" title="Натисніть для зміни теми">Напиши свою тему</div>
+          <div class="project-author" id="projAuthorDisplay" title="Натисніть для зміни автора">Вкажи автора презентації</div>
+        </div>
+      </div>
+
+      <div class="tools-group" id="toolsGroup">
+        <div class="boards-control-group" style="display: flex; align-items: center; gap: 4px;">
+          <div class="dropdown">
+            <button class="btn" id="boardsDropdownBtn" title="Мої дошки (перемикання між дошками)" style="background: #1e293b; border-color: rgba(255,255,255,0.22); color: #f8fafc; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px;">📋</span>
+              <span id="activeBoardTitleBadge" style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Напиши свою тему</span>
+              <span style="font-size: 10px; color: #94a3b8;">▾</span>
+            </button>
+            <div class="dropdown-menu" id="boardsMenu" style="width: 290px; max-height: 400px; overflow-y: auto;">
+              <div style="font-size: 11px; font-weight: 700; color: #94a3b8; padding: 6px 12px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Мої дошки (<span id="boardsCountBadge">1</span>)</span>
+              </div>
+              <div id="boardsListContainer"></div>
+              <div style="border-top: 1px solid rgba(255,255,255,0.12); margin: 6px 0;"></div>
+              <button class="dropdown-item" id="menuNewBoardBtn" style="color: #6ee7b7; font-weight: 700; background: rgba(16,185,129,0.12); display: flex; align-items: center; gap: 8px;">
+                Створити нову дошку
+              </button>
+            </div>
+          </div>
+          <button class="btn" id="createNewBoardBtn" title="Створити нову чисту дошку" style="background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.45); color: #6ee7b7; font-weight: 700;">Нова дошка</button>
+        </div>
+
+        <div class="dropdown">
+          <button class="btn" id="themeDropdownBtn" title="Обрати стиль фону дошки">🎨 Стиль дошки ▾</button>
+          <div class="dropdown-menu" id="themeMenu" style="max-height: 440px; overflow-y: auto; width: 230px;">
+            <div style="font-size: 11px; font-weight: 700; color: #94a3b8; padding: 4px 10px; text-transform: uppercase; letter-spacing: 0.5px;">Готові стилі</div>
+            <button class="dropdown-item" data-theme="chalk">🏫 Крейдова дошка</button>
+            <button class="dropdown-item" data-theme="cork">📌 Корок (пробка)</button>
+            <button class="dropdown-item" data-theme="grid">📐 Зошит у клітинку</button>
+            <button class="dropdown-item" data-theme="lines">📝 Зошит у лінійку</button>
+            <button class="dropdown-item" data-theme="dots">✨ Папір у крапку</button>
+            <button class="dropdown-item" data-theme="blueprint">🌌 Космічний синій</button>
+            <button class="dropdown-item" data-theme="parchment">📜 Пергамент</button>
+            <button class="dropdown-item" data-theme="wood">🪵 Світле дерево</button>
+            <button class="dropdown-item" data-theme="slate">🖤 Темний графіт</button>
+            <button class="dropdown-item" data-theme="mint">🌿 Ніжна м'ята</button>
+            <button class="dropdown-item" data-theme="sunset">🌅 Пастельний захід</button>
+            <button class="dropdown-item" data-theme="cyber">💜 Неонова ніч</button>
+            <button class="dropdown-item" data-theme="canvas">🎨 Тканинне полотно</button>
+            <div style="border-top: 1px solid rgba(255,255,255,0.12); margin: 6px 0;"></div>
+            <button class="dropdown-item" data-theme="custom" id="customSavedThemeItem" style="display: none;">🎨 Мій власний стиль</button>
+            <button class="dropdown-item" id="openCustomThemeMenuItem" style="color: #fef08a; font-weight: 700; background: rgba(245,158,11,0.12);">⚙️ Налаштувати свій стиль...</button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="addStickerBtn">➕ Додати стікер</button>
+        <button class="btn btn-accent" id="startPresentationBtn">▶ Презентація</button>
+        <button class="btn btn-collab" id="openCollabModalBtn" title="Спільна робота (Peer-to-Peer)">
+          <span>👥</span> <span id="collabBtnText">Спільна робота</span>
+          <span id="collabPeersBadge" style="display:none; background:#ef4444; color:#fff; border-radius:10px; padding:1px 6px; font-size:10px; margin-left:4px; font-weight:700;">0</span>
+        </button>
+
+        <div class="dropdown">
+          <button class="btn" id="exportDropdownBtn">📥 Експорт ▾</button>
+          <div class="dropdown-menu" id="exportMenu" style="width: 250px;">
+            <div style="font-size: 11px; font-weight: 700; color: #94a3b8; padding: 4px 10px; text-transform: uppercase; letter-spacing: 0.5px;">Зображення (PNG)</div>
+            <button class="dropdown-item" id="exportBoardPngBtn" style="color: #6ee7b7; font-weight: 700;">
+              🖼️ Вся дошка як PNG-зображення
+            </button>
+            <div style="border-top: 1px solid rgba(255,255,255,0.12); margin: 6px 0;"></div>
+            <div style="font-size: 11px; font-weight: 700; color: #94a3b8; padding: 4px 10px; text-transform: uppercase; letter-spacing: 0.5px;">Документи (PDF)</div>
+            <button class="dropdown-item" id="exportPdf169Btn">📑 Слайди 16:9 (PDF-файл)</button>
+            <button class="dropdown-item" id="exportBoardPosterBtn">📄 Постер усієї дошки (PDF)</button>
+            <button class="dropdown-item" id="printDirectBtn">🖨 Роздрукувати / Зберегти як PDF</button>
+          </div>
+        </div>
+
+        <div class="dropdown">
+          <button class="btn" id="fileDropdownBtn">📁 Файл ▾</button>
+          <div class="dropdown-menu" id="fileMenu">
+            <button class="dropdown-item" id="saveJsonBtn">💾 Зберегти поточну дошку (.json)</button>
+            <button class="dropdown-item" id="saveAllBoardsJsonBtn">📦 Зберегти всі дошки разом (.json)</button>
+            <button class="dropdown-item" id="loadJsonBtn">📂 Відкрити проект (.json)</button>
+            <button class="dropdown-item" id="loadDemoBtn">✨ Відновити інструкцію на цій дошці</button>
+            <div style="border-top: 1px solid rgba(255,255,255,0.12); margin: 6px 0;"></div>
+            <button class="dropdown-item danger" id="clearBoardBtn">🗑 Очистити дошку (видалити всі стікери)</button>
+            <button class="dropdown-item danger" id="closeCurrentBoardFileMenuBtn">✕ Закрити поточну дошку</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="read-only-banner" id="collabReadOnlyBanner">
+      <span>🔒</span> <span>Режим перегляду: вчитель тимчасово вимкнув редагування для вашої участі</span>
+    </div>
+
+    <main id="boardContainer">
+      <div id="boardCanvas" class="theme-chalk">
+        <div class="board-empty-hint" id="boardEmptyHint" style="display:none;">
+          <h3>Дошка готова до творчості! ✨</h3>
+          <p>Натисніть кнопку <b>«➕ Додати стікер»</b> вгорі, щоб записати першу ідею, додати малюнок і почати створювати свою презентацію.</p>
+        </div>
+      </div>
+    </main>
+
+    <div class="zoom-dock">
+      <button class="zoom-btn" id="zoomOutBtn" title="Зменшити">−</button>
+      <span class="zoom-level" id="zoomValDisplay">100%</span>
+      <button class="zoom-btn" id="zoomInBtn" title="Збільшити">+</button>
+      <button class="zoom-btn" id="zoomResetBtn" title="Скинути масштаб" style="font-size:12px;">1:1</button>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="stickerModalOverlay">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="modalStickerHeading">Створити стікер</h2>
+        <button class="close-btn" id="closeStickerModalBtn">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label for="inputStickerTitle">Заголовок стікера / Слайду</label>
+        <input type="text" id="inputStickerTitle" class="form-input" placeholder="Наприклад: Червона планета Марс" maxlength="80">
+      </div>
+
+      <div class="form-group">
+        <label>Тематичний бейдж (категорія)</label>
+        <div class="pill-group" id="catPills">
+          <button type="button" class="pill-opt active" data-cat="💡 Ідея">💡 Ідея</button>
+          <button type="button" class="pill-opt" data-cat="🔬 Дослідження">🔬 Дослідження</button>
+          <button type="button" class="pill-opt" data-cat="❓ Питання">❓ Питання</button>
+          <button type="button" class="pill-opt" data-cat="⭐ Важливо">⭐ Важливо</button>
+          <button type="button" class="pill-opt" data-cat="🎨 Творчість">🎨 Творчість</button>
+          <button type="button" class="pill-opt" data-cat="📝 Нотатка">📝 Нотатка</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Колір паперу</label>
+        <div class="color-swatches" id="colorSwatches">
+          <div class="swatch active" style="background:#fef9c3;" data-color="#fef9c3" title="Сонячно-жовтий"></div>
+          <div class="swatch" style="background:#dcfce7;" data-color="#dcfce7" title="М'ятний"></div>
+          <div class="swatch" style="background:#e0f2fe;" data-color="#e0f2fe" title="Небесний"></div>
+          <div class="swatch" style="background:#ffe4e6;" data-color="#ffe4e6" title="Рожевий"></div>
+          <div class="swatch" style="background:#f3e8ff;" data-color="#f3e8ff" title="Лавандовий"></div>
+          <div class="swatch" style="background:#ffedd5;" data-color="#ffedd5" title="Персиковий"></div>
+          <div class="swatch" style="background:#ffffff;" data-color="#ffffff" title="Білий аркуш"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Кріплення</label>
+        <div class="pill-group" id="attachmentPills">
+          <button type="button" class="pill-opt active" data-att="pin-red">📌 Червона кнопка</button>
+          <button type="button" class="pill-opt" data-att="pin-gold">🟡 Золота кнопка</button>
+          <button type="button" class="pill-opt" data-att="tape">🩹 Скотч</button>
+          <button type="button" class="pill-opt" data-att="star">⭐ Зірочка</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="inputStickerText">Опис / Зміст слайду</label>
+        <textarea id="inputStickerText" class="form-textarea" placeholder="Запишіть цікаві факти, думки або зміст для презентації..." maxlength="700"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Зображення (малюнок чи фото)</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" id="inputImgUrl" class="form-input" placeholder="Посилання на картинку або оберіть файл">
+          <label class="btn" style="background:#0f172a; cursor:pointer; flex-shrink:0;">
+            📁 З файлу
+            <input type="file" id="fileImgInput" accept="image/*" style="display:none;">
+          </label>
+          <button type="button" class="btn" id="openSearchImgBtn" style="background:#334155; flex-shrink:0;">🔍 Пошук</button>
+        </div>
+        <div class="image-preview-box" id="modalImgPreview">
+          <img id="modalImgTag" src="" alt="Попередній перегляд">
+          <button type="button" class="remove-img-btn" id="removeImgBtn" title="Видалити зображення">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn" id="deleteStickerModalBtn" style="color:#ef4444; border-color:rgba(239,68,68,0.3); display:none;">🗑 Видалити</button>
+        <div style="display:flex; gap:10px; margin-left:auto;">
+          <button type="button" class="btn" id="cancelStickerModalBtn" style="color:#0f172a; background:#e2e8f0;">Скасувати</button>
+          <button type="button" class="btn btn-primary" id="saveStickerBtn">Зберегти стікер</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="searchImgModalOverlay">
+    <div class="modal-card" style="width:min(720px, 94vw); max-height:92vh; display:flex; flex-direction:column;">
+      <div class="modal-head" style="margin-bottom:14px; padding-bottom:10px;">
+        <div>
+          <h2>🔍 Пошук якісних фото для стікера</h2>
+          <div style="font-size:12px; color:#64748b; margin-top:2px;">Українська енциклопедія + відкритий медіабанк зображень</div>
+        </div>
+        <button class="close-btn" id="closeSearchImgBtn">✕</button>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="searchImgQuery" class="form-input" placeholder="Наприклад: марс, сонце, лев, козак, київ, вулкан, школа, космос...">
+        <button class="btn btn-primary" id="runSearchImgBtn" style="white-space:nowrap; padding:10px 18px;">Знайти</button>
+      </div>
+
+      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:10px; padding:8px 12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; font-size:12px;">
+        <span style="font-weight:700; color:#475569;">Пошук в один клік:</span>
+        <button type="button" class="btn" id="searchGoogleBtn" title="Відкрити Google Зображення з цим словом" style="padding:4px 10px; font-size:12px; background:#ffffff; border-color:#cbd5e1; color:#1e293b; display:flex; align-items:center; gap:5px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/></svg>
+          Google Зображення ↗
+        </button>
+        <button type="button" class="btn" id="searchDuckBtn" title="Відкрити DuckDuckGo Images з цим словом" style="padding:4px 10px; font-size:12px; background:#ffffff; border-color:#cbd5e1; color:#1e293b; display:flex; align-items:center; gap:5px;">
+          <span>🦆</span>
+          DuckDuckGo Images ↗
+        </button>
+        <button type="button" class="btn" id="searchUnsplashBtn" title="Відкрити Unsplash з якісними фото" style="padding:4px 10px; font-size:12px; background:#ffffff; border-color:#cbd5e1; color:#1e293b; display:flex; align-items:center; gap:5px;">
+          <span>📷</span>
+          Unsplash ↗
+        </button>
+      </div>
+
+      <div style="margin-top:8px; padding:7px 11px; background:#eff6ff; border-left:3px solid #3b82f6; border-radius:6px; font-size:11.5px; color:#1e3a8a; line-height:1.4;">
+        📋 <strong>Швидка вставка з Google / DuckDuckGo:</strong> знайдіть будь-яку картинку в інтернеті, натисніть правою кнопкою миші <strong>«Копіювати зображення»</strong> і просто натисніть <strong>Ctrl+V</strong> у будь-якому місці додатку!
+      </div>
+
+      <div class="search-grid" id="searchImgResults">
+        <div style="grid-column: 1/-1; text-align:center; padding:35px; color:#64748b;">
+          Введіть слово (наприклад, <strong>марс</strong>, <strong>сонце</strong>, <strong>київ</strong>, <strong>лев</strong>) та натисніть «Знайти»
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="customThemeModalOverlay">
+    <div class="modal-card" style="width: min(580px, 94vw);">
+      <div class="modal-head">
+        <h2>🎨 Налаштувати власний стиль дошки</h2>
+        <button class="close-btn" id="closeCustomThemeModalBtn">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label>Попередній перегляд фону</label>
+        <div style="position: relative; height: 110px; border-radius: 12px; overflow: hidden; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center;">
+          <div id="themeLivePreview" style="position: absolute; inset: 0; transition: background 0.15s ease;"></div>
+          <div style="position: relative; z-index: 2; background: #fef9c3; padding: 7px 14px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 13px; font-weight: 700; color: #1e293b; transform: rotate(-2deg); display: flex; align-items: center; gap: 6px;">
+            <span>📌</span>
+            <span>Твій стікер на дошці</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+          <label style="margin-bottom: 0;">Колір фону</label>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <input type="color" id="customThemeBgPicker" value="#172d22" style="width: 30px; height: 30px; border: none; border-radius: 6px; cursor: pointer; background: transparent; padding: 0;">
+            <input type="text" id="customThemeBgHex" value="#172d22" maxlength="7" style="width: 80px; padding: 4px 8px; font-size: 13px; font-family: monospace; border: 1.5px solid #cbd5e1; border-radius: 6px;">
+          </div>
+        </div>
+        <div class="color-swatches" id="customBgSwatches">
+          <div class="swatch active" style="background:#172d22;" data-color="#172d22" title="Крейдовий зелений"></div>
+          <div class="swatch" style="background:#925835;" data-color="#925835" title="Корок"></div>
+          <div class="swatch" style="background:#1e3a8a;" data-color="#1e3a8a" title="Глибокий синій"></div>
+          <div class="swatch" style="background:#0f172a;" data-color="#0f172a" title="Графітовий чорний"></div>
+          <div class="swatch" style="background:#180d2b;" data-color="#180d2b" title="Неоновий фіолетовий"></div>
+          <div class="swatch" style="background:#f5eedc;" data-color="#f5eedc" title="Пергамент"></div>
+          <div class="swatch" style="background:#ecfdf5;" data-color="#ecfdf5" title="М'ятний"></div>
+          <div class="swatch" style="background:#f0fdf4;" data-color="#f0fdf4" title="Світло-зелений"></div>
+          <div class="swatch" style="background:#e0f2fe;" data-color="#e0f2fe" title="Небесний"></div>
+          <div class="swatch" style="background:#fefce8;" data-color="#fefce8" title="Теплий кремовий"></div>
+          <div class="swatch" style="background:#ffffff;" data-color="#ffffff" title="Білий аркуш"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Візерунок / Текстура дошки</label>
+        <div class="pill-group" id="customPatternPills">
+          <button type="button" class="pill-opt active" data-pattern="grid">📐 Клітинка</button>
+          <button type="button" class="pill-opt" data-pattern="lines">📝 Лінійка</button>
+          <button type="button" class="pill-opt" data-pattern="dots">✨ Крапки</button>
+          <button type="button" class="pill-opt" data-pattern="stripes">📏 Смужки</button>
+          <button type="button" class="pill-opt" data-pattern="gradient">🌈 Градієнт</button>
+          <button type="button" class="pill-opt" data-pattern="texture">📜 Текстура</button>
+          <button type="button" class="pill-opt" data-pattern="none">🚫 Однотонний</button>
+        </div>
+      </div>
+
+      <div id="patternControlsGroup">
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+          <div>
+            <label style="display:block; font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">Колір візерунка</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="color" id="customPatternColorPicker" value="#ffffff" style="width:32px; height:32px; border:none; border-radius:6px; cursor:pointer; background:transparent; padding:0;">
+              <select id="customPatternColorPreset" class="form-input" style="padding:6px 10px; font-size:13px;">
+                <option value="#ffffff">Світлий (Білий)</option>
+                <option value="#000000">Темний (Чорний)</option>
+                <option value="#3b82f6">Шкільний синій</option>
+                <option value="#10b981">М'ятний смарагд</option>
+                <option value="#f59e0b">Золотистий / Теплий</option>
+                <option value="#ec4899">Рожевий акцент</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between;">
+              <label style="display:block; font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">Яскравість ліній</label>
+              <span id="patternOpacityVal" style="font-size:12px; font-weight:700; color:#0f172a;">15%</span>
+            </div>
+            <input type="range" id="customPatternOpacity" min="4" max="75" value="15" style="width:100%; accent-color:#f59e0b;">
+          </div>
+        </div>
+
+        <div id="patternSizeRow" class="form-group" style="margin-bottom: 14px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <label style="margin-bottom:0;">Розмір клітинки / відстань ліній</label>
+            <span id="patternSizeVal" style="font-size:12px; font-weight:700; color:#0f172a;">28 px</span>
+          </div>
+          <input type="range" id="customPatternSize" min="16" max="60" step="2" value="28" style="width:100%; accent-color:#f59e0b;">
+        </div>
+
+        <div id="gradientControlsRow" style="display:none; margin-bottom:14px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+              <label style="display:block; font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">Другий колір градієнта</label>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input type="color" id="customGradientColorPicker" value="#0f172a" style="width:32px; height:32px; border:none; border-radius:6px; cursor:pointer; background:transparent; padding:0;">
+                <input type="text" id="customGradientColorHex" value="#0f172a" maxlength="7" style="width:80px; padding:4px 8px; font-size:13px; font-family:monospace; border:1.5px solid #cbd5e1; border-radius:6px;">
+              </div>
+            </div>
+            <div>
+              <label style="display:block; font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">Напрямок градієнта</label>
+              <select id="customGradientDir" class="form-input" style="padding:6px 10px; font-size:13px;">
+                <option value="135deg">По діагоналі ↘</option>
+                <option value="180deg">Зверху вниз ↓</option>
+                <option value="90deg">Зліва направо →</option>
+                <option value="radial">Радіальний (із центру) ⊙</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 16px;">
+        <button type="button" class="btn" id="cancelCustomThemeBtn" style="color:#64748b; border-color:#cbd5e1;">Скасувати</button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn" id="resetCustomThemeBtn" style="color:#64748b; border-color:#cbd5e1;" title="Скинути до стандартних налаштувань">Скинути</button>
+          <button type="button" class="btn btn-primary" id="applyCustomThemeBtn">✨ Застосувати дошку</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="closeBoardConfirmModal">
+    <div class="modal-card" style="width: min(460px, 94vw); text-align: left;">
+      <div class="modal-head" style="margin-bottom: 12px;">
+        <h2 style="font-size: 17px; display: flex; align-items: center; gap: 8px;">
+          <span>💾</span> Закрити цю дошку?
+        </h2>
+        <button class="close-btn" id="cancelCloseBoardIconBtn">✕</button>
+      </div>
+
+      <div style="font-size: 14px; color: #334155; line-height: 1.5; margin-bottom: 14px;">
+        Ви збираєтеся закрити дошку <strong id="closeBoardTargetTitle" style="color: #0f172a;">«Назва дошки»</strong>.
+        <div style="margin-top: 8px; padding: 10px 12px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; color: #92400e; font-size: 13px;">
+          Бажаєте спочатку зберегти зміни у файл <strong>.json</strong> на комп'ютер, щоб не втратити свої стікери?
+        </div>
+      </div>
+
+      <div class="modal-actions" style="display: flex; flex-direction: column; gap: 8px; margin-top: 18px;">
+        <button type="button" class="btn btn-primary" id="confirmCloseWithSaveBtn" style="width: 100%; justify-content: center; padding: 10px 16px; font-weight: 700; background: #10b981; border-color: #059669; font-size: 14px;">
+          💾 Зберегти дошку (.json) і закрити
+        </button>
+        <div style="display: flex; gap: 8px; width: 100%;">
+          <button type="button" class="btn" id="confirmCloseWithoutSaveBtn" style="flex: 1; justify-content: center; color: #ef4444; border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.06); font-weight: 600; font-size: 13px;" title="Закрити без збереження у файл">
+            Закрити без збереження
+          </button>
+          <button type="button" class="btn" id="cancelCloseBoardBtn" style="flex: 1; justify-content: center; color: #64748b; border-color: #cbd5e1; font-weight: 600; font-size: 13px;" title="Повернутися до перегляду дошки">
+            Скасувати
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="collab-sidebar" id="collabSidebar" aria-label="Панель спільної роботи">
+    <div class="collab-sidebar-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 18px;">👥</span>
+        <div>
+          <strong style="font-size: 15px; font-weight: 700; display: block; line-height: 1.2;">Спільна робота</strong>
+          <span style="font-size: 11px; color: #94a3b8;" id="collabRoleLabel">Вчитель (Організатор)</span>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="collab-status-badge live" id="collabBadgeStatus">
+          <span class="pulse-dot"></span> <span id="collabBadgeText">В ефірі</span>
+        </span>
+        <button type="button" class="close-btn" id="closeCollabSidebarBtn" title="Згорнути панель (робота продовжується)" style="color: #cbd5e1; font-size: 18px; line-height: 1; padding: 4px 8px;">✕</button>
+      </div>
+    </div>
+
+    <div class="collab-sidebar-body">
+      
+      <div id="collabTeacherShareSection">
+        <div class="collab-code-hero">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <span style="font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; color: #cbd5e1;">🔑 Код підключення для учнів</span>
+            <span style="font-size: 11px; color: #fde047; font-weight: 700;">6 символів</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="collab-code-badge" id="collabRoomCodeDisplay" style="flex: 1;" title="Короткий код уроку">------</div>
+            <button type="button" class="btn" id="copyCollabCodeBtn" style="background: #f59e0b; color: #0f172a; font-weight: 700; font-size: 12.5px; padding: 8px 12px; white-space: nowrap; border: none; border-radius: 8px;" title="Скопіювати короткий код дошки">
+              📋 Скопіювати код
+            </button>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 6px; line-height: 1.35;">
+            Напишіть цей код на звичайній дошці в класі або надішліть коротке посилання нижче.
+          </div>
+        </div>
+
+        <div class="collab-card">
+          <div class="collab-card-title">
+            <span>🔗 Коротке посилання для учнів</span>
+            <span style="font-size: 10.5px; font-weight: 600; color: #10b981;">P2P зв'язок</span>
+          </div>
+          <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+            <input type="text" class="form-input" id="collabShareLinkInput" readonly style="font-size: 12px; background: #fff; cursor: text; padding: 8px 10px;">
+            <button type="button" class="btn btn-primary" id="copyCollabLinkBtn" style="white-space: nowrap; font-size: 12.5px; font-weight: 700; padding: 8px 12px;" title="Скопіювати коротке посилання в буфер обміну">
+              📋 Посилання
+            </button>
+          </div>
+
+          <div class="qr-container">
+            <div class="qr-canvas-wrapper">
+              <canvas id="collabQrCanvas" width="140" height="140" style="display: block; width: 140px; height: 140px;"></canvas>
+            </div>
+            <div style="font-size: 12px; color: #334155; line-height: 1.4; font-weight: 600;">
+              📱 Скануйте камерою смартфона або планшета
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+              Коротке посилання миттєво відкриває дошку безпосередньо в браузері
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="font-size: 12.5px; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.3px;">
+              Учні на уроці (<span id="collabParticipantsCount">0</span>)
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="student-action-btn btn-unlock" id="unlockAllStudentsBtn" title="Дозволити всім учням додавати та рухати стікери">
+                🔓 Дозволити всім
+              </button>
+              <button type="button" class="student-action-btn btn-lock" id="lockAllStudentsBtn" title="Вимкнути редагування для всіх дітей (тільки перегляд дій вчителя)">
+                🔒 Заборонити всім
+              </button>
+            </div>
+          </div>
+
+          <div id="collabStudentsList" style="max-height: 240px; overflow-y: auto; padding-right: 2px;">
+            <div style="text-align: center; color: #94a3b8; font-size: 12.5px; padding: 20px 10px; background: #f8fafc; border: 1.5px dashed #e2e8f0; border-radius: 10px;">
+              <div style="font-size: 24px; margin-bottom: 4px;">⏳</div>
+              Очікуємо підключення учнів...<br>
+              <span style="font-size: 11.5px; color: #64748b;">Надішліть дітям посилання або покажіть QR-код чи 6-значний код!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="collabStudentInfo" style="display: none;">
+        <div class="collab-card" style="background: #eff6ff; border-color: #bfdbfe;">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <div id="collabStudentAvatarBadge" style="width: 36px; height: 36px; border-radius: 50%; background: #2563eb; color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">У</div>
+            <div>
+              <strong style="color: #1e40af; font-size: 14px; display: block;">Ви на уроці</strong>
+              <div style="font-size: 12px; color: #3b82f6;" id="collabStudentSelfName">Учень</div>
+            </div>
+          </div>
+          <p style="font-size: 12.5px; color: #1e3a8a; line-height: 1.45; margin: 0 0 10px 0;">
+            Ваш курсор та стікери синхронізуються з дошкою вчителя та однокласників у реальному часі.
+          </p>
+
+          <div style="margin-bottom: 12px;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #1e3a8a; margin-bottom: 6px;">
+              Колір вашого курсору (можна змінити):
+            </div>
+            <div class="cursor-colors-grid" id="collabStudentSidebarColors" style="margin: 0; justify-content: flex-start; gap: 6px;"></div>
+          </div>
+
+          <div id="collabStudentPermBadge" style="font-size: 12px; font-weight: 700; padding: 6px 10px; border-radius: 8px; background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;">
+            ✓ Редагування дозволено
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: auto; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
+        <details style="font-size: 12px; color: #64748b;">
+          <summary style="cursor: pointer; user-select: none; font-weight: 600;">🔗 Приєднатися до іншої сесії за кодом...</summary>
+          <div style="display: flex; gap: 6px; margin-top: 8px;">
+            <input type="text" class="form-input" id="collabJoinCodeInput" placeholder="6-значний код або посилання..." style="font-size: 12px; padding: 6px 8px; text-transform: uppercase;">
+            <button type="button" class="btn" id="collabJoinBtn" style="font-size: 12px; padding: 6px 10px; white-space: nowrap; background: #0284c7; color: #fff;">
+              Увійти
+            </button>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="collab-sidebar-footer">
+      <button type="button" class="btn" id="disconnectCollabBtn" style="color: #dc2626; border-color: rgba(220,38,38,0.3); font-size: 12.5px; font-weight: 600;">
+        🚪 Завершити сесію
+      </button>
+      <button type="button" class="btn" id="collapseCollabSidebarFootBtn" style="color: #64748b; border-color: #cbd5e1; font-size: 12.5px;">
+        Згорнути панель ›
+      </button>
+    </div>
+  </aside>
+
+  <div class="student-welcome-overlay" id="studentWelcomeOverlay">
+    <div class="student-welcome-card">
+      <div style="font-size: 42px; line-height: 1; margin-bottom: 8px;">🎒</div>
+      <h2 style="font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
+        Приєднання до уроку
+      </h2>
+      <p style="font-size: 13px; color: #64748b; line-height: 1.45; margin-bottom: 16px;">
+        Введіть своє ім'я та оберіть колір особистого курсору для інтерактивної роботи на дошці:
+      </p>
+
+      <form id="studentWelcomeForm" onsubmit="return false;" style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+        <div>
+          <label for="studentJoinNameInput" style="font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; display: block;">
+            Ваше ім'я та клас:
+          </label>
+          <input
+            type="text"
+            id="studentJoinNameInput"
+            class="form-input"
+            placeholder="Наприклад: Оленка (6-А) або Андрій"
+            maxlength="40"
+            autocomplete="name"
+            style="font-size: 15px; padding: 10px 14px; font-weight: 600;"
+          >
+          <div id="studentJoinNameError" style="display: none; color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 600;">
+            Будь ласка, введіть ваше ім'я для участі в уроці!
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; display: block;">
+            Оберіть колір вашого курсору:
+          </label>
+          <div class="cursor-colors-grid" id="studentCursorColorsGrid"></div>
+
+          <div class="cursor-preview-wrapper">
+            <span style="font-size: 11px; color: #64748b; font-weight: 600;">Вигляд вашої стрілочки на дошці:</span>
+            <div id="studentCursorPreviewBadge" class="cursor-preview-badge" style="background: #2563eb;">
+              <svg class="remote-cursor-pointer" style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="#ffffff">
+                <path d="M4 0l16 12-7 2-4 9-5-23z" />
+              </svg>
+              <span id="studentCursorPreviewName">Учень</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" id="studentJoinSubmitBtn" class="btn btn-primary" style="padding: 12px; font-size: 15px; font-weight: 700; justify-content: center; border-radius: 10px; margin-top: 2px;">
+          Увійти на дошку 🚀
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="presentation-view" id="presOverlay">
+    <div class="pres-header">
+      <div class="pres-title-badge">
+        <span style="color:#f59e0b; font-weight:700;">Stickerbox</span>
+        <span style="opacity:0.5; margin:0 6px;">•</span>
+        <span id="presHeaderTitle">Назва проекту</span>
+      </div>
+      <div class="pres-controls-top">
+        <button class="btn" id="fullscreenToggleBtn">⛶ На весь екран</button>
+        <button class="btn" id="closePresBtn">✕ Закрити (Esc)</button>
+      </div>
+    </div>
+
+    <div class="slide-wrapper" id="presSlideWrapper">
+      <div class="slide-body" id="presSlideContent"></div>
+    </div>
+
+    <div class="pres-nav-bar">
+      <button class="pres-nav-btn" id="presPrevBtn" title="Попередній слайд (Стрілка вліво)">‹</button>
+      <div class="pres-counter" id="presCounterDisplay">1 / 5</div>
+      <button class="pres-nav-btn" id="presNextBtn" title="Наступний слайд (Стрілка вправо)">›</button>
+    </div>
+  </div>
+
+  <div id="printContainer"></div>
+
+  <div class="loading-toast" id="loadingToast">
+    <div class="spinner"></div>
+    <span id="loadingMsg">Генерація файлу...</span>
+  </div>
+
+  <input type="file" id="jsonFileInput" accept=".json" style="display:none;">
+
+  <script>
+    (function () {
+      "use strict";
+
+      const STORAGE_KEY = "school_sticker_boards_v4";
+      const LEGACY_STORAGE_KEY = "school_sticker_board_v3";
+
+      const DEFAULT_CUSTOM_THEME = {
+        bgColor: "#172d22",
+        pattern: "grid",
+        patternColor: "#ffffff",
+        patternOpacity: 15,
+        patternSize: 28,
+        gradientColor: "#0f172a",
+        gradientDir: "135deg"
+      };
+
+      const DEFAULT_STATE = {
+        title: "Напиши свою тему",
+        author: "Вкажи автора презентації",
+        theme: "chalk",
+        customTheme: DEFAULT_CUSTOM_THEME,
+        stickers: [
+          {
+            id: "guide_sticker_1",
+            title: "Вітаємо у Stickerbox! 💡",
+            text: "1. Натисни вгорі на «Напиши свою тему» та «Вкажи автора презентації» ✏️\n2. Натискай кнопку «➕ Додати стікер», щоб писати факти та додавати власні малюнки або фото.\n3. Перетягуй стікери мишкою чи пальцем по дошці.\n4. Натискай «▶ Презентація» для показу або «📥 Експорт PDF» для збереження!\n\n(Ти можеш легко видалити цей стікер-підказку, просто натиснувши на червоний хрестик ✕ у його правому кутку).",
+            color: "#fef9c3",
+            category: "💡 Ідея",
+            attachment: "pin-red",
+            image: "",
+            x: 140,
+            y: 100,
+            rotation: -1
+          }
+        ]
+      };
+
+      function createBoardTemplate(customTitle = "Напиши свою тему") {
+        return {
+          id: "b_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+          title: customTitle,
+          author: "Вкажи автора презентації",
+          theme: "chalk",
+          customTheme: Object.assign({}, DEFAULT_CUSTOM_THEME),
+          stickers: [
+            {
+              id: "guide_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+              title: "Вітаємо у Stickerbox! 💡",
+              text: "1. Натисни вгорі на «Напиши свою тему» та «Вкажи автора презентації» ✏️\n2. Натискай кнопку «➕ Додати стікер», щоб писати факти та додавати власні малюнки або фото.\n3. Перетягуй стікери мишкою чи пальцем по дошці.\n4. Натискай «▶ Презентація» для показу або «📥 Експорт PDF» для збереження!\n\n(Ти можеш легко видалити цей стікер-підказку, просто натиснувши на червоний хрестик ✕ у його правому кутку).",
+              color: "#fef9c3",
+              category: "💡 Ідея",
+              attachment: "pin-red",
+              image: "",
+              x: 140,
+              y: 100,
+              rotation: -1
+            }
+          ],
+          createdAt: Date.now()
+        };
+      }
+
+      function restoreGuideStickerOnCurrentBoard() {
+        appState.stickers = [
+          {
+            id: "guide_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+            title: "Вітаємо у Stickerbox! 💡",
+            text: "1. Натисни вгорі на «Напиши свою тему» та «Вкажи автора презентації» ✏️\n2. Натискай кнопку «➕ Додати стікер», щоб писати факти та додавати власні малюнки або фото.\n3. Перетягуй стікери мишкою чи пальцем по дошці.\n4. Натискай «▶ Презентація» для показу або «📥 Експорт PDF» для збереження!\n\n(Ти можеш легко видалити цей стікер-підказку, просто натиснувши на червоний хрестик ✕ у його правому кутку).",
+            color: "#fef9c3",
+            category: "💡 Ідея",
+            attachment: "pin-red",
+            image: "",
+            x: 140,
+            y: 100,
+            rotation: -1
+          }
+        ];
+
+        const idx = boardsData.boards.findIndex(b => b.id === boardsData.activeBoardId);
+        if (idx !== -1) {
+          boardsData.boards[idx].stickers = appState.stickers;
+        }
+
+        renderStickers();
+        renderBoardsDropdown();
+        saveToStorage();
+      }
+
+      function clearCurrentBoardStickers() {
+        appState.stickers = [];
+        const idx = boardsData.boards.findIndex(b => b.id === boardsData.activeBoardId);
+        if (idx !== -1) {
+          boardsData.boards[idx].stickers = [];
+        }
+
+        renderStickers();
+        renderBoardsDropdown();
+        saveToStorage();
+      }
+
+      function resetCurrentBoardToInitial() {
+        appState.title = "Напиши свою тему";
+        appState.author = "Вкажи автора презентації";
+        appState.theme = "chalk";
+        appState.customTheme = Object.assign({}, DEFAULT_CUSTOM_THEME);
+        appState.stickers = [
+          {
+            id: "guide_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+            title: "Вітаємо у Stickerbox! 💡",
+            text: "1. Натисни вгорі на «Напиши свою тему» та «Вкажи автора презентації» ✏️\n2. Натискай кнопку «➕ Додати стікер», щоб писати факти та додавати власні малюнки або фото.\n3. Перетягуй стікери мишкою чи пальцем по дошці.\n4. Натискай «▶ Презентація» для показу або «📥 Експорт PDF» для збереження!\n\n(Ти можеш легко видалити цей стікер-підказку, просто натиснувши на червоний хрестик ✕ у його правому кутку).",
+            color: "#fef9c3",
+            category: "💡 Ідея",
+            attachment: "pin-red",
+            image: "",
+            x: 140,
+            y: 100,
+            rotation: -1
+          }
+        ];
+
+        const idx = boardsData.boards.findIndex(b => b.id === boardsData.activeBoardId);
+        if (idx !== -1) {
+          boardsData.boards[idx] = appState;
+        }
+
+        applyTheme(appState.theme);
+        updateHeaderInfo();
+        renderStickers();
+        renderBoardsDropdown();
+        saveToStorage();
+      }
+
+      let boardsData = {
+        activeBoardId: "b_init_1",
+        boards: [
+          {
+            id: "b_init_1",
+            title: DEFAULT_STATE.title,
+            author: DEFAULT_STATE.author,
+            theme: DEFAULT_STATE.theme,
+            customTheme: Object.assign({}, DEFAULT_CUSTOM_THEME),
+            stickers: JSON.parse(JSON.stringify(DEFAULT_STATE.stickers)),
+            createdAt: Date.now()
+          }
+        ]
+      };
+
+      let appState = boardsData.boards[0];
+
+      let peerInstance = null;
+      let collabRole = null; // 'teacher' | 'student' | null
+      let collabPeerId = null;
+      let collabRoomCode = "";
+      let collabTeacherConn = null; // для учня: зв'язок з вчителем
+      let collabStudentConns = new Map(); // для вчителя: peerId -> { conn, name, color, canEdit }
+      let collabMyName = "";
+      let collabMyColor = "#2563eb";
+      let collabIsReadOnlyForMe = false;
+      let collabAllLocked = false;
+      const remoteCursorElements = new Map();
+
+      function isCollabActive() {
+        return !!peerInstance && (collabRole === "teacher" || (collabRole === "student" && !!collabTeacherConn));
+      }
+
+      function isCollabReadOnly() {
+        if (!isCollabActive()) return false;
+        if (collabRole === "teacher") return false;
+        return collabIsReadOnlyForMe;
+      }
+
+      let zoomLevel = 1.0;
+      let activeEditingId = null;
+      let modalDraft = {};
+      let presCurrentIndex = 0;
+
+      const boardContainer = document.getElementById("boardContainer");
+      const boardCanvas = document.getElementById("boardCanvas");
+      const boardEmptyHint = document.getElementById("boardEmptyHint");
+      const projTitleDisplay = document.getElementById("projTitleDisplay");
+      const projAuthorDisplay = document.getElementById("projAuthorDisplay");
+      const loadingToast = document.getElementById("loadingToast");
+      const loadingMsg = document.getElementById("loadingMsg");
+
+      const activeBoardTitleBadge = document.getElementById("activeBoardTitleBadge");
+      const boardsCountBadge = document.getElementById("boardsCountBadge");
+      const boardsListContainer = document.getElementById("boardsListContainer");
+      const createNewBoardBtn = document.getElementById("createNewBoardBtn");
+      const menuNewBoardBtn = document.getElementById("menuNewBoardBtn");
+
+      function getActiveBoard() {
+        let b = boardsData.boards.find(x => x.id === boardsData.activeBoardId);
+        if (!b) {
+          b = boardsData.boards[0] || createBoardTemplate();
+          boardsData.activeBoardId = b.id;
+        }
+        return b;
+      }
+
+      function switchBoard(boardId) {
+        const target = boardsData.boards.find(b => b.id === boardId);
+        if (!target) return;
+        boardsData.activeBoardId = target.id;
+        appState = target;
+        applyTheme(appState.theme || "chalk");
+        updateHeaderInfo();
+        renderStickers();
+        renderBoardsDropdown();
+        saveToStorage();
+        showToast(`Перемкнуто: «${appState.title || "Дошка"}» 📋`);
+      }
+
+      function createNewBoard() {
+        const newBoard = createBoardTemplate("Напиши свою тему");
+        boardsData.boards.push(newBoard);
+        boardsData.activeBoardId = newBoard.id;
+        appState = newBoard;
+        applyTheme(appState.theme);
+        updateHeaderInfo();
+        renderStickers();
+        renderBoardsDropdown();
+        saveToStorage();
+        showToast("Створено нову чисту дошку! 🎨");
+      }
+
+      let boardPendingDeletionId = null;
+
+      const closeBoardConfirmModal = document.getElementById("closeBoardConfirmModal");
+      const closeBoardTargetTitle = document.getElementById("closeBoardTargetTitle");
+      const confirmCloseWithSaveBtn = document.getElementById("confirmCloseWithSaveBtn");
+      const confirmCloseWithoutSaveBtn = document.getElementById("confirmCloseWithoutSaveBtn");
+      const cancelCloseBoardBtn = document.getElementById("cancelCloseBoardBtn");
+      const cancelCloseBoardIconBtn = document.getElementById("cancelCloseBoardIconBtn");
+
+      function openCloseBoardConfirm(boardId) {
+        boardPendingDeletionId = boardId;
+        const b = boardsData.boards.find(x => x.id === boardId);
+        const name = b && b.title && b.title !== "Напиши свою тему" ? `«${b.title}»` : "цю дошку";
+        if (closeBoardTargetTitle) closeBoardTargetTitle.textContent = name;
+        if (closeBoardConfirmModal) closeBoardConfirmModal.classList.add("open");
+      }
+
+      function hideCloseBoardConfirm() {
+        boardPendingDeletionId = null;
+        if (closeBoardConfirmModal) closeBoardConfirmModal.classList.remove("open");
+      }
+
+      function exportBoardToJson(boardObj) {
+        if (!boardObj) return;
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(boardObj, null, 2));
+        const a = document.createElement("a");
+        a.href = dataStr;
+        const cleanName = (boardObj.title && boardObj.title !== "Напиши свою тему" ? boardObj.title : "doshka").replace(/[^a-z0-9а-яіїєґ]/gi, "_");
+        a.download = `${cleanName}.json`;
+        a.click();
+      }
+
+      function executeDeleteBoard(boardId) {
+        if (boardsData.boards.length <= 1) {
+          showToast("Неможливо закрити єдину дошку. Ви можете її очистити! ℹ️");
+          return;
+        }
+        const b = boardsData.boards.find(x => x.id === boardId);
+        const name = b && b.title && b.title !== "Напиши свою тему" ? `«${b.title}»` : "дошку";
+
+        boardsData.boards = boardsData.boards.filter(x => x.id !== boardId);
+        if (boardsData.activeBoardId === boardId) {
+          boardsData.activeBoardId = boardsData.boards[0].id;
+          appState = boardsData.boards[0];
+          applyTheme(appState.theme || "chalk");
+          updateHeaderInfo();
+          renderStickers();
+        }
+        renderBoardsDropdown();
+        saveToStorage();
+        showToast(`Закрито ${name} 🗑`);
+      }
+
+      function requestDeleteBoard(boardId, e) {
+        if (e) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+        if (boardsData.boards.length <= 1) {
+          showToast("Неможливо закрити єдину дошку. Ви можете її очистити! ℹ️");
+          return;
+        }
+
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+        openCloseBoardConfirm(boardId);
+      }
+
+      if (confirmCloseWithSaveBtn) {
+        confirmCloseWithSaveBtn.addEventListener("click", () => {
+          if (boardPendingDeletionId) {
+            const targetBoard = boardsData.boards.find(b => b.id === boardPendingDeletionId);
+            if (targetBoard) {
+
+              if (targetBoard.id === boardsData.activeBoardId) {
+                Object.assign(targetBoard, appState);
+              }
+              exportBoardToJson(targetBoard);
+              showToast("Дошку збережено у файл .json! 💾");
+            }
+            executeDeleteBoard(boardPendingDeletionId);
+          }
+          hideCloseBoardConfirm();
+        });
+      }
+
+      if (confirmCloseWithoutSaveBtn) {
+        confirmCloseWithoutSaveBtn.addEventListener("click", () => {
+          if (boardPendingDeletionId) {
+            executeDeleteBoard(boardPendingDeletionId);
+          }
+          hideCloseBoardConfirm();
+        });
+      }
+
+      if (cancelCloseBoardBtn) cancelCloseBoardBtn.addEventListener("click", hideCloseBoardConfirm);
+      if (cancelCloseBoardIconBtn) cancelCloseBoardIconBtn.addEventListener("click", hideCloseBoardConfirm);
+      if (closeBoardConfirmModal) {
+        closeBoardConfirmModal.addEventListener("click", (e) => {
+          if (e.target === closeBoardConfirmModal) hideCloseBoardConfirm();
+        });
+      }
+
+      function renderBoardsDropdown() {
+        if (!activeBoardTitleBadge || !boardsListContainer) return;
+
+        const curTitle = appState.title || "Напиши свою тему";
+        activeBoardTitleBadge.textContent = curTitle;
+        activeBoardTitleBadge.title = curTitle;
+
+        if (boardsCountBadge) {
+          boardsCountBadge.textContent = boardsData.boards.length;
+        }
+
+        boardsListContainer.innerHTML = "";
+        boardsData.boards.forEach((b, idx) => {
+          const isActive = b.id === boardsData.activeBoardId;
+          const item = document.createElement("div");
+          item.className = "board-menu-item" + (isActive ? " active" : "");
+
+          const stickersCount = Array.isArray(b.stickers) ? b.stickers.length : 0;
+          const countText = stickersCount === 1 ? "1 стікер" :
+                            (stickersCount >= 2 && stickersCount <= 4 ? `${stickersCount} стікери` : `${stickersCount} стікерів`);
+
+          let delBtnHtml = "";
+          if (boardsData.boards.length > 1) {
+            delBtnHtml = `<button type="button" class="board-item-delete" title="Видалити цю дошку" data-id="${b.id}">✕</button>`;
+          }
+
+          item.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+              <span style="font-size:14px; opacity:${isActive ? '1' : '0.6'};">${isActive ? '📌' : '📋'}</span>
+              <div class="board-item-meta">
+                <span class="board-item-title">${escapeHtml(b.title || "Дошка " + (idx + 1))}</span>
+                <span class="board-item-sub">${countText} • ${escapeHtml(b.author && b.author !== "Вкажи автора презентації" ? b.author : "Без автора")}</span>
+              </div>
+            </div>
+            ${delBtnHtml}
+          `;
+
+          item.addEventListener("click", () => {
+            document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+            if (b.id !== boardsData.activeBoardId) {
+              switchBoard(b.id);
+            }
+          });
+
+          const delBtn = item.querySelector(".board-item-delete");
+          if (delBtn) {
+            delBtn.addEventListener("click", (evt) => {
+              evt.preventDefault();
+              evt.stopPropagation();
+              requestDeleteBoard(b.id, evt);
+            });
+          }
+
+          boardsListContainer.appendChild(item);
+        });
+      }
+
+      function loadFromStorage() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.boards) && parsed.boards.length > 0) {
+              boardsData = parsed;
+              boardsData.boards.forEach(b => {
+                if (!Array.isArray(b.stickers)) b.stickers = [];
+                if (!b.customTheme) b.customTheme = Object.assign({}, DEFAULT_CUSTOM_THEME);
+                if (!b.title) b.title = DEFAULT_STATE.title;
+                if (!b.author) b.author = DEFAULT_STATE.author;
+              });
+            }
+          } else {
+
+            const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+            if (legacyRaw) {
+              const legacyParsed = JSON.parse(legacyRaw);
+              if (legacyParsed && Array.isArray(legacyParsed.stickers)) {
+                boardsData = {
+                  activeBoardId: "b_migrated_1",
+                  boards: [{
+                    id: "b_migrated_1",
+                    title: legacyParsed.title || DEFAULT_STATE.title,
+                    author: legacyParsed.author || DEFAULT_STATE.author,
+                    theme: legacyParsed.theme || DEFAULT_STATE.theme,
+                    customTheme: legacyParsed.customTheme || Object.assign({}, DEFAULT_CUSTOM_THEME),
+                    stickers: legacyParsed.stickers,
+                    createdAt: Date.now()
+                  }]
+                };
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Storage not accessible, using in-memory state", e);
+        }
+
+        appState = getActiveBoard();
+        applyTheme(appState.theme || "chalk");
+        updateHeaderInfo();
+        renderStickers();
+        renderBoardsDropdown();
+      }
+
+      function saveToStorage() {
+        try {
+          const idx = boardsData.boards.findIndex(b => b.id === boardsData.activeBoardId);
+          if (idx !== -1) {
+            boardsData.boards[idx] = appState;
+          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(boardsData));
+        } catch (e) {
+          console.warn("Could not save to localStorage", e);
+        }
+      }
+
+      function showToast(msg, duration = 2500) {
+        loadingMsg.textContent = msg;
+        loadingToast.classList.add("show");
+        if (duration > 0) {
+          setTimeout(() => loadingToast.classList.remove("show"), duration);
+        }
+      }
+      function hideToast() {
+        loadingToast.classList.remove("show");
+      }
+
+      function updateHeaderInfo() {
+        projTitleDisplay.textContent = appState.title || "Напиши свою тему";
+        if (!appState.author || appState.author === "Вкажи автора презентації") {
+          projAuthorDisplay.textContent = "Вкажи автора презентації";
+        } else {
+          projAuthorDisplay.textContent = "Автор: " + appState.author;
+        }
+        if (activeBoardTitleBadge) {
+          activeBoardTitleBadge.textContent = appState.title || "Напиши свою тему";
+        }
+      }
+
+      function editProjectField(field, element) {
+        const isDefaultTitle = appState.title === "Напиши свою тему" || appState.title === "Дивовижний Космос";
+        const isDefaultAuthor = appState.author === "Вкажи автора презентації" || appState.author === "Учні 6-А класу";
+        
+        let initialVal = "";
+        if (field === "title") {
+          initialVal = isDefaultTitle ? "" : (appState.title || "");
+        } else {
+          initialVal = isDefaultAuthor ? "" : (appState.author || "");
+        }
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = initialVal;
+        input.placeholder = field === "title" ? "Напиши свою тему..." : "Вкажи автора (ім'я, клас)...";
+        input.className = field === "title" ? "title-input" : "author-input";
+        input.maxLength = 70;
+        element.replaceWith(input);
+        input.focus();
+        if (initialVal) {
+          input.select();
+        }
+
+        function commit() {
+          const val = input.value.trim();
+          if (field === "title") {
+            appState.title = val || "Напиши свою тему";
+          } else {
+            appState.author = val || "Вкажи автора презентації";
+          }
+          input.replaceWith(element);
+          updateHeaderInfo();
+          renderBoardsDropdown();
+          saveToStorage();
+          if (isCollabActive()) {
+            collabSendEvent({ type: "board_meta", title: appState.title, author: appState.author });
+          }
+        }
+
+        input.addEventListener("blur", commit);
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+          if (e.key === "Escape") { input.value = initialVal; input.blur(); }
+        });
+      }
+
+      projTitleDisplay.addEventListener("click", () => editProjectField("title", projTitleDisplay));
+      projAuthorDisplay.addEventListener("click", () => editProjectField("author", projAuthorDisplay));
+
+      if (createNewBoardBtn) createNewBoardBtn.addEventListener("click", createNewBoard);
+      if (menuNewBoardBtn) menuNewBoardBtn.addEventListener("click", () => {
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+        createNewBoard();
+      });
+
+      function hexToRgba(hex, alpha) {
+        if (!hex) return `rgba(255, 255, 255, ${alpha})`;
+        let c = hex.replace("#", "");
+        if (c.length === 3) c = c.split("").map(x => x + x).join("");
+        const num = parseInt(c, 16) || 0;
+        const r = (num >> 16) & 255;
+        const g = (num >> 8) & 255;
+        const b = num & 255;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      function computeThemeStyles(cfg) {
+        if (!cfg) cfg = DEFAULT_CUSTOM_THEME;
+        const bg = cfg.bgColor || "#172d22";
+        const pat = cfg.pattern || "grid";
+        const patCol = cfg.patternColor || "#ffffff";
+        const opacity = (cfg.patternOpacity !== undefined ? cfg.patternOpacity : 15) / 100;
+        const size = cfg.patternSize || 28;
+        const color = hexToRgba(patCol, opacity);
+
+        let bgImage = "";
+        let bgSize = "";
+
+        if (pat === "none") {
+          bgImage = "none";
+          bgSize = "";
+        } else if (pat === "grid") {
+          bgImage = `linear-gradient(${color} 1px, transparent 1px), linear-gradient(90deg, ${color} 1px, transparent 1px)`;
+          bgSize = `${size}px ${size}px`;
+        } else if (pat === "lines") {
+          const marginCol = hexToRgba("#ef4444", Math.min(0.4, opacity * 1.6));
+          bgImage = `linear-gradient(90deg, transparent 79px, ${marginCol} 79px, ${marginCol} 81px, transparent 81px), linear-gradient(${color} 1px, transparent 1px)`;
+          bgSize = `100% 100%, 100% ${size}px`;
+        } else if (pat === "dots") {
+          bgImage = `radial-gradient(circle, ${color} 1.6px, transparent 1.6px)`;
+          bgSize = `${size}px ${size}px`;
+        } else if (pat === "stripes") {
+          bgImage = `repeating-linear-gradient(45deg, ${color} 0, ${color} 2px, transparent 2px, transparent ${size}px)`;
+          bgSize = "";
+        } else if (pat === "gradient") {
+          const dir = cfg.gradientDir || "135deg";
+          const gCol = cfg.gradientColor || "#0f172a";
+          if (dir === "radial") {
+            bgImage = `radial-gradient(circle at 50% 50%, ${bg} 0%, ${gCol} 100%)`;
+          } else {
+            bgImage = `linear-gradient(${dir}, ${bg} 0%, ${gCol} 100%)`;
+          }
+          bgSize = "";
+        } else if (pat === "texture") {
+          bgImage = `radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 80%), repeating-radial-gradient(circle at 20% 30%, ${color} 0, ${color} 3px, transparent 3px, transparent 16px)`;
+          bgSize = "";
+        }
+
+        return {
+          backgroundColor: bg,
+          backgroundImage: bgImage,
+          backgroundSize: bgSize
+        };
+      }
+
+      function updateActiveThemeInMenu() {
+        const current = appState.theme || "chalk";
+        document.querySelectorAll("#themeMenu .dropdown-item[data-theme]").forEach(btn => {
+          if (btn.dataset.theme === current) {
+            btn.style.backgroundColor = "rgba(245,158,11,0.22)";
+            btn.style.fontWeight = "700";
+            btn.style.color = "#fef08a";
+          } else {
+            btn.style.backgroundColor = "";
+            btn.style.fontWeight = "";
+            btn.style.color = "";
+          }
+        });
+
+        const customItem = document.getElementById("customSavedThemeItem");
+        if (customItem) {
+          if (appState.customTheme) {
+            customItem.style.display = "block";
+          }
+        }
+      }
+
+      function applyTheme(themeName, customConfig) {
+        if (customConfig) {
+          appState.customTheme = Object.assign({}, appState.customTheme || DEFAULT_CUSTOM_THEME, customConfig);
+        }
+        appState.theme = themeName;
+
+        if (themeName === "custom") {
+          const styles = computeThemeStyles(appState.customTheme);
+          boardCanvas.className = "theme-custom";
+          boardCanvas.style.backgroundColor = styles.backgroundColor;
+          boardCanvas.style.backgroundImage = styles.backgroundImage;
+          boardCanvas.style.backgroundSize = styles.backgroundSize;
+        } else {
+          boardCanvas.style.backgroundColor = "";
+          boardCanvas.style.backgroundImage = "";
+          boardCanvas.style.backgroundSize = "";
+          boardCanvas.className = "theme-" + themeName;
+        }
+
+        updateActiveThemeInMenu();
+        saveToStorage();
+        if (isCollabActive()) {
+          collabSendEvent({ type: "theme_change", theme: themeName, customTheme: appState.customTheme });
+        }
+      }
+
+      function renderStickers() {
+
+        const existing = boardCanvas.querySelectorAll(".sticker-card");
+        existing.forEach(el => el.remove());
+
+        if (appState.stickers.length === 0) {
+          boardEmptyHint.style.display = "block";
+          return;
+        }
+        boardEmptyHint.style.display = "none";
+
+        appState.stickers.forEach((sticker, index) => {
+          const el = createStickerElement(sticker, index);
+          boardCanvas.appendChild(el);
+        });
+      }
+
+      function createStickerElement(sticker, index) {
+        const card = document.createElement("div");
+        card.className = "sticker-card";
+        card.id = "card_" + sticker.id;
+        card.style.left = (sticker.x || 80) + "px";
+        card.style.top = (sticker.y || 80) + "px";
+        card.style.backgroundColor = sticker.color || "#fef9c3";
+        card.style.transform = `rotate(${sticker.rotation || 0}deg)`;
+
+        let attHtml = "";
+        if (sticker.attachment === "pin-red") attHtml = '<div class="card-attachment pin-red"></div>';
+        else if (sticker.attachment === "pin-gold") attHtml = '<div class="card-attachment pin-gold"></div>';
+        else if (sticker.attachment === "tape") attHtml = '<div class="card-attachment tape"></div>';
+        else if (sticker.attachment === "star") attHtml = '<div class="card-attachment star-pin">⭐</div>';
+
+        let imgHtml = "";
+        if (sticker.image) {
+          imgHtml = `<div class="card-img-wrap"><img src="${escapeHtml(sticker.image)}" alt="" loading="lazy"></div>`;
+        }
+
+        card.innerHTML = `
+          ${attHtml}
+          <div class="card-header">
+            <div class="card-slide-pill">#${index + 1}</div>
+            <div class="card-cat-badge">${escapeHtml(sticker.category || "💡 Ідея")}</div>
+            <div class="card-actions-quick">
+              <button class="card-mini-btn" title="Перемістити раніше (вгору)" data-act="up">▲</button>
+              <button class="card-mini-btn" title="Перемістити пізніше (вниз)" data-act="down">▼</button>
+              <button class="card-mini-btn" title="Редагувати" data-act="edit">✎</button>
+              <button class="card-mini-btn del" title="Видалити" data-act="del">✕</button>
+            </div>
+          </div>
+          <div class="card-title">${escapeHtml(sticker.title || "Без назви")}</div>
+          ${imgHtml}
+          <div class="card-text">${escapeHtml(sticker.text || "")}</div>
+        `;
+
+        card.querySelectorAll(".card-mini-btn").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (isCollabReadOnly()) {
+              showToast("Вчитель тимчасово вимкнув редагування для вашого пристрою 🔒");
+              return;
+            }
+            const act = btn.dataset.act;
+            if (act === "edit") openStickerModal(sticker.id);
+            else if (act === "del") deleteSticker(sticker.id);
+            else if (act === "up") moveStickerOrder(sticker.id, -1);
+            else if (act === "down") moveStickerOrder(sticker.id, 1);
+          });
+        });
+
+        setupDraggable(card, sticker);
+
+        return card;
+      }
+
+      function setupDraggable(el, sticker) {
+        let isDragging = false;
+        let startX = 0, startY = 0;
+        let initialX = 0, initialY = 0;
+        let moved = false;
+
+        el.addEventListener("pointerdown", (e) => {
+          if (e.target.closest(".card-mini-btn")) return;
+          if (isCollabReadOnly()) {
+            showToast("Вчитель тимчасово вимкнув переміщення для учнів 🔒");
+            return;
+          }
+          isDragging = true;
+          moved = false;
+          el.setPointerCapture(e.pointerId);
+          startX = e.clientX;
+          startY = e.clientY;
+          initialX = sticker.x || 0;
+          initialY = sticker.y || 0;
+          el.classList.add("dragging");
+
+          function onPointerMove(ev) {
+            if (!isDragging) return;
+            const dx = (ev.clientX - startX) / zoomLevel;
+            const dy = (ev.clientY - startY) / zoomLevel;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+
+            let nextX = Math.max(10, Math.min(3200 - 300, initialX + dx));
+            let nextY = Math.max(10, Math.min(2200 - 300, initialY + dy));
+            sticker.x = nextX;
+            sticker.y = nextY;
+            el.style.left = nextX + "px";
+            el.style.top = nextY + "px";
+            if (isCollabActive()) {
+              collabSendEvent({ type: "sticker_move", id: sticker.id, x: nextX, y: nextY });
+            }
+          }
+
+          function onPointerUp(ev) {
+            if (!isDragging) return;
+            isDragging = false;
+            el.releasePointerCapture(ev.pointerId);
+            el.removeEventListener("pointermove", onPointerMove);
+            el.removeEventListener("pointerup", onPointerUp);
+            el.classList.remove("dragging");
+            if (moved) {
+              saveToStorage();
+              if (isCollabActive()) {
+                collabSendEvent({ type: "sticker_move_end", id: sticker.id, x: sticker.x, y: sticker.y });
+              }
+            } else {
+              openStickerModal(sticker.id);
+            }
+          }
+
+          el.addEventListener("pointermove", onPointerMove);
+          el.addEventListener("pointerup", onPointerUp);
+        });
+      }
+
+      function deleteSticker(id) {
+        if (isCollabReadOnly()) {
+          showToast("Видалення вимкнено в режимі перегляду 🔒");
+          return;
+        }
+        appState.stickers = appState.stickers.filter(s => s.id !== id);
+        renderStickers();
+        saveToStorage();
+        if (isCollabActive()) {
+          collabSendEvent({ type: "sticker_delete", id });
+        }
+      }
+
+      function moveStickerOrder(id, delta) {
+        if (isCollabReadOnly()) return;
+        const idx = appState.stickers.findIndex(s => s.id === id);
+        if (idx === -1) return;
+        const targetIdx = idx + delta;
+        if (targetIdx < 0 || targetIdx >= appState.stickers.length) return;
+        const temp = appState.stickers[idx];
+        appState.stickers[idx] = appState.stickers[targetIdx];
+        appState.stickers[targetIdx] = temp;
+        renderStickers();
+        saveToStorage();
+        if (isCollabActive()) {
+          collabSendEvent({ type: "board_state_sync", board: appState });
+        }
+      }
+
+      const stickerModalOverlay = document.getElementById("stickerModalOverlay");
+      const modalStickerHeading = document.getElementById("modalStickerHeading");
+      const inputStickerTitle = document.getElementById("inputStickerTitle");
+      const inputStickerText = document.getElementById("inputStickerText");
+      const inputImgUrl = document.getElementById("inputImgUrl");
+      const fileImgInput = document.getElementById("fileImgInput");
+      const modalImgPreview = document.getElementById("modalImgPreview");
+      const modalImgTag = document.getElementById("modalImgTag");
+      const removeImgBtn = document.getElementById("removeImgBtn");
+      const deleteStickerModalBtn = document.getElementById("deleteStickerModalBtn");
+      const saveStickerBtn = document.getElementById("saveStickerBtn");
+      const cancelStickerModalBtn = document.getElementById("cancelStickerModalBtn");
+      const closeStickerModalBtn = document.getElementById("closeStickerModalBtn");
+
+      function openStickerModal(id = null) {
+        activeEditingId = id;
+        if (id) {
+          const existing = appState.stickers.find(s => s.id === id);
+          if (!existing) return;
+          modalDraft = JSON.parse(JSON.stringify(existing));
+          modalStickerHeading.textContent = "Редагувати стікер";
+          deleteStickerModalBtn.style.display = "block";
+        } else {
+          modalDraft = {
+            id: "s_" + Date.now(),
+            title: "",
+            text: "",
+            category: "💡 Ідея",
+            color: "#fef9c3",
+            attachment: "pin-red",
+            image: "",
+            x: Math.min(2600, boardContainer.scrollLeft + 160 + Math.random() * 80),
+            y: Math.min(1700, boardContainer.scrollTop + 140 + Math.random() * 80),
+            rotation: (Math.random() * 6 - 3)
+          };
+          modalStickerHeading.textContent = "Новий стікер";
+          deleteStickerModalBtn.style.display = "none";
+        }
+
+        inputStickerTitle.value = modalDraft.title || "";
+        inputStickerText.value = modalDraft.text || "";
+        inputImgUrl.value = modalDraft.image || "";
+
+        document.querySelectorAll("#colorSwatches .swatch").forEach(sw => {
+          sw.classList.toggle("active", sw.dataset.color === modalDraft.color);
+        });
+
+        document.querySelectorAll("#catPills .pill-opt").forEach(p => {
+          p.classList.toggle("active", p.dataset.cat === modalDraft.category);
+        });
+
+        document.querySelectorAll("#attachmentPills .pill-opt").forEach(p => {
+          p.classList.toggle("active", p.dataset.att === modalDraft.attachment);
+        });
+
+        updateModalImgPreview(modalDraft.image);
+        stickerModalOverlay.classList.add("open");
+        inputStickerTitle.focus();
+      }
+
+      function closeStickerModal() {
+        stickerModalOverlay.classList.remove("open");
+        activeEditingId = null;
+      }
+
+      function updateModalImgPreview(url) {
+        if (url) {
+          modalImgTag.src = url;
+          modalImgPreview.classList.add("has-img");
+        } else {
+          modalImgTag.src = "";
+          modalImgPreview.classList.remove("has-img");
+        }
+      }
+
+      document.getElementById("colorSwatches").addEventListener("click", (e) => {
+        const sw = e.target.closest(".swatch");
+        if (!sw) return;
+        document.querySelectorAll("#colorSwatches .swatch").forEach(s => s.classList.remove("active"));
+        sw.classList.add("active");
+        modalDraft.color = sw.dataset.color;
+      });
+
+      document.getElementById("catPills").addEventListener("click", (e) => {
+        const p = e.target.closest(".pill-opt");
+        if (!p) return;
+        document.querySelectorAll("#catPills .pill-opt").forEach(el => el.classList.remove("active"));
+        p.classList.add("active");
+        modalDraft.category = p.dataset.cat;
+      });
+
+      document.getElementById("attachmentPills").addEventListener("click", (e) => {
+        const p = e.target.closest(".pill-opt");
+        if (!p) return;
+        document.querySelectorAll("#attachmentPills .pill-opt").forEach(el => el.classList.remove("active"));
+        p.classList.add("active");
+        modalDraft.attachment = p.dataset.att;
+      });
+
+      fileImgInput.addEventListener("change", () => {
+        const file = fileImgInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          modalDraft.image = ev.target.result;
+          inputImgUrl.value = "";
+          updateModalImgPreview(modalDraft.image);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      inputImgUrl.addEventListener("input", () => {
+        modalDraft.image = inputImgUrl.value.trim();
+        updateModalImgPreview(modalDraft.image);
+      });
+
+      removeImgBtn.addEventListener("click", () => {
+        modalDraft.image = "";
+        inputImgUrl.value = "";
+        fileImgInput.value = "";
+        updateModalImgPreview("");
+      });
+
+      saveStickerBtn.addEventListener("click", () => {
+        if (isCollabReadOnly()) {
+          showToast("Створення або редагування стікерів заблоковано вчителем 🔒");
+          closeStickerModal();
+          return;
+        }
+        modalDraft.title = inputStickerTitle.value.trim();
+        modalDraft.text = inputStickerText.value.trim();
+        if (!modalDraft.title && !modalDraft.text && !modalDraft.image) {
+          inputStickerTitle.focus();
+          return;
+        }
+        if (activeEditingId) {
+          const idx = appState.stickers.findIndex(s => s.id === activeEditingId);
+          if (idx !== -1) appState.stickers[idx] = modalDraft;
+        } else {
+          appState.stickers.push(modalDraft);
+        }
+        renderStickers();
+        saveToStorage();
+        if (isCollabActive()) {
+          collabSendEvent({ type: "sticker_upsert", sticker: modalDraft });
+        }
+        closeStickerModal();
+      });
+
+      deleteStickerModalBtn.addEventListener("click", () => {
+        if (activeEditingId) deleteSticker(activeEditingId);
+        closeStickerModal();
+      });
+
+      document.getElementById("addStickerBtn").addEventListener("click", () => {
+        if (isCollabReadOnly()) {
+          showToast("Вчитель тимчасово вимкнув додавання стікерів для вашого пристрою 🔒");
+          return;
+        }
+        openStickerModal(null);
+      });
+      cancelStickerModalBtn.addEventListener("click", closeStickerModal);
+      closeStickerModalBtn.addEventListener("click", closeStickerModal);
+      stickerModalOverlay.addEventListener("click", (e) => {
+        if (e.target === stickerModalOverlay) closeStickerModal();
+      });
+
+      const searchImgModalOverlay = document.getElementById("searchImgModalOverlay");
+      const openSearchImgBtn = document.getElementById("openSearchImgBtn");
+      const closeSearchImgBtn = document.getElementById("closeSearchImgBtn");
+      const searchImgQuery = document.getElementById("searchImgQuery");
+      const runSearchImgBtn = document.getElementById("runSearchImgBtn");
+      const searchImgResults = document.getElementById("searchImgResults");
+      const searchGoogleBtn = document.getElementById("searchGoogleBtn");
+      const searchDuckBtn = document.getElementById("searchDuckBtn");
+      const searchUnsplashBtn = document.getElementById("searchUnsplashBtn");
+
+      openSearchImgBtn.addEventListener("click", () => {
+
+        if (!searchImgQuery.value.trim() && inputStickerTitle.value.trim()) {
+          searchImgQuery.value = inputStickerTitle.value.trim();
+        }
+        searchImgModalOverlay.classList.add("open");
+        searchImgQuery.focus();
+        searchImgQuery.select();
+        if (searchImgQuery.value.trim()) {
+          performImageSearch();
+        }
+      });
+      closeSearchImgBtn.addEventListener("click", () => searchImgModalOverlay.classList.remove("open"));
+      searchImgModalOverlay.addEventListener("click", (e) => {
+        if (e.target === searchImgModalOverlay) searchImgModalOverlay.classList.remove("open");
+      });
+
+      function getActiveSearchWord() {
+        return searchImgQuery.value.trim() ||
+               inputStickerTitle.value.trim() ||
+               (appState.title && appState.title !== "Напиши свою тему" ? appState.title : "") ||
+               "природа";
+      }
+
+      if (searchGoogleBtn) {
+        searchGoogleBtn.addEventListener("click", () => {
+          const w = getActiveSearchWord();
+          window.open("https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(w), "_blank");
+        });
+      }
+      if (searchDuckBtn) {
+        searchDuckBtn.addEventListener("click", () => {
+          const w = getActiveSearchWord();
+          window.open("https://duckduckgo.com/?iax=images&ia=images&q=" + encodeURIComponent(w), "_blank");
+        });
+      }
+      if (searchUnsplashBtn) {
+        searchUnsplashBtn.addEventListener("click", () => {
+          const w = getActiveSearchWord();
+          window.open("https://unsplash.com/s/photos/" + encodeURIComponent(w), "_blank");
+        });
+      }
+
+      async function performImageSearch() {
+        const q = searchImgQuery.value.trim();
+        if (!q) return;
+        searchImgResults.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:35px; color:#f59e0b; font-weight:600;">🔍 Шукаємо фотографії в енциклопедії та відкритому архіві...</div>';
+
+        const results = [];
+        const seenUrls = new Set();
+
+        function addResult(thumbUrl, fullUrl, title) {
+          if (!thumbUrl || seenUrls.has(thumbUrl)) return;
+          seenUrls.add(thumbUrl);
+
+          if (/\.(ogg|oga|ogv|webm|mid|midi|pdf|djvu|mp3|wav|flac)(\?|$)/i.test(thumbUrl) ||
+              /\.(ogg|oga|ogv|webm|mid|midi|pdf|djvu|mp3|wav|flac)(\?|$)/i.test(fullUrl)) {
+            return;
+          }
+          results.push({ thumbUrl, fullUrl: fullUrl || thumbUrl, title: title || "" });
+        }
+
+        try {
+
+          const ukWikiUrl = "https://uk.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=" +
+            encodeURIComponent(q) + "&gsrlimit=14&prop=pageimages&piprop=thumbnail|original&pithumbsize=400";
+          const reqUk = fetch(ukWikiUrl).then(r => r.ok ? r.json() : null).catch(() => null);
+
+          const commUrl = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=" +
+            encodeURIComponent(q + " filetype:bitmap") + "&gsrnamespace=6&gsrlimit=18&prop=imageinfo&iiprop=url&iiurlwidth=400";
+          const reqComm = fetch(commUrl).then(r => r.ok ? r.json() : null).catch(() => null);
+
+          const enWikiUrl = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=" +
+            encodeURIComponent(q) + "&gsrlimit=8&prop=pageimages&piprop=thumbnail|original&pithumbsize=400";
+          const reqEn = fetch(enWikiUrl).then(r => r.ok ? r.json() : null).catch(() => null);
+
+          const [dataUk, dataComm, dataEn] = await Promise.all([reqUk, reqComm, reqEn]);
+
+          if (dataUk && dataUk.query && dataUk.query.pages) {
+            Object.values(dataUk.query.pages).forEach(p => {
+              if (p.thumbnail && p.thumbnail.source) {
+                const full = p.original && p.original.source ? p.original.source : p.thumbnail.source;
+                addResult(p.thumbnail.source, full, p.title);
+              }
+            });
+          }
+
+          if (dataComm && dataComm.query && dataComm.query.pages) {
+            Object.values(dataComm.query.pages).forEach(p => {
+              const info = p.imageinfo && p.imageinfo[0];
+              if (info) {
+                const thumb = info.thumburl || info.url;
+                const full = info.url;
+                const cleanTitle = (p.title || "").replace(/^File:/i, "").replace(/\.[^/.]+$/, "");
+                addResult(thumb, full, cleanTitle);
+              }
+            });
+          }
+
+          if (results.length < 8 && dataEn && dataEn.query && dataEn.query.pages) {
+            Object.values(dataEn.query.pages).forEach(p => {
+              if (p.thumbnail && p.thumbnail.source) {
+                const full = p.original && p.original.source ? p.original.source : p.thumbnail.source;
+                addResult(p.thumbnail.source, full, p.title);
+              }
+            });
+          }
+
+          if (results.length === 0) {
+            searchImgResults.innerHTML = `
+              <div style="grid-column:1/-1; text-align:center; padding:30px; color:#64748b;">
+                <p style="margin-bottom:12px; font-size:14px;">Нічого не знайдено за запитом «<strong>${escapeHtml(q)}</strong>».</p>
+                <div style="display:flex; justify-content:center; gap:8px;">
+                  <button type="button" class="btn btn-primary" style="font-size:13px;" onclick="document.getElementById('searchGoogleBtn').click()">🔍 Знайти «${escapeHtml(q)}» у Google Зображеннях</button>
+                </div>
+              </div>
+            `;
+            return;
+          }
+
+          searchImgResults.innerHTML = "";
+          results.forEach(item => {
+            const el = document.createElement("div");
+            el.className = "search-thumb";
+            el.title = item.title;
+            el.innerHTML = `
+              <img src="${item.thumbUrl}" alt="${escapeHtml(item.title)}" loading="lazy">
+              ${item.title ? `<div class="search-thumb-title">${escapeHtml(item.title)}</div>` : ""}
+            `;
+            el.addEventListener("click", () => {
+              modalDraft.image = item.fullUrl;
+              inputImgUrl.value = item.fullUrl;
+              updateModalImgPreview(item.fullUrl);
+              searchImgModalOverlay.classList.remove("open");
+              showToast("Ілюстрацію успішно додано! 🖼️");
+            });
+            searchImgResults.appendChild(el);
+          });
+        } catch (err) {
+          searchImgResults.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#ef4444;">Помилка пошуку зображень. Перевірте з\'єднання з інтернетом.</div>';
+        }
+      }
+      runSearchImgBtn.addEventListener("click", performImageSearch);
+      searchImgQuery.addEventListener("keydown", (e) => { if (e.key === "Enter") performImageSearch(); });
+
+      document.addEventListener("paste", (e) => {
+        const items = (e.clipboardData || window.clipboardData)?.items;
+        if (!items) return;
+
+        let hasImage = false;
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.type.indexOf("image") !== -1) {
+            hasImage = true;
+            const blob = item.getAsFile();
+            if (!blob) continue;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const dataUrl = ev.target.result;
+              if (stickerModalOverlay.classList.contains("open")) {
+                modalDraft.image = dataUrl;
+                inputImgUrl.value = "";
+                updateModalImgPreview(dataUrl);
+                showToast("Картинку вставлено з буфера обміну! 📋");
+              } else {
+                const newSticker = {
+                  id: "s_" + Date.now(),
+                  title: "Вставлене зображення",
+                  text: "",
+                  category: "🎨 Творчість",
+                  color: "#ffffff",
+                  attachment: "tape-top",
+                  image: dataUrl,
+                  x: Math.min(2600, boardContainer.scrollLeft + 180 + Math.random() * 40),
+                  y: Math.min(1700, boardContainer.scrollTop + 140 + Math.random() * 40),
+                  rotation: (Math.random() * 4 - 2)
+                };
+                appState.stickers.push(newSticker);
+                renderStickers();
+                saveToStorage();
+                showToast("Створено новий стікер зі скопійованого фото! 📋");
+              }
+            };
+            reader.readAsDataURL(blob);
+            e.preventDefault();
+            break;
+          }
+        }
+
+        if (!hasImage && stickerModalOverlay.classList.contains("open")) {
+          const text = (e.clipboardData || window.clipboardData)?.getData("text");
+          if (text && /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?.*)?)$/i.test(text.trim())) {
+            modalDraft.image = text.trim();
+            inputImgUrl.value = text.trim();
+            updateModalImgPreview(text.trim());
+            showToast("Посилання на фото додано! 🔗");
+          }
+        }
+      });
+
+      boardContainer.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+      });
+      boardContainer.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0 && files[0].type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const rect = boardCanvas.getBoundingClientRect();
+            const dropX = Math.max(40, (e.clientX - rect.left) / zoomLevel - 130);
+            const dropY = Math.max(40, (e.clientY - rect.top) / zoomLevel - 100);
+            const newSticker = {
+              id: "s_" + Date.now(),
+              title: files[0].name.replace(/\.[^/.]+$/, ""),
+              text: "",
+              category: "🎨 Творчість",
+              color: "#ffffff",
+              attachment: "pin-red",
+              image: ev.target.result,
+              x: Math.round(dropX),
+              y: Math.round(dropY),
+              rotation: (Math.random() * 4 - 2)
+            };
+            appState.stickers.push(newSticker);
+            renderStickers();
+            saveToStorage();
+            showToast("Зображення успішно перетягнуто на дошку! 🖼️");
+          };
+          reader.readAsDataURL(files[0]);
+        }
+      });
+
+      const presOverlay = document.getElementById("presOverlay");
+      const presHeaderTitle = document.getElementById("presHeaderTitle");
+      const presSlideWrapper = document.getElementById("presSlideWrapper");
+      const presSlideContent = document.getElementById("presSlideContent");
+      const presCounterDisplay = document.getElementById("presCounterDisplay");
+      const presPrevBtn = document.getElementById("presPrevBtn");
+      const presNextBtn = document.getElementById("presNextBtn");
+      const closePresBtn = document.getElementById("closePresBtn");
+      const fullscreenToggleBtn = document.getElementById("fullscreenToggleBtn");
+
+      function openPresentation() {
+        if (appState.stickers.length === 0) {
+          alert("Будь ласка, додайте хоча б один стікер перед показом презентації!");
+          return;
+        }
+        presCurrentIndex = 0;
+        presHeaderTitle.textContent = appState.title || "Презентація";
+        renderSlide();
+        presOverlay.classList.add("open");
+      }
+
+      function closePresentation() {
+        presOverlay.classList.remove("open");
+      }
+
+      function renderSlide() {
+        const totalSlides = 1 + appState.stickers.length; // 1 титульний + стікери
+        presCounterDisplay.textContent = `${presCurrentIndex + 1} / ${totalSlides}`;
+        presPrevBtn.disabled = presCurrentIndex === 0;
+        presNextBtn.disabled = presCurrentIndex === totalSlides - 1;
+
+        if (presCurrentIndex === 0) {
+
+          presSlideWrapper.style.backgroundColor = "#fef9c3";
+          presSlideContent.innerHTML = `
+            <div class="slide-title-layout">
+              <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(245,158,11,0.18); border:1px solid rgba(217,119,6,0.3); padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700; color:#b45309; margin-bottom:12px;">🎨 Stickerbox Presentation</div>
+              <h1>${escapeHtml(appState.title || "Напиши свою тему")}</h1>
+              <div class="author-tag">Автор: ${escapeHtml(appState.author || "Вкажи автора презентації")}</div>
+              <div class="date-tag">${new Date().toLocaleDateString("uk-UA", { year: "numeric", month: "long", day: "numeric" })}</div>
+            </div>
+          `;
+        } else {
+
+          const sticker = appState.stickers[presCurrentIndex - 1];
+          presSlideWrapper.style.backgroundColor = sticker.color || "#fef9c3";
+
+          let mediaHtml = "";
+          if (sticker.image) {
+            mediaHtml = `<div class="slide-media"><img src="${escapeHtml(sticker.image)}" alt=""></div>`;
+          }
+
+          presSlideContent.innerHTML = `
+            ${mediaHtml}
+            <div class="slide-content">
+              <div class="slide-badge-row">
+                <span class="slide-num-tag">Слайд #${presCurrentIndex}</span>
+                <span class="card-cat-badge">${escapeHtml(sticker.category || "💡 Ідея")}</span>
+              </div>
+              <h2 class="slide-h1">${escapeHtml(sticker.title || "Без назви")}</h2>
+              <p class="slide-p">${escapeHtml(sticker.text || "")}</p>
+            </div>
+          `;
+        }
+      }
+
+      document.getElementById("startPresentationBtn").addEventListener("click", openPresentation);
+      closePresBtn.addEventListener("click", closePresentation);
+      presPrevBtn.addEventListener("click", () => {
+        if (presCurrentIndex > 0) { presCurrentIndex--; renderSlide(); }
+      });
+      presNextBtn.addEventListener("click", () => {
+        if (presCurrentIndex < appState.stickers.length) { presCurrentIndex++; renderSlide(); }
+      });
+
+      fullscreenToggleBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (!presOverlay.classList.contains("open")) return;
+        if (e.key === "Escape") closePresentation();
+        else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+          if (presCurrentIndex > 0) { presCurrentIndex--; renderSlide(); }
+        } else if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ") {
+          if (presCurrentIndex < appState.stickers.length) { presCurrentIndex++; renderSlide(); }
+        }
+      });
+
+      // Сенсорні жести (Свайп вліво/вправо) для планшетів та смартфонів у режимі презентації
+      let presTouchStartX = 0;
+      let presTouchStartY = 0;
+      presOverlay.addEventListener("touchstart", (e) => {
+        if (e.touches.length === 1) {
+          presTouchStartX = e.touches[0].clientX;
+          presTouchStartY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+
+      presOverlay.addEventListener("touchend", (e) => {
+        if (!presOverlay.classList.contains("open")) return;
+        if (e.changedTouches.length === 1) {
+          const touchEndX = e.changedTouches[0].clientX;
+          const touchEndY = e.changedTouches[0].clientY;
+          const dx = touchEndX - presTouchStartX;
+          const dy = touchEndY - presTouchStartY;
+          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+            if (dx < 0) {
+              if (presCurrentIndex < appState.stickers.length) { presCurrentIndex++; renderSlide(); }
+            } else {
+              if (presCurrentIndex > 0) { presCurrentIndex--; renderSlide(); }
+            }
+          }
+        }
+      }, { passive: true });
+
+      function loadExternalScript(src) {
+        return new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = src;
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      async function exportPresentation169Pdf() {
+        if (appState.stickers.length === 0) {
+          alert("Додайте стікери перед експортом!");
+          return;
+        }
+        showToast("Створення слайдів презентації 16:9...", 0);
+        try {
+          if (!window.jspdf) {
+            await loadExternalScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+          }
+          const { jsPDF } = window.jspdf;
+          const SLIDE_W = 1280, SLIDE_H = 720;
+          const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: [SLIDE_W, SLIDE_H] });
+
+          const loadedImgs = {};
+          for (const s of appState.stickers) {
+            if (s.image && !(s.image in loadedImgs)) {
+              loadedImgs[s.image] = await preloadImage(s.image);
+            }
+          }
+
+          const titleCanvas = document.createElement("canvas");
+          titleCanvas.width = SLIDE_W;
+          titleCanvas.height = SLIDE_H;
+          const tCtx = titleCanvas.getContext("2d");
+
+          tCtx.fillStyle = "#1e293b";
+          tCtx.fillRect(0, 0, SLIDE_W, SLIDE_H);
+
+          const grad = tCtx.createLinearGradient(0, 0, SLIDE_W, 0);
+          grad.addColorStop(0, "#f59e0b");
+          grad.addColorStop(1, "#ef4444");
+          tCtx.fillStyle = grad;
+          tCtx.fillRect(0, 0, SLIDE_W, 14);
+
+          tCtx.fillStyle = "#fef08a";
+          tCtx.font = "bold 54px 'Plus Jakarta Sans', Arial, sans-serif";
+          tCtx.textAlign = "center";
+          tCtx.textBaseline = "middle";
+
+          wrapTextCanvas(tCtx, appState.title || "Напиши свою тему", SLIDE_W / 2, SLIDE_H / 2 - 40, SLIDE_W - 180, 68);
+
+          tCtx.fillStyle = "#f8fafc";
+          tCtx.font = "600 24px 'Plus Jakarta Sans', Arial, sans-serif";
+          tCtx.fillText("Автор: " + (appState.author || "Вкажи автора презентації"), SLIDE_W / 2, SLIDE_H / 2 + 60);
+
+          tCtx.fillStyle = "#94a3b8";
+          tCtx.font = "400 18px 'Plus Jakarta Sans', Arial, sans-serif";
+          tCtx.fillText(new Date().toLocaleDateString("uk-UA", { year: "numeric", month: "long", day: "numeric" }), SLIDE_W / 2, SLIDE_H / 2 + 105);
+
+          doc.addImage(titleCanvas.toDataURL("image/jpeg", 0.94), "JPEG", 0, 0, SLIDE_W, SLIDE_H);
+
+          for (let i = 0; i < appState.stickers.length; i++) {
+            const st = appState.stickers[i];
+            const sc = document.createElement("canvas");
+            sc.width = SLIDE_W;
+            sc.height = SLIDE_H;
+            const ctx = sc.getContext("2d");
+
+            ctx.fillStyle = st.color || "#fef9c3";
+            ctx.fillRect(0, 0, SLIDE_W, SLIDE_H);
+
+            ctx.fillStyle = "rgba(0,0,0,0.06)";
+            ctx.fillRect(0, 0, SLIDE_W, 60);
+
+            ctx.fillStyle = "#1e293b";
+            ctx.font = "bold 20px 'Plus Jakarta Sans', Arial, sans-serif";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(`Слайд #${i + 1}  •  ${st.category || "Ідея"}`, 50, 30);
+
+            const imgEl = st.image ? loadedImgs[st.image] : null;
+
+            if (imgEl && imgEl.naturalWidth) {
+
+              const areaW = SLIDE_W * 0.44;
+              const areaH = SLIDE_H - 140;
+              const scale = Math.min(areaW / imgEl.naturalWidth, areaH / imgEl.naturalHeight);
+              const dw = imgEl.naturalWidth * scale;
+              const dh = imgEl.naturalHeight * scale;
+              const dx = 50 + (areaW - dw) / 2;
+              const dy = 90 + (areaH - dh) / 2;
+
+              ctx.drawImage(imgEl, dx, dy, dw, dh);
+
+              const tx = 50 + areaW + 40;
+              const tw = SLIDE_W - tx - 50;
+              ctx.fillStyle = "#0f172a";
+              ctx.font = "bold 38px 'Plus Jakarta Sans', Arial, sans-serif";
+              ctx.textAlign = "left";
+              ctx.textBaseline = "top";
+              const nextY = wrapTextCanvas(ctx, st.title || "Без назви", tx, 100, tw, 48);
+
+              ctx.fillStyle = "#334155";
+              ctx.font = "400 22px 'Plus Jakarta Sans', Arial, sans-serif";
+              wrapTextCanvas(ctx, st.text || "", tx, nextY + 24, tw, 34);
+            } else {
+
+              ctx.fillStyle = "#0f172a";
+              ctx.font = "bold 44px 'Plus Jakarta Sans', Arial, sans-serif";
+              ctx.textAlign = "center";
+              ctx.textBaseline = "top";
+              const nextY = wrapTextCanvas(ctx, st.title || "Без назви", SLIDE_W / 2, 160, SLIDE_W - 200, 56);
+
+              ctx.fillStyle = "#334155";
+              ctx.font = "400 24px 'Plus Jakarta Sans', Arial, sans-serif";
+              wrapTextCanvas(ctx, st.text || "", SLIDE_W / 2, nextY + 36, SLIDE_W - 240, 38);
+            }
+
+            ctx.fillStyle = "rgba(0,0,0,0.35)";
+            ctx.font = "500 15px 'Plus Jakarta Sans', Arial, sans-serif";
+            ctx.textAlign = "right";
+            ctx.textBaseline = "bottom";
+            ctx.fillText(`${appState.title || "Презентація"}  |  Сторінка ${i + 2} з ${appState.stickers.length + 1}`, SLIDE_W - 50, SLIDE_H - 24);
+
+            doc.addPage([SLIDE_W, SLIDE_H], "landscape");
+            doc.addImage(sc.toDataURL("image/jpeg", 0.94), "JPEG", 0, 0, SLIDE_W, SLIDE_H);
+          }
+
+          doc.save((appState.title && appState.title !== "Напиши свою тему" ? appState.title.replace(/[^a-z0-9а-яіїєґ]/gi, "_") : "stickerbox-presentation") + ".pdf");
+          showToast("Презентацію успішно збережено в PDF! 🎉");
+        } catch (err) {
+          console.error(err);
+
+          fallbackToNativePrint();
+        }
+      }
+
+      function preloadImage(src) {
+        return new Promise((resolve) => {
+          if (!src) return resolve(null);
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => resolve(img);
+          img.onerror = () => {
+
+            const proxy = "https://images.weserv.nl/?url=" + encodeURIComponent(src.replace(/^https?:\/\//, ""));
+            const img2 = new Image();
+            img2.crossOrigin = "anonymous";
+            img2.onload = () => resolve(img2);
+            img2.onerror = () => resolve(null);
+            img2.src = proxy;
+          };
+          img.src = src;
+        });
+      }
+
+      function wrapTextCanvas(ctx, text, x, y, maxW, lineH) {
+        if (!text) return y;
+        const words = text.split(/\s+/);
+        let line = "";
+        let currY = y;
+        for (let i = 0; i < words.length; i++) {
+          const testLine = line + (line ? " " : "") + words[i];
+          if (ctx.measureText(testLine).width > maxW && line !== "") {
+            ctx.fillText(line, x, currY);
+            line = words[i];
+            currY += lineH;
+          } else {
+            line = testLine;
+          }
+        }
+        if (line) {
+          ctx.fillText(line, x, currY);
+          currY += lineH;
+        }
+        return currY;
+      }
+
+      async function exportBoardPosterPdf() {
+        if (appState.stickers.length === 0) {
+          alert("Додайте хоча б один стікер перед експортом!");
+          return;
+        }
+        showToast("Створення постера дошки...", 0);
+        try {
+          if (!window.html2canvas) {
+            await loadExternalScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+          }
+          if (!window.jspdf) {
+            await loadExternalScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+          }
+
+          let maxX = 1200, maxY = 800;
+          appState.stickers.forEach(s => {
+            maxX = Math.max(maxX, (s.x || 0) + 360);
+            maxY = Math.max(maxY, (s.y || 0) + 340);
+          });
+
+          const canvas = await window.html2canvas(boardCanvas, {
+            scale: 1.5,
+            useCORS: true,
+            width: Math.min(3000, maxX + 80),
+            height: Math.min(2000, maxY + 80)
+          });
+
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+          const pw = doc.internal.pageSize.getWidth();
+          const ph = doc.internal.pageSize.getHeight();
+          const imgH = (canvas.height * pw) / canvas.width;
+
+          doc.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, pw, Math.min(ph, imgH));
+          doc.save("doshka-poster.pdf");
+          showToast("Постер збережено в PDF! 🎉");
+        } catch (e) {
+          console.error(e);
+          fallbackToNativePrint();
+        }
+      }
+
+      function fallbackToNativePrint() {
+        hideToast();
+        const printContainer = document.getElementById("printContainer");
+        printContainer.innerHTML = "";
+
+        const tSlide = document.createElement("div");
+        tSlide.className = "print-slide";
+        tSlide.style.textAlign = "center";
+        tSlide.innerHTML = `
+          <h1 style="font-size:36pt; margin-bottom:14pt; color:#0f172a;">${escapeHtml(appState.title || "Напиши свою тему")}</h1>
+          <h2 style="font-size:20pt; color:#d97706; margin-bottom:18pt;">Автор: ${escapeHtml(appState.author || "Вкажи автора презентації")}</h2>
+          <p style="font-size:14pt; color:#64748b;">${new Date().toLocaleDateString("uk-UA", { year: "numeric", month: "long", day: "numeric" })}</p>
+        `;
+        printContainer.appendChild(tSlide);
+
+        appState.stickers.forEach((s, idx) => {
+          const slide = document.createElement("div");
+          slide.className = "print-slide";
+          slide.style.backgroundColor = s.color || "#fef9c3";
+
+          let imgHtml = "";
+          if (s.image) {
+            imgHtml = `<div style="max-height:90mm; margin-bottom:10mm;"><img src="${escapeHtml(s.image)}" style="max-height:85mm; border-radius:6px;" alt=""></div>`;
+          }
+
+          slide.innerHTML = `
+            <div style="font-size:12pt; font-weight:bold; margin-bottom:6mm; color:#475569;">#${idx + 1} • ${escapeHtml(s.category || "")}</div>
+            <h2 style="font-size:26pt; margin-bottom:8mm; color:#0f172a;">${escapeHtml(s.title || "")}</h2>
+            ${imgHtml}
+            <p style="font-size:16pt; line-height:1.6; color:#334155;">${escapeHtml(s.text || "")}</p>
+          `;
+          printContainer.appendChild(slide);
+        });
+
+        window.print();
+      }
+
+      async function exportBoardPng() {
+        if (appState.stickers.length === 0) {
+          showToast("Додайте хоча б один стікер перед експортом зображення! ℹ️");
+          return;
+        }
+        showToast("Створення PNG-зображення всієї дошки...", 0);
+        try {
+          if (!window.html2canvas) {
+            await loadExternalScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+          }
+
+          let maxX = 1200, maxY = 800;
+          appState.stickers.forEach(s => {
+            maxX = Math.max(maxX, (s.x || 0) + 380);
+            maxY = Math.max(maxY, (s.y || 0) + 360);
+          });
+
+          const emptyHint = document.getElementById("boardEmptyHint");
+          const oldHintDisplay = emptyHint ? emptyHint.style.display : "";
+          if (emptyHint) emptyHint.style.display = "none";
+          document.querySelectorAll(".remote-cursor").forEach(c => c.style.display = "none");
+
+          const canvas = await window.html2canvas(boardCanvas, {
+            scale: 2, // Подвійна чіткість (Retina / висока якість для друку чи презентації)
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: null,
+            width: Math.min(3600, maxX + 80),
+            height: Math.min(2600, maxY + 80),
+            logging: false
+          });
+
+          if (emptyHint) emptyHint.style.display = oldHintDisplay;
+          document.querySelectorAll(".remote-cursor").forEach(c => c.style.display = "");
+
+          const link = document.createElement("a");
+          const cleanTitle = (appState.title && appState.title !== "Напиши свою тему" ? appState.title : "stickerbox-doshka").replace(/[^a-z0-9а-яіїєґ]/gi, "_");
+          link.download = `${cleanTitle}.png`;
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+
+          showToast("Зображення дошки успішно збережено в PNG! 🖼️");
+        } catch (err) {
+          console.error("Помилка генерації PNG:", err);
+          showToast("Помилка при збереженні PNG ⚠️");
+        }
+      }
+
+      document.getElementById("exportBoardPngBtn").addEventListener("click", () => {
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+        exportBoardPng();
+      });
+      document.getElementById("exportPdf169Btn").addEventListener("click", exportPresentation169Pdf);
+      document.getElementById("exportBoardPosterBtn").addEventListener("click", exportBoardPosterPdf);
+      document.getElementById("printDirectBtn").addEventListener("click", fallbackToNativePrint);
+
+      function setupDropdown(btnId, menuId) {
+        const btn = document.getElementById(btnId);
+        const menu = document.getElementById(menuId);
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          document.querySelectorAll(".dropdown-menu").forEach(m => {
+            if (m !== menu) m.classList.remove("show");
+          });
+          menu.classList.toggle("show");
+        });
+      }
+      setupDropdown("boardsDropdownBtn", "boardsMenu");
+      setupDropdown("themeDropdownBtn", "themeMenu");
+      setupDropdown("exportDropdownBtn", "exportMenu");
+      setupDropdown("fileDropdownBtn", "fileMenu");
+
+      const brandLogoBtn = document.getElementById("brandLogoBtn");
+      const logoQuickMenu = document.getElementById("logoQuickMenu");
+      const closeLogoMenuBtn = document.getElementById("closeLogoMenuBtn");
+
+      function toggleLogoMenu(forceState) {
+        if (!logoQuickMenu) return;
+        const willShow = typeof forceState === "boolean" ? forceState : !logoQuickMenu.classList.contains("show");
+        if (willShow) {
+          document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+          logoQuickMenu.classList.add("show");
+          if (brandLogoBtn) {
+            brandLogoBtn.classList.add("menu-active");
+            brandLogoBtn.setAttribute("aria-expanded", "true");
+          }
+        } else {
+          logoQuickMenu.classList.remove("show");
+          if (brandLogoBtn) {
+            brandLogoBtn.classList.remove("menu-active");
+            brandLogoBtn.setAttribute("aria-expanded", "false");
+          }
+        }
+      }
+
+      if (brandLogoBtn) {
+        brandLogoBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleLogoMenu();
+        });
+        brandLogoBtn.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleLogoMenu();
+          }
+        });
+      }
+
+      if (closeLogoMenuBtn) {
+        closeLogoMenuBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleLogoMenu(false);
+        });
+      }
+
+      const logoAddStickerBtn = document.getElementById("logoAddStickerBtn");
+      if (logoAddStickerBtn) {
+        logoAddStickerBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleLogoMenu(false);
+          openStickerModal();
+        });
+      }
+
+      const logoNewBoardBtn = document.getElementById("logoNewBoardBtn");
+      if (logoNewBoardBtn) {
+        logoNewBoardBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleLogoMenu(false);
+          createNewBoard();
+        });
+      }
+
+      const logoExportBtn = document.getElementById("logoExportBtn");
+      if (logoExportBtn) {
+        logoExportBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleLogoMenu(false);
+          exportBoardPng();
+        });
+      }
+
+      const logoPresentationBtn = document.getElementById("logoPresentationBtn");
+      if (logoPresentationBtn) {
+        logoPresentationBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleLogoMenu(false);
+          openPresentation();
+        });
+      }
+
+      const logoCollabBtn = document.getElementById("logoCollabBtn");
+      if (logoCollabBtn) {
+        logoCollabBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleLogoMenu(false);
+          toggleCollabSidebar();
+        });
+      }
+
+      document.addEventListener("click", (e) => {
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+        if (logoQuickMenu && logoQuickMenu.classList.contains("show")) {
+          if (!e.target.closest("#logoQuickMenu") && !e.target.closest("#brandLogoBtn")) {
+            toggleLogoMenu(false);
+          }
+        }
+      });
+
+      document.addEventListener("pointerdown", (e) => {
+        if (logoQuickMenu && logoQuickMenu.classList.contains("show")) {
+          if (!e.target.closest("#logoQuickMenu") && !e.target.closest("#brandLogoBtn")) {
+            toggleLogoMenu(false);
+          }
+        }
+      });
+
+      document.getElementById("themeMenu").addEventListener("click", (e) => {
+        const item = e.target.closest(".dropdown-item");
+        if (!item) return;
+        if (item.id === "openCustomThemeMenuItem") {
+          return;
+        }
+        if (item.dataset.theme) {
+          applyTheme(item.dataset.theme);
+        }
+      });
+
+      const customThemeModalOverlay = document.getElementById("customThemeModalOverlay");
+      const closeCustomThemeModalBtn = document.getElementById("closeCustomThemeModalBtn");
+      const cancelCustomThemeBtn = document.getElementById("cancelCustomThemeBtn");
+      const resetCustomThemeBtn = document.getElementById("resetCustomThemeBtn");
+      const applyCustomThemeBtn = document.getElementById("applyCustomThemeBtn");
+      const themeLivePreview = document.getElementById("themeLivePreview");
+
+      const customThemeBgPicker = document.getElementById("customThemeBgPicker");
+      const customThemeBgHex = document.getElementById("customThemeBgHex");
+      const customBgSwatches = document.getElementById("customBgSwatches");
+      const customPatternPills = document.getElementById("customPatternPills");
+      const patternControlsGroup = document.getElementById("patternControlsGroup");
+      const customPatternColorPicker = document.getElementById("customPatternColorPicker");
+      const customPatternColorPreset = document.getElementById("customPatternColorPreset");
+      const customPatternOpacity = document.getElementById("customPatternOpacity");
+      const patternOpacityVal = document.getElementById("patternOpacityVal");
+      const customPatternSize = document.getElementById("customPatternSize");
+      const patternSizeVal = document.getElementById("patternSizeVal");
+      const patternSizeRow = document.getElementById("patternSizeRow");
+      const gradientControlsRow = document.getElementById("gradientControlsRow");
+      const customGradientColorPicker = document.getElementById("customGradientColorPicker");
+      const customGradientColorHex = document.getElementById("customGradientColorHex");
+      const customGradientDir = document.getElementById("customGradientDir");
+
+      let currentCustomDraft = Object.assign({}, DEFAULT_CUSTOM_THEME);
+
+      function updateThemeLivePreview() {
+        const styles = computeThemeStyles(currentCustomDraft);
+        themeLivePreview.style.backgroundColor = styles.backgroundColor;
+        themeLivePreview.style.backgroundImage = styles.backgroundImage;
+        themeLivePreview.style.backgroundSize = styles.backgroundSize;
+      }
+
+      function togglePatternControls(pattern) {
+        const isNone = pattern === "none";
+        const isGradient = pattern === "gradient";
+        const isGridOrLinesOrDots = ["grid", "lines", "dots", "stripes"].includes(pattern);
+
+        patternControlsGroup.style.display = isNone ? "none" : "block";
+        gradientControlsRow.style.display = isGradient ? "block" : "none";
+        patternSizeRow.style.display = isGridOrLinesOrDots ? "block" : "none";
+      }
+
+      function syncCustomThemeInputsFromDraft() {
+        customThemeBgPicker.value = currentCustomDraft.bgColor || "#172d22";
+        customThemeBgHex.value = currentCustomDraft.bgColor || "#172d22";
+
+        customBgSwatches.querySelectorAll(".swatch").forEach(s => {
+          s.classList.toggle("active", s.dataset.color.toLowerCase() === (currentCustomDraft.bgColor || "").toLowerCase());
+        });
+
+        customPatternPills.querySelectorAll(".pill-opt").forEach(p => {
+          p.classList.toggle("active", p.dataset.pattern === currentCustomDraft.pattern);
+        });
+
+        customPatternColorPicker.value = currentCustomDraft.patternColor || "#ffffff";
+        customPatternColorPreset.value = currentCustomDraft.patternColor || "#ffffff";
+        customPatternOpacity.value = currentCustomDraft.patternOpacity !== undefined ? currentCustomDraft.patternOpacity : 15;
+        patternOpacityVal.textContent = customPatternOpacity.value + "%";
+
+        customPatternSize.value = currentCustomDraft.patternSize || 28;
+        patternSizeVal.textContent = customPatternSize.value + " px";
+
+        customGradientColorPicker.value = currentCustomDraft.gradientColor || "#0f172a";
+        customGradientColorHex.value = currentCustomDraft.gradientColor || "#0f172a";
+        customGradientDir.value = currentCustomDraft.gradientDir || "135deg";
+
+        togglePatternControls(currentCustomDraft.pattern);
+        updateThemeLivePreview();
+      }
+
+      function openCustomThemeModal() {
+        currentCustomDraft = Object.assign({}, DEFAULT_CUSTOM_THEME, appState.customTheme || {});
+        syncCustomThemeInputsFromDraft();
+        customThemeModalOverlay.classList.add("open");
+      }
+
+      function closeCustomThemeModal() {
+        customThemeModalOverlay.classList.remove("open");
+      }
+
+      customThemeBgPicker.addEventListener("input", (e) => {
+        currentCustomDraft.bgColor = e.target.value;
+        customThemeBgHex.value = e.target.value;
+        syncCustomThemeInputsFromDraft();
+      });
+
+      customThemeBgHex.addEventListener("change", (e) => {
+        let val = e.target.value.trim();
+        if (!val.startsWith("#")) val = "#" + val;
+        if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+          currentCustomDraft.bgColor = val;
+          customThemeBgPicker.value = val;
+          syncCustomThemeInputsFromDraft();
+        }
+      });
+
+      customBgSwatches.addEventListener("click", (e) => {
+        const swatch = e.target.closest(".swatch");
+        if (!swatch) return;
+        currentCustomDraft.bgColor = swatch.dataset.color;
+        syncCustomThemeInputsFromDraft();
+      });
+
+      customPatternPills.addEventListener("click", (e) => {
+        const pill = e.target.closest(".pill-opt");
+        if (!pill) return;
+        currentCustomDraft.pattern = pill.dataset.pattern;
+        syncCustomThemeInputsFromDraft();
+      });
+
+      customPatternColorPicker.addEventListener("input", (e) => {
+        currentCustomDraft.patternColor = e.target.value;
+        updateThemeLivePreview();
+      });
+
+      customPatternColorPreset.addEventListener("change", (e) => {
+        currentCustomDraft.patternColor = e.target.value;
+        customPatternColorPicker.value = e.target.value;
+        updateThemeLivePreview();
+      });
+
+      customPatternOpacity.addEventListener("input", (e) => {
+        currentCustomDraft.patternOpacity = parseInt(e.target.value, 10);
+        patternOpacityVal.textContent = e.target.value + "%";
+        updateThemeLivePreview();
+      });
+
+      customPatternSize.addEventListener("input", (e) => {
+        currentCustomDraft.patternSize = parseInt(e.target.value, 10);
+        patternSizeVal.textContent = e.target.value + " px";
+        updateThemeLivePreview();
+      });
+
+      customGradientColorPicker.addEventListener("input", (e) => {
+        currentCustomDraft.gradientColor = e.target.value;
+        customGradientColorHex.value = e.target.value;
+        updateThemeLivePreview();
+      });
+
+      customGradientColorHex.addEventListener("change", (e) => {
+        let val = e.target.value.trim();
+        if (!val.startsWith("#")) val = "#" + val;
+        if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+          currentCustomDraft.gradientColor = val;
+          customGradientColorPicker.value = val;
+          updateThemeLivePreview();
+        }
+      });
+
+      customGradientDir.addEventListener("change", (e) => {
+        currentCustomDraft.gradientDir = e.target.value;
+        updateThemeLivePreview();
+      });
+
+      resetCustomThemeBtn.addEventListener("click", () => {
+        currentCustomDraft = Object.assign({}, DEFAULT_CUSTOM_THEME);
+        syncCustomThemeInputsFromDraft();
+      });
+
+      applyCustomThemeBtn.addEventListener("click", () => {
+        applyTheme("custom", currentCustomDraft);
+        closeCustomThemeModal();
+        showToast("Стиль дошки успішно збережено! 🎨");
+      });
+
+      closeCustomThemeModalBtn.addEventListener("click", closeCustomThemeModal);
+      cancelCustomThemeBtn.addEventListener("click", closeCustomThemeModal);
+      customThemeModalOverlay.addEventListener("click", (e) => {
+        if (e.target === customThemeModalOverlay) closeCustomThemeModal();
+      });
+
+      const quickThemeBtn = document.getElementById("quickCustomThemeBtn");
+      if (quickThemeBtn) quickThemeBtn.addEventListener("click", openCustomThemeModal);
+      document.getElementById("openCustomThemeMenuItem").addEventListener("click", () => {
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+        openCustomThemeModal();
+      });
+
+      document.getElementById("saveJsonBtn").addEventListener("click", () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+        const a = document.createElement("a");
+        a.href = dataStr;
+        const cleanName = (appState.title && appState.title !== "Напиши свою тему" ? appState.title : "doshka").replace(/[^a-z0-9а-яіїєґ]/gi, "_");
+        a.download = `${cleanName}.json`;
+        a.click();
+        showToast("Поточну дошку збережено у JSON! 💾");
+      });
+
+      const saveAllBoardsJsonBtn = document.getElementById("saveAllBoardsJsonBtn");
+      if (saveAllBoardsJsonBtn) {
+        saveAllBoardsJsonBtn.addEventListener("click", () => {
+
+          const idx = boardsData.boards.findIndex(b => b.id === boardsData.activeBoardId);
+          if (idx !== -1) {
+            boardsData.boards[idx] = appState;
+          }
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(boardsData, null, 2));
+          const a = document.createElement("a");
+          a.href = dataStr;
+          const dateStr = new Date().toISOString().slice(0, 10);
+          a.download = `stickerbox_vsi_doshky_${dateStr}.json`;
+          a.click();
+          showToast("Усі дошки збережено в один файл! 📦");
+        });
+      }
+
+      const jsonFileInput = document.getElementById("jsonFileInput");
+      document.getElementById("loadJsonBtn").addEventListener("click", () => jsonFileInput.click());
+      jsonFileInput.addEventListener("change", () => {
+        const file = jsonFileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const parsed = JSON.parse(e.target.result);
+
+            if (parsed && Array.isArray(parsed.boards) && parsed.boards.length > 0) {
+              boardsData = parsed;
+              boardsData.boards.forEach(b => {
+                if (!Array.isArray(b.stickers)) b.stickers = [];
+                if (!b.customTheme) b.customTheme = Object.assign({}, DEFAULT_CUSTOM_THEME);
+              });
+              if (!boardsData.activeBoardId || !boardsData.boards.some(b => b.id === boardsData.activeBoardId)) {
+                boardsData.activeBoardId = boardsData.boards[0].id;
+              }
+              appState = getActiveBoard();
+              applyTheme(appState.theme || "chalk");
+              updateHeaderInfo();
+              renderStickers();
+              renderBoardsDropdown();
+              saveToStorage();
+              showToast(`Завантажено набір з ${boardsData.boards.length} дощок! 📦`);
+            } 
+
+            else if (parsed && Array.isArray(parsed.stickers)) {
+              const newBoard = {
+                id: "b_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+                title: parsed.title || "Імпортована дошка",
+                author: parsed.author || "Вкажи автора презентації",
+                theme: parsed.theme || "chalk",
+                customTheme: parsed.customTheme || Object.assign({}, DEFAULT_CUSTOM_THEME),
+                stickers: parsed.stickers,
+                createdAt: Date.now()
+              };
+              boardsData.boards.push(newBoard);
+              switchBoard(newBoard.id);
+              showToast("Дошку успішно відкрито як нову! 📂");
+            } else {
+              showToast("Помилка: невірний формат JSON-файлу ⚠️");
+            }
+          } catch (err) {
+            showToast("Помилка читання JSON-файлу ⚠️");
+          }
+          jsonFileInput.value = "";
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById("loadDemoBtn").addEventListener("click", () => {
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+        restoreGuideStickerOnCurrentBoard();
+        showToast("Інструкцію на дошці відновлено! ✨");
+      });
+
+      document.getElementById("clearBoardBtn").addEventListener("click", () => {
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+        clearCurrentBoardStickers();
+        showToast("Дошку очищено від стікерів! 🗑");
+      });
+
+      const closeCurrentBoardFileMenuBtn = document.getElementById("closeCurrentBoardFileMenuBtn");
+      if (closeCurrentBoardFileMenuBtn) {
+        closeCurrentBoardFileMenuBtn.addEventListener("click", () => {
+          document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+          requestDeleteBoard(boardsData.activeBoardId);
+        });
+      }
+
+      const zoomValDisplay = document.getElementById("zoomValDisplay");
+      function applyZoom(z, centerClientX, centerClientY) {
+        const oldZoom = zoomLevel;
+        zoomLevel = Math.max(0.4, Math.min(2.0, z));
+        boardCanvas.style.transform = `scale(${zoomLevel})`;
+        if (zoomValDisplay) zoomValDisplay.textContent = Math.round(zoomLevel * 100) + "%";
+
+        if (centerClientX !== undefined && centerClientY !== undefined && oldZoom !== zoomLevel) {
+          const rect = boardContainer.getBoundingClientRect();
+          const offsetX = centerClientX - rect.left;
+          const offsetY = centerClientY - rect.top;
+          const ratio = zoomLevel / oldZoom;
+          boardContainer.scrollLeft = (boardContainer.scrollLeft + offsetX) * ratio - offsetX;
+          boardContainer.scrollTop = (boardContainer.scrollTop + offsetY) * ratio - offsetY;
+        }
+      }
+      document.getElementById("zoomInBtn").addEventListener("click", () => applyZoom(zoomLevel + 0.15));
+      document.getElementById("zoomOutBtn").addEventListener("click", () => applyZoom(zoomLevel - 0.15));
+      document.getElementById("zoomResetBtn").addEventListener("click", () => applyZoom(1.0));
+
+      // -------------------------------------------------------------
+      // Движок сенсорних жестів та переміщення дошки (Touch & Pan Engine)
+      // Для Комп'ютера (Мишка), Планшета (Мультитач / Pinch) та Смартфона
+      // -------------------------------------------------------------
+      let isCanvasPanning = false;
+      let panStartX = 0;
+      let panStartY = 0;
+      let panStartScrollLeft = 0;
+      let panStartScrollTop = 0;
+
+      // Стан масштабування двома пальцями (Pinch-to-zoom)
+      let initialPinchDist = 0;
+      let initialPinchZoom = 1;
+      let isPinching = false;
+
+      // Переміщення дошки мишкою на ПК при затисканні на вільному фоні
+      boardContainer.addEventListener("mousedown", (e) => {
+        if (e.target.closest(".sticker-card") || e.target.closest("button, input, select, textarea, a, .zoom-dock")) return;
+        if (e.button === 0 || e.button === 1 || e.spaceKey) {
+          isCanvasPanning = true;
+          panStartX = e.clientX;
+          panStartY = e.clientY;
+          panStartScrollLeft = boardContainer.scrollLeft;
+          panStartScrollTop = boardContainer.scrollTop;
+          boardContainer.style.cursor = "grabbing";
+          e.preventDefault();
+        }
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (!isCanvasPanning) return;
+        const dx = e.clientX - panStartX;
+        const dy = e.clientY - panStartY;
+        boardContainer.scrollLeft = panStartScrollLeft - dx;
+        boardContainer.scrollTop = panStartScrollTop - dy;
+      });
+
+      window.addEventListener("mouseup", () => {
+        if (isCanvasPanning) {
+          isCanvasPanning = false;
+          boardContainer.style.cursor = "";
+        }
+      });
+
+      // Зум коліщатком мишки при натиснутому Ctrl (або жест масштабування на тачпаді ноутбука)
+      boardContainer.addEventListener("wheel", (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          const delta = -e.deltaY * 0.004;
+          applyZoom(zoomLevel + delta, e.clientX, e.clientY);
+        }
+      }, { passive: false });
+
+      // Сенсорні жести для планшетів та смартфонів
+      boardContainer.addEventListener("touchstart", (e) => {
+        if (e.touches.length === 2) {
+          // Два пальці: мультитач pinch-to-zoom та панорамування
+          isPinching = true;
+          isCanvasPanning = false;
+          const t1 = e.touches[0];
+          const t2 = e.touches[1];
+          initialPinchDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+          initialPinchZoom = zoomLevel;
+          const midX = (t1.clientX + t2.clientX) / 2;
+          const midY = (t1.clientY + t2.clientY) / 2;
+          panStartX = midX;
+          panStartY = midY;
+          panStartScrollLeft = boardContainer.scrollLeft;
+          panStartScrollTop = boardContainer.scrollTop;
+          e.preventDefault();
+        } else if (e.touches.length === 1) {
+          isPinching = false;
+          // Один палець: якщо дотик на вільному просторі (не на стікері чи кнопці) — переміщення полотна
+          if (!e.target.closest(".sticker-card") && !e.target.closest("button, input, select, textarea, a, .zoom-dock, .modal-card, .collab-sidebar")) {
+            isCanvasPanning = true;
+            const t = e.touches[0];
+            panStartX = t.clientX;
+            panStartY = t.clientY;
+            panStartScrollLeft = boardContainer.scrollLeft;
+            panStartScrollTop = boardContainer.scrollTop;
+          }
+        }
+      }, { passive: false });
+
+      boardContainer.addEventListener("touchmove", (e) => {
+        if (isPinching && e.touches.length === 2) {
+          const t1 = e.touches[0];
+          const t2 = e.touches[1];
+          const currentDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+          const currentMidX = (t1.clientX + t2.clientX) / 2;
+          const currentMidY = (t1.clientY + t2.clientY) / 2;
+
+          if (initialPinchDist > 0) {
+            const scaleFactor = currentDist / initialPinchDist;
+            applyZoom(initialPinchZoom * scaleFactor, currentMidX, currentMidY);
+          }
+
+          const midDx = currentMidX - panStartX;
+          const midDy = currentMidY - panStartY;
+          boardContainer.scrollLeft = panStartScrollLeft - midDx;
+          boardContainer.scrollTop = panStartScrollTop - midDy;
+
+          e.preventDefault();
+        } else if (isCanvasPanning && e.touches.length === 1) {
+          const t = e.touches[0];
+          const dx = t.clientX - panStartX;
+          const dy = t.clientY - panStartY;
+          boardContainer.scrollLeft = panStartScrollLeft - dx;
+          boardContainer.scrollTop = panStartScrollTop - dy;
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      boardContainer.addEventListener("touchend", (e) => {
+        if (e.touches.length < 2) isPinching = false;
+        if (e.touches.length === 0) isCanvasPanning = false;
+      });
+      boardContainer.addEventListener("touchcancel", () => {
+        isPinching = false;
+        isCanvasPanning = false;
+      });
+
+      function escapeHtml(str) {
+        if (!str) return "";
+        return String(str).replace(/[&<>"']/g, m => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        })[m]);
+      }
+
+      const ROOM_CODE_CHARS = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+      function generateShortRoomCode(length = 6) {
+        let code = "";
+        for (let i = 0; i < length; i++) {
+          code += ROOM_CODE_CHARS.charAt(Math.floor(Math.random() * ROOM_CODE_CHARS.length));
+        }
+        return code;
+      }
+
+      function parseRoomCode(input) {
+        if (!input) return "";
+        let str = String(input).trim();
+        if (str.includes("#collab=")) str = str.split("#collab=")[1];
+        else if (str.includes("#code=")) str = str.split("#code=")[1];
+        else if (str.includes("#join=")) str = str.split("#join=")[1];
+        else if (str.includes("?join=")) str = str.split("?join=")[1];
+        else if (str.includes("?code=")) str = str.split("?code=")[1];
+        else if (str.includes("#")) str = str.split("#")[1];
+
+        str = str.split("&")[0].split("?")[0].trim();
+        str = str.replace(/^(sbk-|sbx_|sb-)/i, "");
+        return str.toUpperCase();
+      }
+
+      const CURSOR_COLORS = [
+        { name: "Синій", hex: "#2563eb" },
+        { name: "Смарагдовий", hex: "#10b981" },
+        { name: "Червоний", hex: "#ef4444" },
+        { name: "Фіолетовий", hex: "#8b5cf6" },
+        { name: "Помаранчевий", hex: "#f97316" },
+        { name: "Малиновий", hex: "#ec4899" },
+        { name: "Бурштиновий", hex: "#f59e0b" },
+        { name: "Бірюзовий", hex: "#06b6d4" },
+        { name: "Лаймовий", hex: "#84cc16" },
+        { name: "Графітовий", hex: "#334155" }
+      ];
+
+      const collabSidebar = document.getElementById("collabSidebar");
+      const openCollabModalBtn = document.getElementById("openCollabModalBtn");
+      const closeCollabSidebarBtn = document.getElementById("closeCollabSidebarBtn");
+      const collapseCollabSidebarFootBtn = document.getElementById("collapseCollabSidebarFootBtn");
+      const collabRoomCodeDisplay = document.getElementById("collabRoomCodeDisplay");
+      const copyCollabCodeBtn = document.getElementById("copyCollabCodeBtn");
+      const collabShareLinkInput = document.getElementById("collabShareLinkInput");
+      const copyCollabLinkBtn = document.getElementById("copyCollabLinkBtn");
+      const collabQrCanvas = document.getElementById("collabQrCanvas");
+      const collabTeacherShareSection = document.getElementById("collabTeacherShareSection");
+      const collabStudentsList = document.getElementById("collabStudentsList");
+      const collabParticipantsCount = document.getElementById("collabParticipantsCount");
+      const unlockAllStudentsBtn = document.getElementById("unlockAllStudentsBtn");
+      const lockAllStudentsBtn = document.getElementById("lockAllStudentsBtn");
+      const collabStudentInfo = document.getElementById("collabStudentInfo");
+      const collabStudentSelfName = document.getElementById("collabStudentSelfName");
+      const collabStudentAvatarBadge = document.getElementById("collabStudentAvatarBadge");
+      const collabStudentSidebarColors = document.getElementById("collabStudentSidebarColors");
+      const collabStudentPermBadge = document.getElementById("collabStudentPermBadge");
+      const collabJoinCodeInput = document.getElementById("collabJoinCodeInput");
+      const collabJoinBtn = document.getElementById("collabJoinBtn");
+      const disconnectCollabBtn = document.getElementById("disconnectCollabBtn");
+      const collabBadgeStatus = document.getElementById("collabBadgeStatus");
+      const collabBadgeText = document.getElementById("collabBadgeText");
+      const collabRoleLabel = document.getElementById("collabRoleLabel");
+      const collabBtnText = document.getElementById("collabBtnText");
+      const collabPeersBadge = document.getElementById("collabPeersBadge");
+      const collabReadOnlyBanner = document.getElementById("collabReadOnlyBanner");
+
+      const studentWelcomeOverlay = document.getElementById("studentWelcomeOverlay");
+      const studentWelcomeForm = document.getElementById("studentWelcomeForm");
+      const studentJoinNameInput = document.getElementById("studentJoinNameInput");
+      const studentJoinNameError = document.getElementById("studentJoinNameError");
+      const studentCursorColorsGrid = document.getElementById("studentCursorColorsGrid");
+      const studentCursorPreviewBadge = document.getElementById("studentCursorPreviewBadge");
+      const studentCursorPreviewName = document.getElementById("studentCursorPreviewName");
+      const studentJoinSubmitBtn = document.getElementById("studentJoinSubmitBtn");
+      let pendingJoinRoomId = null;
+
+      function initWelcomeColorPicker() {
+        if (!studentCursorColorsGrid) return;
+        studentCursorColorsGrid.innerHTML = "";
+        CURSOR_COLORS.forEach(c => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "cursor-color-btn" + (c.hex.toLowerCase() === collabMyColor.toLowerCase() ? " active" : "");
+          btn.style.backgroundColor = c.hex;
+          btn.title = c.name;
+          btn.addEventListener("click", () => {
+            studentCursorColorsGrid.querySelectorAll(".cursor-color-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            collabMyColor = c.hex;
+            if (studentCursorPreviewBadge) studentCursorPreviewBadge.style.backgroundColor = c.hex;
+          });
+          studentCursorColorsGrid.appendChild(btn);
+        });
+
+        if (studentCursorPreviewBadge) studentCursorPreviewBadge.style.backgroundColor = collabMyColor;
+        if (studentJoinNameInput && studentCursorPreviewName) {
+          studentJoinNameInput.addEventListener("input", () => {
+            const val = studentJoinNameInput.value.trim();
+            studentCursorPreviewName.textContent = val || "Учень";
+          });
+        }
+      }
+
+      function renderStudentSidebarColorPickers() {
+        if (!collabStudentSidebarColors) return;
+        collabStudentSidebarColors.innerHTML = "";
+        CURSOR_COLORS.forEach(c => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "cursor-color-btn" + (c.hex.toLowerCase() === collabMyColor.toLowerCase() ? " active" : "");
+          btn.style.width = "28px";
+          btn.style.height = "28px";
+          btn.style.backgroundColor = c.hex;
+          btn.title = c.name;
+          btn.addEventListener("click", () => {
+            collabStudentSidebarColors.querySelectorAll(".cursor-color-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            collabMyColor = c.hex;
+            if (collabStudentAvatarBadge) collabStudentAvatarBadge.style.background = c.hex;
+            collabSendEvent({ type: "cursor_color_change", color: c.hex, name: collabMyName, peerId: collabPeerId });
+            showToast(`Колір вашого курсору: ${c.name} 🎨`);
+          });
+          collabStudentSidebarColors.appendChild(btn);
+        });
+      }
+
+      function openCollabSidebar() {
+        document.querySelectorAll(".dropdown-menu").forEach(m => m.classList.remove("show"));
+
+        if (!isCollabActive()) {
+          startTeacherHost();
+        }
+
+        if (collabSidebar) {
+          collabSidebar.classList.add("open");
+        }
+      }
+
+      function closeCollabSidebar() {
+        if (collabSidebar) {
+          collabSidebar.classList.remove("open");
+        }
+      }
+
+      function toggleCollabSidebar() {
+        if (!collabSidebar) return;
+        if (collabSidebar.classList.contains("open")) {
+          closeCollabSidebar();
+        } else {
+          openCollabSidebar();
+        }
+      }
+
+      if (openCollabModalBtn) {
+        openCollabModalBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleCollabSidebar();
+        });
+      }
+      if (closeCollabSidebarBtn) closeCollabSidebarBtn.addEventListener("click", closeCollabSidebar);
+      if (collapseCollabSidebarFootBtn) collapseCollabSidebarFootBtn.addEventListener("click", closeCollabSidebar);
+
+      if (copyCollabCodeBtn) {
+        copyCollabCodeBtn.addEventListener("click", () => {
+          if (!collabRoomCode) return;
+          const origHtml = copyCollabCodeBtn.innerHTML;
+          const onCopied = () => {
+            copyCollabCodeBtn.innerHTML = "✓ Скопійовано!";
+            copyCollabCodeBtn.style.background = "#059669";
+            copyCollabCodeBtn.style.color = "#ffffff";
+            showToast(`Код дошки «${collabRoomCode}» скопійовано! 📋`);
+            setTimeout(() => {
+              copyCollabCodeBtn.innerHTML = origHtml;
+              copyCollabCodeBtn.style.background = "#f59e0b";
+              copyCollabCodeBtn.style.color = "#0f172a";
+            }, 2000);
+          };
+
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(collabRoomCode).then(onCopied).catch(onCopied);
+          } else {
+            onCopied();
+          }
+        });
+      }
+
+      if (copyCollabLinkBtn) {
+        copyCollabLinkBtn.addEventListener("click", () => {
+          if (!collabShareLinkInput || !collabShareLinkInput.value) return;
+          const text = collabShareLinkInput.value;
+          const originalBtnHtml = copyCollabLinkBtn.innerHTML;
+
+          const onCopied = () => {
+            copyCollabLinkBtn.innerHTML = "✓ Скопійовано!";
+            copyCollabLinkBtn.style.background = "#059669";
+            showToast("Коротке посилання на спільну дошку скопійовано! 📋");
+            setTimeout(() => {
+              copyCollabLinkBtn.innerHTML = originalBtnHtml;
+              copyCollabLinkBtn.style.background = "";
+            }, 2000);
+          };
+
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(onCopied).catch(() => {
+              collabShareLinkInput.select();
+              document.execCommand("copy");
+              onCopied();
+            });
+          } else {
+            collabShareLinkInput.select();
+            document.execCommand("copy");
+            onCopied();
+          }
+        });
+      }
+
+      function generateQrCode(url) {
+        if (!window.QRious || !collabQrCanvas) return;
+        try {
+          new window.QRious({
+            element: collabQrCanvas,
+            value: url,
+            size: 140,
+            level: "M"
+          });
+        } catch (e) {
+          console.warn("QRious failed to render QR", e);
+        }
+      }
+
+      function updateCollabToolbarBadge() {
+        if (!openCollabModalBtn || !collabBtnText || !collabPeersBadge) return;
+
+        const headerMenuBadge = document.getElementById("headerMenuBadge");
+
+        if (!isCollabActive()) {
+          openCollabModalBtn.classList.remove("active-session");
+          collabBtnText.textContent = "Спільна робота";
+          collabPeersBadge.style.display = "none";
+          if (headerMenuBadge) headerMenuBadge.style.display = "none";
+          if (collabReadOnlyBanner) collabReadOnlyBanner.style.display = "none";
+          return;
+        }
+
+        openCollabModalBtn.classList.add("active-session");
+
+        if (collabRole === "teacher") {
+          const count = collabStudentConns.size;
+          collabBtnText.textContent = count > 0 ? `Спільна робота (${count})` : "Спільна робота";
+          collabPeersBadge.textContent = count;
+          collabPeersBadge.style.display = count > 0 ? "inline-block" : "none";
+          if (headerMenuBadge) {
+            headerMenuBadge.textContent = count > 0 ? count : "";
+            headerMenuBadge.style.display = count > 0 ? "inline-block" : "inline-block";
+          }
+          if (collabReadOnlyBanner) collabReadOnlyBanner.style.display = "none";
+        } else {
+          collabBtnText.textContent = "Спільна робота (Учень)";
+          collabPeersBadge.style.display = "none";
+          if (headerMenuBadge) headerMenuBadge.style.display = "none";
+          if (collabReadOnlyBanner) collabReadOnlyBanner.style.display = collabIsReadOnlyForMe ? "flex" : "none";
+        }
+      }
+
+      function renderTeacherStudentList() {
+        if (collabRole !== "teacher" || !collabStudentsList) return;
+        const count = collabStudentConns.size;
+        if (collabParticipantsCount) collabParticipantsCount.textContent = count;
+
+        if (count === 0) {
+          collabStudentsList.innerHTML = `
+            <div style="text-align: center; color: #94a3b8; font-size: 12.5px; padding: 20px 10px; background: #f8fafc; border: 1.5px dashed #e2e8f0; border-radius: 10px;">
+              <div style="font-size: 24px; margin-bottom: 4px;">⏳</div>
+              Очікуємо підключення учнів...<br>
+              <span style="font-size: 11.5px; color: #64748b;">Надішліть дітям посилання або покажіть код чи QR-код!</span>
+            </div>
+          `;
+          return;
+        }
+
+        collabStudentsList.innerHTML = "";
+        collabStudentConns.forEach((info, peerId) => {
+          const item = document.createElement("div");
+          item.className = "student-item" + (!info.canEdit ? " read-only" : "");
+
+          const studentName = info.name || "Учень";
+          const studentColor = info.color || "#2563eb";
+          const initial = studentName.trim().charAt(0).toUpperCase() || "У";
+
+          item.innerHTML = `
+            <div class="student-avatar" style="background: ${studentColor}; box-shadow: 0 2px 6px rgba(0,0,0,0.2);" title="${escapeHtml(studentName)}">${escapeHtml(initial)}</div>
+            <div class="student-info">
+              <div class="student-name" title="${escapeHtml(studentName)}">
+                ${escapeHtml(studentName)}
+                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${studentColor}; margin-left:4px;" title="Колір курсору учня"></span>
+              </div>
+              <span class="student-status-tag ${info.canEdit ? 'active' : 'locked'}">
+                ${info.canEdit ? '✓ Редагує' : '🔒 Тільки перегляд'}
+              </span>
+            </div>
+            <button type="button" class="student-action-btn ${info.canEdit ? 'btn-lock' : 'btn-unlock'}" data-peer="${escapeHtml(peerId)}" title="${info.canEdit ? 'Заборонити учню редагувати' : 'Дозволити учню редагувати'}">
+              ${info.canEdit ? '🔒 Вимкнути' : '🔓 Дозволити'}
+            </button>
+          `;
+
+          const toggleBtn = item.querySelector("button");
+          toggleBtn.addEventListener("click", () => {
+            info.canEdit = !info.canEdit;
+
+            if (info.conn && info.conn.open) {
+              try {
+                info.conn.send({ type: "permission_update", canEdit: info.canEdit });
+              } catch (e) {}
+            }
+            renderTeacherStudentList();
+            showToast(`Права учня «${studentName}»: ${info.canEdit ? 'дозволено редагувати 🔓' : 'тільки перегляд 🔒'}`);
+          });
+
+          collabStudentsList.appendChild(item);
+        });
+      }
+
+      function startTeacherHost() {
+        collabRole = "teacher";
+        collabMyName = "Вчитель";
+        collabMyColor = "#f59e0b"; // Бурштиново-золотий для вчителя
+        showToast("Створення кімнати P2P...", 0);
+
+        const shortCode = generateShortRoomCode(6);
+        collabRoomCode = shortCode;
+        const peerId = "sbk-" + shortCode.toLowerCase();
+
+        try {
+          if (!window.Peer) {
+            showToast("Завантаження P2P модуля WebRTC... Спробуйте за 1 сек.");
+            return;
+          }
+
+          if (peerInstance) {
+            try { peerInstance.destroy(); } catch (e) {}
+          }
+
+          peerInstance = new window.Peer(peerId, {
+            debug: 1,
+            config: {
+              iceServers: [
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:global.stun.twilio.com:3478" }
+              ]
+            }
+          });
+
+          peerInstance.on("open", (id) => {
+            collabPeerId = id;
+            collabStudentConns.clear();
+
+            const shareUrl = window.location.origin + window.location.pathname + "#" + shortCode;
+            if (collabShareLinkInput) collabShareLinkInput.value = shareUrl;
+            if (collabRoomCodeDisplay) collabRoomCodeDisplay.textContent = shortCode;
+            generateQrCode(shareUrl);
+
+            if (collabTeacherShareSection) collabTeacherShareSection.style.display = "block";
+            if (collabStudentInfo) collabStudentInfo.style.display = "none";
+            if (collabRoleLabel) collabRoleLabel.textContent = "Вчитель (Організатор)";
+            if (collabBadgeText) collabBadgeText.textContent = "В ефірі";
+            if (collabBadgeStatus) collabBadgeStatus.className = "collab-status-badge live";
+
+            renderTeacherStudentList();
+            updateCollabToolbarBadge();
+            if (collabSidebar) collabSidebar.classList.add("open");
+            showToast(`Спільну дошку створено! Код уроку: ${shortCode} 👥`);
+          });
+
+          peerInstance.on("connection", (conn) => {
+            conn.on("open", () => {
+              const defaultCanEdit = !collabAllLocked;
+              collabStudentConns.set(conn.peer, {
+                conn,
+                name: "Учень",
+                color: "#2563eb",
+                canEdit: defaultCanEdit
+              });
+
+              conn.send({
+                type: "board_init",
+                board: appState,
+                canEdit: defaultCanEdit,
+                teacherName: collabMyName,
+                teacherColor: collabMyColor
+              });
+
+              renderTeacherStudentList();
+              updateCollabToolbarBadge();
+            });
+
+            conn.on("data", (data) => {
+              handleIncomingDataFromPeer(data, conn.peer);
+            });
+
+            conn.on("close", () => {
+              removeRemoteCursor(conn.peer);
+              collabStudentConns.delete(conn.peer);
+              renderTeacherStudentList();
+              updateCollabToolbarBadge();
+            });
+
+            conn.on("error", (err) => {
+              console.warn("Peer connection error", err);
+              removeRemoteCursor(conn.peer);
+              collabStudentConns.delete(conn.peer);
+              renderTeacherStudentList();
+              updateCollabToolbarBadge();
+            });
+          });
+
+          peerInstance.on("error", (err) => {
+            console.error("PeerJS error:", err);
+            if (err && err.type === "unavailable-id" && collabRole === "teacher") {
+              startTeacherHost();
+              return;
+            }
+            showToast("Помилка підключення P2P. Перевірте мережу ⚠️");
+          });
+        } catch (e) {
+          console.error(e);
+          showToast("Помилка ініціалізації PeerJS ⚠️");
+        }
+      }
+
+      function joinTeacherHost(rawTarget, studentName, studentColor) {
+        if (!rawTarget) {
+          showToast("Введіть код або посилання сесії!");
+          return;
+        }
+
+        const cleanCode = parseRoomCode(rawTarget);
+        if (!cleanCode) {
+          showToast("Невірний код кімнати! ⚠️");
+          return;
+        }
+
+        collabRoomCode = cleanCode;
+        const targetPeerId = "sbk-" + cleanCode.toLowerCase();
+
+        collabMyName = (studentName || "").trim() || ("Учень " + Math.floor(Math.random() * 90 + 10));
+        collabMyColor = studentColor || collabMyColor || "#2563eb";
+
+        showToast(`Підключення до дошки за кодом ${cleanCode}...`, 0);
+
+        try {
+          if (!window.Peer) {
+            showToast("Завантаження P2P... Спробуйте за мить.");
+            return;
+          }
+
+          if (peerInstance) {
+            try { peerInstance.destroy(); } catch (e) {}
+          }
+
+          peerInstance = new window.Peer({
+            debug: 1,
+            config: {
+              iceServers: [
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:global.stun.twilio.com:3478" }
+              ]
+            }
+          });
+
+          peerInstance.on("open", (myId) => {
+            collabPeerId = myId;
+            collabRole = "student";
+
+            const conn = peerInstance.connect(targetPeerId, {
+              reliable: true
+            });
+
+            collabTeacherConn = conn;
+
+            conn.on("open", () => {
+              conn.send({
+                type: "student_hello",
+                name: collabMyName,
+                color: collabMyColor
+              });
+
+              if (collabTeacherShareSection) collabTeacherShareSection.style.display = "none";
+              if (collabStudentInfo) collabStudentInfo.style.display = "block";
+              if (collabStudentSelfName) collabStudentSelfName.textContent = collabMyName;
+              if (collabStudentAvatarBadge) {
+                collabStudentAvatarBadge.textContent = (collabMyName.charAt(0) || "У").toUpperCase();
+                collabStudentAvatarBadge.style.background = collabMyColor;
+              }
+              if (collabRoleLabel) collabRoleLabel.textContent = `Учень: ${collabMyName}`;
+              if (collabBadgeText) collabBadgeText.textContent = "На уроці";
+              if (collabBadgeStatus) collabBadgeStatus.className = "collab-status-badge live";
+
+              const shareUrl = window.location.origin + window.location.pathname + "#" + cleanCode;
+              if (collabShareLinkInput) collabShareLinkInput.value = shareUrl;
+              generateQrCode(shareUrl);
+
+              renderStudentSidebarColorPickers();
+              updateCollabToolbarBadge();
+              showToast(`Вітаємо, ${collabMyName}! Ви приєдналися до уроку 🎒`);
+            });
+
+            conn.on("data", (data) => {
+              handleIncomingDataFromPeer(data, targetPeerId);
+            });
+
+            conn.on("close", () => {
+              showToast("Вчитель завершив сесію або зв'язок втрачено ℹ️");
+              disconnectCollab();
+            });
+
+            conn.on("error", (err) => {
+              console.warn("Conn error:", err);
+              showToast("Помилка зв'язку з дошкою вчителя ⚠️");
+            });
+          });
+
+          peerInstance.on("error", (err) => {
+            console.error("Peer error:", err);
+            showToast("Не вдалося знайти таку дошку. Перевірте код уроку ⚠️");
+          });
+        } catch (e) {
+          console.error(e);
+          showToast("Помилка P2P підключення ⚠️");
+        }
+      }
+
+      function submitStudentJoin() {
+        if (!studentJoinNameInput) return;
+        const name = studentJoinNameInput.value.trim();
+        if (!name) {
+          if (studentJoinNameError) studentJoinNameError.style.display = "block";
+          studentJoinNameInput.style.borderColor = "#dc2626";
+          studentJoinNameInput.focus();
+          return;
+        }
+
+        if (studentJoinNameError) studentJoinNameError.style.display = "none";
+        studentJoinNameInput.style.borderColor = "";
+
+        if (studentWelcomeOverlay) {
+          studentWelcomeOverlay.classList.remove("open");
+        }
+
+        const rawCode = pendingJoinRoomId || (collabJoinCodeInput ? collabJoinCodeInput.value.trim() : "");
+        if (!rawCode) {
+          showToast("Не знайдено кімнату для підключення! ⚠️");
+          return;
+        }
+
+        joinTeacherHost(rawCode, name, collabMyColor);
+      }
+
+      if (studentJoinSubmitBtn) studentJoinSubmitBtn.addEventListener("click", submitStudentJoin);
+      if (studentWelcomeForm) {
+        studentWelcomeForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          submitStudentJoin();
+        });
+      }
+      if (studentJoinNameInput) {
+        studentJoinNameInput.addEventListener("input", () => {
+          if (studentJoinNameError) studentJoinNameError.style.display = "none";
+          studentJoinNameInput.style.borderColor = "";
+        });
+        studentJoinNameInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submitStudentJoin();
+          }
+        });
+      }
+
+      function disconnectCollab() {
+        if (peerInstance) {
+          try { peerInstance.destroy(); } catch (e) {}
+        }
+        peerInstance = null;
+        collabRole = null;
+        collabPeerId = null;
+        collabRoomCode = "";
+        collabTeacherConn = null;
+        collabStudentConns.clear();
+        collabIsReadOnlyForMe = false;
+
+        remoteCursorElements.forEach(el => el.remove());
+        remoteCursorElements.clear();
+
+        if (collabSidebar) collabSidebar.classList.remove("open");
+        if (collabTeacherShareSection) collabTeacherShareSection.style.display = "block";
+        if (collabStudentInfo) collabStudentInfo.style.display = "none";
+        if (collabReadOnlyBanner) collabReadOnlyBanner.style.display = "none";
+
+        if (window.location.hash.length > 1) {
+          history.replaceState(null, null, window.location.pathname + window.location.search);
+        }
+
+        updateCollabToolbarBadge();
+        showToast("Спільну сесію завершено 🚪");
+      }
+
+      if (disconnectCollabBtn) disconnectCollabBtn.addEventListener("click", disconnectCollab);
+      if (collabJoinBtn && collabJoinCodeInput) {
+        collabJoinBtn.addEventListener("click", () => {
+          const code = parseRoomCode(collabJoinCodeInput.value.trim());
+          if (code) {
+            pendingJoinRoomId = code;
+            initWelcomeColorPicker();
+            if (studentWelcomeOverlay) studentWelcomeOverlay.classList.add("open");
+            if (studentJoinNameInput) studentJoinNameInput.focus();
+          }
+        });
+      }
+
+      if (unlockAllStudentsBtn) {
+        unlockAllStudentsBtn.addEventListener("click", () => {
+          collabAllLocked = false;
+          collabStudentConns.forEach(info => {
+            info.canEdit = true;
+            if (info.conn && info.conn.open) {
+              try { info.conn.send({ type: "permission_update", canEdit: true }); } catch (e) {}
+            }
+          });
+          renderTeacherStudentList();
+          showToast("Всім учням дозволено додавати та переміщувати стікери! 🔓");
+        });
+      }
+
+      if (lockAllStudentsBtn) {
+        lockAllStudentsBtn.addEventListener("click", () => {
+          collabAllLocked = true;
+          collabStudentConns.forEach(info => {
+            info.canEdit = false;
+            if (info.conn && info.conn.open) {
+              try { info.conn.send({ type: "permission_update", canEdit: false }); } catch (e) {}
+            }
+          });
+          renderTeacherStudentList();
+          showToast("Всім учням вимкнено редагування (режим перегляду) 🔒");
+        });
+      }
+
+      function collabSendEvent(data) {
+        if (!isCollabActive()) return;
+
+        if (collabRole === "teacher") {
+          collabStudentConns.forEach(info => {
+            if (info.conn && info.conn.open) {
+              try { info.conn.send(data); } catch (e) {}
+            }
+          });
+        } else if (collabRole === "student" && collabTeacherConn && collabTeacherConn.open) {
+          try { collabTeacherConn.send(data); } catch (e) {}
+        }
+      }
+
+      function handleIncomingDataFromPeer(data, fromPeerId) {
+        if (!data || !data.type) return;
+
+        if (collabRole === "teacher") {
+          const studentInfo = collabStudentConns.get(fromPeerId);
+
+          if (data.type === "student_hello") {
+            if (studentInfo) {
+              studentInfo.name = data.name || "Учень";
+              studentInfo.color = data.color || "#2563eb";
+              renderTeacherStudentList();
+              showToast(`Учень «${studentInfo.name}» приєднався до уроку! 👋`);
+            }
+            return;
+          }
+
+          if (data.type === "cursor_color_change") {
+            if (studentInfo) {
+              studentInfo.color = data.color || studentInfo.color;
+              renderTeacherStudentList();
+            }
+            // Relay to all other students
+            collabStudentConns.forEach((other, otherId) => {
+              if (otherId !== fromPeerId && other.conn && other.conn.open) {
+                try { other.conn.send(data); } catch (e) {}
+              }
+            });
+            return;
+          }
+
+          if (studentInfo && !studentInfo.canEdit && ["sticker_upsert", "sticker_delete", "sticker_move", "sticker_move_end", "board_meta", "theme_change"].includes(data.type)) {
+            return;
+          }
+
+          applyIncomingEvent(data, fromPeerId, studentInfo ? studentInfo.name : "Учень", studentInfo ? studentInfo.color : "#2563eb");
+
+          // Relay to all other students
+          collabStudentConns.forEach((other, otherId) => {
+            if (otherId !== fromPeerId && other.conn && other.conn.open) {
+              try { other.conn.send(data); } catch (e) {}
+            }
+          });
+        } else {
+          if (data.type === "board_init") {
+            if (data.board) {
+              appState = data.board;
+              applyTheme(appState.theme || "chalk", appState.customTheme);
+              updateHeaderInfo();
+              renderStickers();
+              renderBoardsDropdown();
+            }
+            collabIsReadOnlyForMe = !data.canEdit;
+            if (collabStudentPermBadge) {
+              if (collabIsReadOnlyForMe) {
+                collabStudentPermBadge.style.background = "#fee2e2";
+                collabStudentPermBadge.style.color = "#dc2626";
+                collabStudentPermBadge.style.borderColor = "#fecaca";
+                collabStudentPermBadge.textContent = "🔒 Тільки перегляд дій вчителя";
+              } else {
+                collabStudentPermBadge.style.background = "#dcfce7";
+                collabStudentPermBadge.style.color = "#15803d";
+                collabStudentPermBadge.style.borderColor = "#bbf7d0";
+                collabStudentPermBadge.textContent = "✓ Редагування дозволено";
+              }
+            }
+            updateCollabToolbarBadge();
+            return;
+          }
+
+          if (data.type === "permission_update") {
+            collabIsReadOnlyForMe = !data.canEdit;
+            updateCollabToolbarBadge();
+            if (collabStudentPermBadge) {
+              if (collabIsReadOnlyForMe) {
+                collabStudentPermBadge.style.background = "#fee2e2";
+                collabStudentPermBadge.style.color = "#dc2626";
+                collabStudentPermBadge.style.borderColor = "#fecaca";
+                collabStudentPermBadge.textContent = "🔒 Тільки перегляд дій вчителя";
+                showToast("Вчитель тимчасово вимкнув вам редагування (режим перегляду) 🔒");
+              } else {
+                collabStudentPermBadge.style.background = "#dcfce7";
+                collabStudentPermBadge.style.color = "#15803d";
+                collabStudentPermBadge.style.borderColor = "#bbf7d0";
+                collabStudentPermBadge.textContent = "✓ Редагування дозволено";
+                showToast("Вчитель дозволив вам додавати та переміщувати стікери! 🔓");
+              }
+            }
+            return;
+          }
+
+          applyIncomingEvent(data, fromPeerId, data.name || "Вчитель", data.color || "#f59e0b");
+        }
+      }
+
+      function applyIncomingEvent(data, peerId, authorName, authorColor) {
+        switch (data.type) {
+          case "cursor_move": {
+            const pId = data.peerId || peerId;
+            const pName = data.name || authorName;
+            const pColor = data.color || authorColor || "#2563eb";
+            renderRemoteCursor(pId, pName, data.x, data.y, pColor);
+            break;
+          }
+
+          case "cursor_color_change": {
+            const pId = data.peerId || peerId;
+            const cur = remoteCursorElements.get(pId);
+            if (cur && data.color) {
+              const pathEl = cur.querySelector("path");
+              if (pathEl) pathEl.setAttribute("fill", data.color);
+              const labelEl = cur.querySelector(".remote-cursor-label");
+              if (labelEl) labelEl.style.backgroundColor = data.color;
+            }
+            break;
+          }
+
+          case "sticker_move": {
+            const st = appState.stickers.find(s => s.id === data.id);
+            if (st) {
+              st.x = data.x;
+              st.y = data.y;
+              const cardEl = document.getElementById("card_" + data.id);
+              if (cardEl) {
+                cardEl.style.left = data.x + "px";
+                cardEl.style.top = data.y + "px";
+              }
+            }
+            break;
+          }
+
+          case "sticker_move_end": {
+            const st = appState.stickers.find(s => s.id === data.id);
+            if (st) {
+              st.x = data.x;
+              st.y = data.y;
+              saveToStorage();
+            }
+            break;
+          }
+
+          case "sticker_upsert": {
+            const incoming = data.sticker;
+            if (!incoming) return;
+            const idx = appState.stickers.findIndex(s => s.id === incoming.id);
+            if (idx !== -1) {
+              appState.stickers[idx] = incoming;
+            } else {
+              appState.stickers.push(incoming);
+            }
+            renderStickers();
+            saveToStorage();
+            break;
+          }
+
+          case "sticker_delete": {
+            appState.stickers = appState.stickers.filter(s => s.id !== data.id);
+            renderStickers();
+            saveToStorage();
+            break;
+          }
+
+          case "board_meta": {
+            if (data.title !== undefined) appState.title = data.title;
+            if (data.author !== undefined) appState.author = data.author;
+            updateHeaderInfo();
+            renderBoardsDropdown();
+            saveToStorage();
+            break;
+          }
+
+          case "theme_change": {
+            if (data.theme) {
+              applyTheme(data.theme, data.customTheme);
+            }
+            break;
+          }
+
+          case "board_state_sync": {
+            if (data.board) {
+              appState = data.board;
+              applyTheme(appState.theme || "chalk", appState.customTheme);
+              updateHeaderInfo();
+              renderStickers();
+              renderBoardsDropdown();
+              saveToStorage();
+            }
+            break;
+          }
+        }
+      }
+
+      function renderRemoteCursor(peerId, name, x, y, color) {
+        let cur = remoteCursorElements.get(peerId);
+        const col = color || "#2563eb";
+
+        if (!cur) {
+          cur = document.createElement("div");
+          cur.className = "remote-cursor";
+
+          cur.innerHTML = `
+            <svg class="remote-cursor-pointer" viewBox="0 0 24 24">
+              <path d="M4 0l16 12-7 2-4 9-5-23z" fill="${col}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round" />
+            </svg>
+            <div class="remote-cursor-label" style="background:${col};">${escapeHtml(name)}</div>
+          `;
+          boardCanvas.appendChild(cur);
+          remoteCursorElements.set(peerId, cur);
+        } else {
+          const pathEl = cur.querySelector("path");
+          if (pathEl && pathEl.getAttribute("fill") !== col) {
+            pathEl.setAttribute("fill", col);
+          }
+          const labelEl = cur.querySelector(".remote-cursor-label");
+          if (labelEl) {
+            if (labelEl.textContent !== name) labelEl.textContent = name;
+            if (labelEl.style.backgroundColor !== col) labelEl.style.backgroundColor = col;
+          }
+        }
+        cur.style.transform = `translate(${x}px, ${y}px)`;
+      }
+
+      function removeRemoteCursor(peerId) {
+        const cur = remoteCursorElements.get(peerId);
+        if (cur) {
+          cur.remove();
+          remoteCursorElements.delete(peerId);
+        }
+      }
+
+      let lastCursorSend = 0;
+      boardContainer.addEventListener("pointermove", (e) => {
+        if (!isCollabActive()) return;
+        const now = Date.now();
+        if (now - lastCursorSend < 50) return; // ~20 fps
+        lastCursorSend = now;
+
+        const rect = boardCanvas.getBoundingClientRect();
+        const x = Math.round((e.clientX - rect.left) / zoomLevel);
+        const y = Math.round((e.clientY - rect.top) / zoomLevel);
+
+        if (x >= 0 && y >= 0 && x <= 3200 && y <= 2200) {
+          collabSendEvent({ 
+            type: "cursor_move", 
+            peerId: collabPeerId,
+            name: collabMyName,
+            color: collabMyColor,
+            x, 
+            y 
+          });
+        }
+      });
+
+      function checkAutoJoinFromUrl() {
+        const hash = window.location.hash;
+        if (!hash || hash === "#") return;
+
+        const code = parseRoomCode(hash);
+        if (code && code.length >= 4) {
+          pendingJoinRoomId = code;
+          if (collabJoinCodeInput) collabJoinCodeInput.value = code;
+
+          initWelcomeColorPicker();
+          if (studentWelcomeOverlay) {
+            studentWelcomeOverlay.classList.add("open");
+            setTimeout(() => {
+              if (studentJoinNameInput) {
+                studentJoinNameInput.focus();
+                studentJoinNameInput.select();
+              }
+            }, 200);
+          }
+        }
+      }
+
+      window.addEventListener("hashchange", () => {
+        if (!isCollabActive()) {
+          checkAutoJoinFromUrl();
+        }
+      });
+
+      initWelcomeColorPicker();
+      loadFromStorage();
+      checkAutoJoinFromUrl();
+    })();
+  </script>
+</body>
+</html>
